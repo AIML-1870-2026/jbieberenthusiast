@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfield Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Bottom Drawer Styles */
+        .drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            transform: translateY(calc(100% - 40px));
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .drawer.open {
+            transform: translateY(0);
+        }
+
+        .drawer-toggle {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .drawer-toggle:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .drawer-content {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            color: white;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-group .value {
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+            border: none;
+        }
+
+        .arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .drawer.open .arrow {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+
+    <!-- Bottom Drawer UI -->
+    <div class="drawer" id="drawer">
+        <button class="drawer-toggle" id="drawerToggle">
+            <span>Controls</span>
+            <span class="arrow">▼</span>
+        </button>
+        <div class="drawer-content">
+            <div class="control-group">
+                <label>
+                    <span>Trail Length</span>
+                    <span class="value" id="trailValue">30</span>
+                </label>
+                <input type="range" id="trailLength" min="5" max="100" value="30">
+            </div>
+            <div class="control-group">
+                <label>
+                    <span>Star Count</span>
+                    <span class="value" id="countValue">100</span>
+                </label>
+                <input type="range" id="starCount" min="20" max="300" value="100">
+            </div>
+            <div class="control-group">
+                <label>
+                    <span>Star Speed</span>
+                    <span class="value" id="speedValue">2</span>
+                </label>
+                <input type="range" id="starSpeed" min="0.5" max="5" step="0.1" value="2">
+            </div>
+            <div class="control-group">
+                <label>
+                    <span>Spawn Radius</span>
+                    <span class="value" id="radiusValue">20</span>
+                </label>
+                <input type="range" id="spawnRadius" min="0" max="100" value="20">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+
+        // Nebula cloud positions (fixed, so they don't flicker)
+        const nebulaClouds = [];
+        function initNebula() {
+            nebulaClouds.length = 0; // Clear existing
+            const nebulaCount = 12;
+            const colors = [
+                'rgba(138, 43, 226, 0.9)',  // Purple - much brighter
+                'rgba(75, 0, 130, 0.9)',    // Indigo - much brighter
+                'rgba(72, 61, 139, 0.8)',   // Dark slate blue
+                'rgba(147, 112, 219, 0.9)', // Medium purple - much brighter
+                'rgba(123, 104, 238, 0.8)', // Medium slate blue
+                'rgba(199, 21, 133, 0.8)',  // Medium violet red
+                'rgba(186, 85, 211, 0.9)'   // Medium orchid - new color
+            ];
+
+            for (let i = 0; i < nebulaCount; i++) {
+                nebulaClouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 300 + Math.random() * 400,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+        }
+
+        // Draw nebula background
+        function drawNebula() {
+            // Create a purple/blue gradient background instead of black
+            const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            bgGradient.addColorStop(0, '#1a0033');    // Deep purple
+            bgGradient.addColorStop(0.5, '#0d001a'); // Very dark purple
+            bgGradient.addColorStop(1, '#000a1a');    // Dark blue
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw nebula clouds
+            nebulaClouds.forEach(cloud => {
+                const gradient = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.radius);
+                gradient.addColorStop(0, cloud.color);
+                gradient.addColorStop(0.4, 'rgba(138, 43, 226, 0.3)'); // More visible mid-tone
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            });
+        }
+
+        // Resize canvas function
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initNebula();
+            drawNebula();
+        }
+
+        // Initialize canvas and nebula
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Drawer toggle functionality
+        const drawer = document.getElementById('drawer');
+        const drawerToggle = document.getElementById('drawerToggle');
+        drawerToggle.addEventListener('click', () => {
+            drawer.classList.toggle('open');
+        });
+
+        // Configuration
+        let config = {
+            trailLength: 30,
+            starCount: 100,
+            speed: 2,
+            spawnRadius: 20
+        };
+
+        // Slider controls
+        const sliders = {
+            trailLength: document.getElementById('trailLength'),
+            starCount: document.getElementById('starCount'),
+            starSpeed: document.getElementById('starSpeed'),
+            spawnRadius: document.getElementById('spawnRadius')
+        };
+
+        const values = {
+            trail: document.getElementById('trailValue'),
+            count: document.getElementById('countValue'),
+            speed: document.getElementById('speedValue'),
+            radius: document.getElementById('radiusValue')
+        };
+
+        sliders.trailLength.addEventListener('input', (e) => {
+            config.trailLength = parseInt(e.target.value);
+            values.trail.textContent = e.target.value;
+        });
+
+        sliders.starCount.addEventListener('input', (e) => {
+            config.starCount = parseInt(e.target.value);
+            values.count.textContent = e.target.value;
+            adjustStarCount();
+        });
+
+        sliders.starSpeed.addEventListener('input', (e) => {
+            config.speed = parseFloat(e.target.value);
+            values.speed.textContent = e.target.value;
+        });
+
+        sliders.spawnRadius.addEventListener('input', (e) => {
+            config.spawnRadius = parseInt(e.target.value);
+            values.radius.textContent = e.target.value;
+        });
+
+        // Star class
+        class Star {
+            constructor(isComet = false) {
+                this.isComet = isComet;
+                this.reset();
+            }
+
+            reset() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                if (this.isComet) {
+                    // Comets start from random edge
+                    const edge = Math.floor(Math.random() * 4);
+                    switch(edge) {
+                        case 0: // top
+                            this.x = Math.random() * canvas.width;
+                            this.y = 0;
+                            break;
+                        case 1: // right
+                            this.x = canvas.width;
+                            this.y = Math.random() * canvas.height;
+                            break;
+                        case 2: // bottom
+                            this.x = Math.random() * canvas.width;
+                            this.y = canvas.height;
+                            break;
+                        case 3: // left
+                            this.x = 0;
+                            this.y = Math.random() * canvas.height;
+                            break;
+                    }
+                    // Random angle for comet
+                    const angle = Math.random() * Math.PI * 2;
+                    this.vx = Math.cos(angle) * config.speed * 2;
+                    this.vy = Math.sin(angle) * config.speed * 2;
+                } else {
+                    // Regular stars spawn from center with spawn radius offset
+                    const angle = Math.random() * Math.PI * 2;
+                    this.x = centerX + Math.cos(angle) * config.spawnRadius;
+                    this.y = centerY + Math.sin(angle) * config.spawnRadius;
+
+                    // Set velocity outward from center
+                    this.vx = Math.cos(angle);
+                    this.vy = Math.sin(angle);
+                }
+
+                // Depth layer (0, 1, 2) for parallax effect
+                this.depth = Math.floor(Math.random() * 3);
+                this.speedMultiplier = this.isComet ? 1.5 : [0.5, 1, 1.5][this.depth];
+                this.size = this.isComet ? 3 : [1, 2, 3][this.depth];
+
+                // Trail history
+                this.trail = [];
+
+                // Color hue for rainbow effect
+                this.hue = Math.random() * 360;
+                this.hueSpeed = this.isComet ? 3 : 1;
+            }
+
+            update() {
+                // Update position based on velocity and speed
+                this.x += this.vx * config.speed * this.speedMultiplier;
+                this.y += this.vy * config.speed * this.speedMultiplier;
+
+                // Add current position to trail
+                this.trail.push({ x: this.x, y: this.y, hue: this.hue });
+
+                // Limit trail length
+                const maxTrail = this.isComet ? config.trailLength * 2 : config.trailLength;
+                if (this.trail.length > maxTrail) {
+                    this.trail.shift();
+                }
+
+                // Update hue for rainbow effect
+                this.hue = (this.hue + this.hueSpeed) % 360;
+
+                // Reset if off screen
+                if (this.x < -50 || this.x > canvas.width + 50 ||
+                    this.y < -50 || this.y > canvas.height + 50) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                // Draw trail
+                for (let i = 0; i < this.trail.length; i++) {
+                    const point = this.trail[i];
+                    const alpha = (i / this.trail.length) * 0.8;
+                    const size = (i / this.trail.length) * this.size;
+
+                    ctx.fillStyle = `hsla(${point.hue}, 100%, 50%, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw star
+                const brightness = this.isComet ? 70 : [40, 50, 60][this.depth];
+                ctx.fillStyle = `hsl(${this.hue}, 100%, ${brightness}%)`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Add glow for comets
+                if (this.isComet) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = `hsl(${this.hue}, 100%, 50%)`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        // Initialize stars
+        let stars = [];
+        let comets = [];
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < config.starCount; i++) {
+                stars.push(new Star(false));
+            }
+        }
+
+        initStars();
+
+        // Adjust star count dynamically
+        function adjustStarCount() {
+            if (stars.length < config.starCount) {
+                while (stars.length < config.starCount) {
+                    stars.push(new Star(false));
+                }
+            } else {
+                stars = stars.slice(0, config.starCount);
+            }
+        }
+
+        // Spawn shooting stars/comets
+        let lastCometTime = 0;
+        function spawnComet(timestamp) {
+            if (timestamp - lastCometTime > 2000 + Math.random() * 3000) {
+                comets.push(new Star(true));
+                lastCometTime = timestamp;
+
+                // Remove old comets
+                if (comets.length > 5) {
+                    comets.shift();
+                }
+            }
+        }
+
+        // Animation loop
+        function animate(timestamp) {
+            // Very light fade effect for trails using dark purple instead of black
+            ctx.fillStyle = 'rgba(13, 0, 26, 0.03)'; // Dark purple fade
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw stars
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            // Update and draw comets
+            comets.forEach((comet, index) => {
+                comet.update();
+                comet.draw();
+            });
+
+            // Spawn comets occasionally
+            spawnComet(timestamp);
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate(0);
+    </script>
+</body>
+</html>
