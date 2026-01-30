@@ -1900,33 +1900,14 @@
                 // Check collisions
                 this.checkCollisions();
 
-                // Respawn dead AI snakes
-                this.aiSnakes.forEach((snake, i) => {
+                // Remove dead AI snakes from the game (no respawn)
+                this.aiSnakes = this.aiSnakes.filter((snake, i) => {
                     if (!snake.alive) {
-                        if (!snake.respawnTimer) {
-                            snake.respawnTimer = 10;
-                        } else {
-                            snake.respawnTimer -= deltaTime;
-                            if (snake.respawnTimer <= 0) {
-                                this.aiSnakes.splice(i, 1);
-                                this.aiControllers.splice(i, 1);
-                                this.spawnAISnake(i);
-                            }
-                        }
+                        this.aiControllers.splice(i, 1);
+                        return false;
                     }
+                    return true;
                 });
-
-                // Respawn boss if dead
-                if (this.bossAI && !this.bossAI.alive) {
-                    if (!this.bossAI.respawnTimer) {
-                        this.bossAI.respawnTimer = 15;
-                    } else {
-                        this.bossAI.respawnTimer -= deltaTime;
-                        if (this.bossAI.respawnTimer <= 0) {
-                            this.spawnBossAI();
-                        }
-                    }
-                }
 
                 // Update stats
                 this.players.forEach(p => {
@@ -2079,7 +2060,7 @@
                 } else if (numPlayers === 2) {
                     if (alivePlayers.length === 0) {
                         this.gameOver(null); // Draw
-                    } else if (alivePlayers.length === 1 && !this.players.some(p => p && !p.alive && p.respawnTimer)) {
+                    } else if (alivePlayers.length === 1) {
                         this.gameOver(alivePlayers[0].playerNum);
                     }
                 }
