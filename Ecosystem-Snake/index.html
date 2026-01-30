@@ -746,6 +746,7 @@
                 this.eyeDirection = { ...this.direction };
                 this.score = 0;
                 this.respawnTimer = 0;
+                this.spawnTime = 0; // Track time since spawn for indicator
             }
 
             get head() {
@@ -772,6 +773,7 @@
             update(deltaTime, gameSpeed = 1) {
                 if (!this.alive) return;
 
+                this.spawnTime += deltaTime;
                 this.moveTimer += deltaTime * this.speed * gameSpeed;
 
                 if (this.moveTimer >= 1) {
@@ -826,10 +828,27 @@
 
                 const gradient = this.colors.primary;
                 const secondary = this.colors.secondary;
+                const headX = this.head.x * CELL_SIZE + CELL_SIZE / 2;
+                const headY = this.head.y * CELL_SIZE + CELL_SIZE / 2;
+
+                // Draw spawn indicator for players (pulsing ring for first 5 seconds)
+                if (this.isPlayer && this.spawnTime < 5) {
+                    const alpha = Math.max(0, 1 - this.spawnTime / 5);
+                    const pulse = 1 + Math.sin(this.spawnTime * 6) * 0.3;
+                    const ringSize = 25 * pulse;
+
+                    ctx.strokeStyle = this.playerNum === 1
+                        ? `rgba(14, 165, 233, ${alpha})`
+                        : `rgba(239, 68, 68, ${alpha})`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(headX, headY, ringSize, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
 
                 if (this.colors.glow) {
                     ctx.shadowColor = this.colors.glow;
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = this.isPlayer ? 20 : 15;
                 }
 
                 this.body.forEach((seg, i) => {
@@ -855,6 +874,26 @@
                 });
 
                 ctx.shadowBlur = 0;
+
+                // Draw player label above head
+                if (this.isPlayer) {
+                    const label = this.playerNum === 1 ? 'P1' : 'P2';
+                    const labelY = headY - 18;
+
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    // Label background
+                    ctx.fillStyle = this.playerNum === 1 ? '#0ea5e9' : '#ef4444';
+                    ctx.beginPath();
+                    ctx.roundRect(headX - 12, labelY - 8, 24, 16, 4);
+                    ctx.fill();
+
+                    // Label text
+                    ctx.fillStyle = '#fff';
+                    ctx.fillText(label, headX, labelY);
+                }
             }
 
             drawEyes(ctx, head) {
