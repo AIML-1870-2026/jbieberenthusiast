@@ -1995,6 +1995,7 @@
                     attempts++;
                 } while (avoid.some(p => p.x === pos.x && p.y === pos.y) && attempts < 100);
 
+                console.log('Spawning bonus food at:', pos.x, pos.y, 'Grid size:', this.bonusGridWidth, 'x', this.bonusGridHeight);
                 this.food.push(new Food(pos.x, pos.y, false));
             }
 
