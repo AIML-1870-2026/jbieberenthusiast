@@ -91,6 +91,7 @@
             border-radius: 8px;
             overflow-y: auto;
             padding: 20px;
+            z-index: 100;
         }
 
         .overlay.hidden {
@@ -1939,9 +1940,13 @@
             }
 
             showBonusRoundMenu() {
+                console.log('BONUS ROUND TRIGGERED!'); // Debug
                 this.state = 'bonusIntro';
                 // Save main game score
                 this.mainGameScore = this.players[0] ? this.players[0].score : 0;
+                // Hide other menus first
+                this.hideAllMenus();
+                document.getElementById('hud').classList.remove('hidden');
                 document.getElementById('targetLength').textContent = this.bonusTargetLength;
                 document.getElementById('bonusRoundMenu').classList.remove('hidden');
             }
@@ -2201,6 +2206,11 @@
                 const alivePlayers = this.players.filter(p => p && p.alive);
                 const aliveEnemies = this.aiSnakes.filter(s => s.alive).length +
                                     (this.bossAI && this.bossAI.alive ? 1 : 0);
+
+                // Debug: Log when enemies reach 0
+                if (aliveEnemies === 0 && alivePlayers.length > 0 && !this.bonusRound) {
+                    console.log('All enemies dead! numPlayers:', numPlayers, 'triggering bonus round...');
+                }
 
                 if (this.bonusRound) {
                     // Bonus round conditions
