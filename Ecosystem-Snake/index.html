@@ -497,6 +497,15 @@
             <button class="menu-btn secondary" id="mainMenuBtn">Main Menu</button>
         </div>
 
+        <!-- Bonus Round Intro -->
+        <div class="overlay hidden" id="bonusRoundMenu">
+            <h1 style="color: #fbbf24;">BONUS ROUND!</h1>
+            <p class="subtitle">You cleared the ecosystem!</p>
+            <p style="color: #f0f0f0; margin: 20px 0;">Now survive classic snake on a smaller grid.</p>
+            <p style="color: #0ea5e9; font-size: 18px;">Reach length <span id="targetLength">20</span> to win!</p>
+            <button class="menu-btn" id="startBonusBtn">Start Bonus Round</button>
+        </div>
+
         <!-- Game Over -->
         <div class="overlay hidden" id="gameOverMenu">
             <h2>Game Over</h2>
@@ -548,6 +557,11 @@
             ecosystem: { aiCount: 6, foodSpawnRate: 3000, aiSpeed: 1.1, foodMax: 8 },
             apex: { aiCount: 5, foodSpawnRate: 3500, aiSpeed: 1.2, foodMax: 6 }
         };
+
+        // Bonus round settings
+        const BONUS_GRID_WIDTH = 20;
+        const BONUS_GRID_HEIGHT = 15;
+        const BONUS_TARGET_LENGTH = 20;
 
         // ============================================
         // UTILITY FUNCTIONS
@@ -1419,6 +1433,13 @@
                 this.isDrawing = false;
                 this.drawStart = null;
 
+                // Bonus round state
+                this.bonusRound = false;
+                this.bonusGridWidth = BONUS_GRID_WIDTH;
+                this.bonusGridHeight = BONUS_GRID_HEIGHT;
+                this.bonusTargetLength = BONUS_TARGET_LENGTH;
+                this.mainGameScore = 0;
+
                 this.setupUI();
                 this.setupInput();
                 this.updateHighScoreDisplay();
@@ -1475,6 +1496,9 @@
                 document.getElementById('resumeBtn').onclick = () => this.resume();
                 document.getElementById('restartBtn').onclick = () => this.startGame();
                 document.getElementById('mainMenuBtn').onclick = () => this.showMainMenu();
+
+                // Bonus round
+                document.getElementById('startBonusBtn').onclick = () => this.startBonusRound();
 
                 // Game over
                 document.getElementById('playAgainBtn').onclick = () => this.startGame();
@@ -1729,6 +1753,7 @@
                 const numPlayers = parseInt(this.settings.players);
 
                 this.state = 'playing';
+                this.bonusRound = false;
                 this.gameTime = 0;
                 this.foodSpawnTimer = 0;
                 this.stats = { snakesEaten: 0, foodCollected: 0, maxSize: 3 };
@@ -1848,7 +1873,7 @@
             }
 
             hideAllMenus() {
-                ['startMenu', 'pauseMenu', 'gameOverMenu', 'editorMenu', 'levelSelectMenu', 'loadLevelMenu'].forEach(id => {
+                ['startMenu', 'pauseMenu', 'gameOverMenu', 'editorMenu', 'levelSelectMenu', 'loadLevelMenu', 'bonusRoundMenu'].forEach(id => {
                     document.getElementById(id).classList.add('hidden');
                 });
             }
@@ -1911,6 +1936,61 @@
                 document.getElementById('gameOverMenu').classList.remove('hidden');
 
                 this.updateHighScoreDisplay();
+            }
+
+            showBonusRoundMenu() {
+                this.state = 'bonusIntro';
+                // Save main game score
+                this.mainGameScore = this.players[0] ? this.players[0].score : 0;
+                document.getElementById('targetLength').textContent = this.bonusTargetLength;
+                document.getElementById('bonusRoundMenu').classList.remove('hidden');
+            }
+
+            startBonusRound() {
+                this.state = 'playing';
+                this.bonusRound = true;
+                document.getElementById('bonusRoundMenu').classList.add('hidden');
+
+                // Clear everything
+                this.aiSnakes = [];
+                this.aiControllers = [];
+                this.bossAI = null;
+                this.bossController = null;
+                this.food = [];
+                this.obstacles = [];
+                this.effects = [];
+
+                // Create player in center of bonus grid
+                const centerX = Math.floor(this.bonusGridWidth / 2);
+                const centerY = Math.floor(this.bonusGridHeight / 2);
+
+                this.players = [];
+                this.players[0] = new Snake(centerX, centerY, true, COLORS.player1, 1);
+                this.players[0].score = this.mainGameScore; // Carry over score
+                this.players[0].spawnTime = 0;
+
+                // Spawn initial food
+                for (let i = 0; i < 3; i++) {
+                    this.spawnBonusFood();
+                }
+            }
+
+            spawnBonusFood() {
+                const positions = this.players[0] ? this.players[0].body : [];
+                const foodPositions = this.food.map(f => f.position);
+                const avoid = [...positions, ...foodPositions];
+
+                let pos;
+                let attempts = 0;
+                do {
+                    pos = {
+                        x: randomInt(1, this.bonusGridWidth - 2),
+                        y: randomInt(1, this.bonusGridHeight - 2)
+                    };
+                    attempts++;
+                } while (avoid.some(p => p.x === pos.x && p.y === pos.y) && attempts < 100);
+
+                this.food.push(new Food(pos.x, pos.y, false));
             }
 
             update(deltaTime) {
@@ -1998,8 +2078,11 @@
                     const player = this.players[i];
                     if (!player || !player.alive) continue;
 
-                    // Wall collision
-                    if (player.checkWallCollision()) {
+                    // Wall collision (use bonus grid size if in bonus round)
+                    const gridW = this.bonusRound ? this.bonusGridWidth : GRID_WIDTH;
+                    const gridH = this.bonusRound ? this.bonusGridHeight : GRID_HEIGHT;
+                    if (player.head.x < 0 || player.head.x >= gridW ||
+                        player.head.y < 0 || player.head.y >= gridH) {
                         player.alive = false;
                         this.addEffect(player.head, 'death');
                         continue;
@@ -2026,6 +2109,10 @@
                             player.score += f.value;
                             this.stats.foodCollected++;
                             this.addEffect(f.position, 'eat');
+                            // In bonus round, immediately spawn new food
+                            if (this.bonusRound) {
+                                this.spawnBonusFood();
+                            }
                             return false;
                         }
                         return true;
@@ -2115,12 +2202,22 @@
                 const aliveEnemies = this.aiSnakes.filter(s => s.alive).length +
                                     (this.bossAI && this.bossAI.alive ? 1 : 0);
 
-                if (numPlayers === 1) {
+                if (this.bonusRound) {
+                    // Bonus round conditions
+                    if (alivePlayers.length === 0) {
+                        this.bonusRound = false;
+                        this.gameOver();
+                    } else if (this.players[0] && this.players[0].length >= this.bonusTargetLength) {
+                        // Won bonus round!
+                        this.bonusRound = false;
+                        this.gameOver('victory');
+                    }
+                } else if (numPlayers === 1) {
                     if (alivePlayers.length === 0) {
                         this.gameOver();
                     } else if (aliveEnemies === 0) {
-                        // Victory - all enemies eliminated!
-                        this.gameOver('victory');
+                        // All enemies eliminated - start bonus round!
+                        this.showBonusRoundMenu();
                     }
                 } else if (numPlayers === 2) {
                     if (alivePlayers.length === 0) {
@@ -2146,19 +2243,31 @@
             }
 
             addEffect(pos, type) {
+                // Calculate offset for bonus round
+                const offsetX = this.bonusRound ? (CANVAS_WIDTH - this.bonusGridWidth * CELL_SIZE) / 2 : 0;
+                const offsetY = this.bonusRound ? (CANVAS_HEIGHT - this.bonusGridHeight * CELL_SIZE) / 2 : 0;
+
                 this.effects.push({
-                    x: pos.x * CELL_SIZE + CELL_SIZE / 2,
-                    y: pos.y * CELL_SIZE + CELL_SIZE / 2,
+                    x: pos.x * CELL_SIZE + CELL_SIZE / 2 + offsetX,
+                    y: pos.y * CELL_SIZE + CELL_SIZE / 2 + offsetY,
                     type,
                     life: 0.5
                 });
             }
 
             updateHUD() {
+                const player = this.players[0];
                 document.getElementById('p1Score').querySelector('.score').textContent =
-                    this.players[0] ? this.players[0].score : 0;
-                document.getElementById('p1Size').querySelector('span').textContent =
-                    this.players[0] ? this.players[0].length : 0;
+                    player ? player.score : 0;
+
+                // In bonus round, show progress toward target
+                if (this.bonusRound && player) {
+                    document.getElementById('p1Size').querySelector('span').textContent =
+                        `${player.length}/${this.bonusTargetLength}`;
+                } else {
+                    document.getElementById('p1Size').querySelector('span').textContent =
+                        player ? player.length : 0;
+                }
 
                 if (this.players[1]) {
                     document.getElementById('p2ScoreContainer').querySelector('.score').textContent =
@@ -2188,21 +2297,83 @@
                 ctx.fillStyle = COLORS.background;
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-                // Grid
+                // Determine grid size based on mode
+                const gridW = this.bonusRound ? this.bonusGridWidth : GRID_WIDTH;
+                const gridH = this.bonusRound ? this.bonusGridHeight : GRID_HEIGHT;
+
+                // Calculate offset to center bonus round grid
+                const offsetX = this.bonusRound ? (CANVAS_WIDTH - gridW * CELL_SIZE) / 2 : 0;
+                const offsetY = this.bonusRound ? (CANVAS_HEIGHT - gridH * CELL_SIZE) / 2 : 0;
+
+                // If bonus round, draw outer dark area and border
+                if (this.bonusRound) {
+                    // Draw play area background
+                    ctx.fillStyle = '#1a1a2e';
+                    ctx.fillRect(offsetX, offsetY, gridW * CELL_SIZE, gridH * CELL_SIZE);
+
+                    // Draw glowing border
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 4;
+                    ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
+                    ctx.shadowBlur = 15;
+                    ctx.strokeRect(offsetX, offsetY, gridW * CELL_SIZE, gridH * CELL_SIZE);
+                    ctx.shadowBlur = 0;
+
+                    // Draw "BONUS ROUND" text at top
+                    ctx.font = 'bold 24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillText('BONUS ROUND', CANVAS_WIDTH / 2, offsetY - 15);
+
+                    // Draw progress bar
+                    const player = this.players[0];
+                    if (player) {
+                        const progress = Math.min(player.length / this.bonusTargetLength, 1);
+                        const barWidth = 200;
+                        const barHeight = 20;
+                        const barX = (CANVAS_WIDTH - barWidth) / 2;
+                        const barY = offsetY + gridH * CELL_SIZE + 15;
+
+                        // Background
+                        ctx.fillStyle = '#16213e';
+                        ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                        // Progress
+                        ctx.fillStyle = progress >= 1 ? '#22c55e' : '#0ea5e9';
+                        ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+
+                        // Border
+                        ctx.strokeStyle = '#3b82f6';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+                        // Text
+                        ctx.font = 'bold 12px Arial';
+                        ctx.fillStyle = '#fff';
+                        ctx.fillText(`${player.length} / ${this.bonusTargetLength}`, CANVAS_WIDTH / 2, barY + 14);
+                    }
+                }
+
+                // Grid lines (with offset for bonus round)
+                ctx.save();
+                ctx.translate(offsetX, offsetY);
+
                 ctx.strokeStyle = COLORS.gridLines;
                 ctx.lineWidth = 1;
-                for (let x = 0; x <= GRID_WIDTH; x++) {
+                for (let x = 0; x <= gridW; x++) {
                     ctx.beginPath();
                     ctx.moveTo(x * CELL_SIZE, 0);
-                    ctx.lineTo(x * CELL_SIZE, CANVAS_HEIGHT);
+                    ctx.lineTo(x * CELL_SIZE, gridH * CELL_SIZE);
                     ctx.stroke();
                 }
-                for (let y = 0; y <= GRID_HEIGHT; y++) {
+                for (let y = 0; y <= gridH; y++) {
                     ctx.beginPath();
                     ctx.moveTo(0, y * CELL_SIZE);
-                    ctx.lineTo(CANVAS_WIDTH, y * CELL_SIZE);
+                    ctx.lineTo(gridW * CELL_SIZE, y * CELL_SIZE);
                     ctx.stroke();
                 }
+
+                ctx.restore();
 
                 // Draw based on state
                 if (this.state === 'editor') {
@@ -2217,24 +2388,31 @@
                         // Preview would need current mouse pos
                     }
                 } else if (['playing', 'paused', 'gameover'].includes(this.state)) {
-                    // Obstacles
-                    this.obstacles.forEach(o => o.draw(ctx));
+                    ctx.save();
+                    ctx.translate(offsetX, offsetY);
+
+                    // Obstacles (not in bonus round)
+                    if (!this.bonusRound) {
+                        this.obstacles.forEach(o => o.draw(ctx));
+                    }
 
                     // Food
                     this.food.forEach(f => f.draw(ctx));
 
-                    // AI snakes
-                    this.aiSnakes.forEach(snake => snake.draw(ctx));
-
-                    // Boss AI
-                    if (this.bossAI) this.bossAI.draw(ctx);
+                    // AI snakes (not in bonus round)
+                    if (!this.bonusRound) {
+                        this.aiSnakes.forEach(snake => snake.draw(ctx));
+                        if (this.bossAI) this.bossAI.draw(ctx);
+                    }
 
                     // Players
                     this.players.forEach(player => {
                         if (player) player.draw(ctx);
                     });
 
-                    // Effects
+                    ctx.restore();
+
+                    // Effects (drawn in absolute coordinates, outside translate)
                     this.effects.forEach(e => {
                         const alpha = e.life * 2;
                         const size = (1 - e.life) * 30 + 10;
