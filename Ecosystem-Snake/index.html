@@ -2033,11 +2033,18 @@
                 // Update food
                 this.food.forEach(f => f.update(deltaTime));
 
-                // Food spawning
+                // Food spawning (different for bonus round)
                 this.foodSpawnTimer += deltaTime * 1000;
-                if (this.foodSpawnTimer >= settings.foodSpawnRate && this.food.length < settings.foodMax) {
-                    this.foodSpawnTimer = 0;
-                    this.spawnFood();
+                if (this.bonusRound) {
+                    // Keep 3 food items on screen during bonus round
+                    if (this.food.length < 3) {
+                        this.spawnBonusFood();
+                    }
+                } else {
+                    if (this.foodSpawnTimer >= settings.foodSpawnRate && this.food.length < settings.foodMax) {
+                        this.foodSpawnTimer = 0;
+                        this.spawnFood();
+                    }
                 }
 
                 // Check collisions
