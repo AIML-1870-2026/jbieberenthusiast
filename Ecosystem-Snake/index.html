@@ -368,7 +368,20 @@
             <p class="subtitle">Survive and dominate the food chain</p>
 
             <div class="settings-section">
-                <h3>Game Mode</h3>
+                <h3>Game Type</h3>
+                <div class="setting-row">
+                    <div>
+                        <label>Mode</label>
+                    </div>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-setting="gameType" data-value="ecosystem">Ecosystem</button>
+                        <button class="toggle-btn" data-setting="gameType" data-value="classic">Classic Snake</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section" id="ecosystemSettings">
+                <h3>Ecosystem Settings</h3>
                 <div class="setting-row">
                     <div>
                         <label>Players</label>
@@ -388,6 +401,32 @@
                         <button class="toggle-btn active" data-setting="difficulty" data-value="balanced">Balanced</button>
                         <button class="toggle-btn" data-setting="difficulty" data-value="ecosystem">Ecosystem</button>
                         <button class="toggle-btn" data-setting="difficulty" data-value="apex">Apex</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section hidden" id="classicSettings">
+                <h3>Classic Settings</h3>
+                <div class="setting-row">
+                    <div>
+                        <label>Target Length</label>
+                        <div class="hint">Reach this length to win</div>
+                    </div>
+                    <div class="toggle-group">
+                        <button class="toggle-btn" data-setting="classicTarget" data-value="20">20</button>
+                        <button class="toggle-btn active" data-setting="classicTarget" data-value="30">30</button>
+                        <button class="toggle-btn" data-setting="classicTarget" data-value="50">50</button>
+                        <button class="toggle-btn" data-setting="classicTarget" data-value="endless">Endless</button>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div>
+                        <label>Speed</label>
+                    </div>
+                    <div class="toggle-group">
+                        <button class="toggle-btn" data-setting="classicSpeed" data-value="slow">Slow</button>
+                        <button class="toggle-btn active" data-setting="classicSpeed" data-value="normal">Normal</button>
+                        <button class="toggle-btn" data-setting="classicSpeed" data-value="fast">Fast</button>
                     </div>
                 </div>
             </div>
@@ -1406,12 +1445,19 @@
 
                 // Settings
                 this.settings = {
+                    gameType: 'ecosystem',
                     players: 1,
                     difficulty: 'balanced',
                     aiOpponent: 'off',
                     obstacles: 'off',
-                    customLevel: 'none'
+                    customLevel: 'none',
+                    classicTarget: '30',
+                    classicSpeed: 'normal'
                 };
+
+                // Classic mode state
+                this.classicMode = false;
+                this.classicTargetLength = 30;
 
                 this.state = 'menu';
                 this.players = [];
@@ -1469,6 +1515,19 @@
                         );
                         btn.classList.add('active');
                         this.settings[setting] = value;
+
+                        // Toggle settings sections based on game type
+                        if (setting === 'gameType') {
+                            if (value === 'ecosystem') {
+                                document.getElementById('ecosystemSettings').classList.remove('hidden');
+                                document.getElementById('classicSettings').classList.add('hidden');
+                                document.querySelector('.settings-section:has([data-setting="aiOpponent"])').classList.remove('hidden');
+                            } else {
+                                document.getElementById('ecosystemSettings').classList.add('hidden');
+                                document.getElementById('classicSettings').classList.remove('hidden');
+                                document.querySelector('.settings-section:has([data-setting="aiOpponent"])').classList.add('hidden');
+                            }
+                        }
                     };
                 });
 
@@ -1750,8 +1809,11 @@
             }
 
             startGame() {
+                // Check if classic mode
+                this.classicMode = this.settings.gameType === 'classic';
+
                 const settings = DIFFICULTY_SETTINGS[this.settings.difficulty];
-                const numPlayers = parseInt(this.settings.players);
+                const numPlayers = this.classicMode ? 1 : parseInt(this.settings.players);
 
                 this.state = 'playing';
                 this.bonusRound = false;
@@ -1760,14 +1822,24 @@
                 this.stats = { snakesEaten: 0, foodCollected: 0, maxSize: 3 };
                 this.effects = [];
 
-                // Setup obstacles
+                // Classic mode settings
+                if (this.classicMode) {
+                    this.classicTargetLength = this.settings.classicTarget === 'endless' ? Infinity : parseInt(this.settings.classicTarget);
+                    // Speed multiplier for classic mode
+                    const speedMap = { slow: 0.7, normal: 1.0, fast: 1.4 };
+                    this.classicSpeedMultiplier = speedMap[this.settings.classicSpeed] || 1.0;
+                }
+
+                // Setup obstacles (only for ecosystem mode or if explicitly selected in classic)
                 this.obstacles = [];
-                if (this.settings.obstacles !== 'off') {
-                    this.obstacles = LevelGenerator.generate(this.settings.obstacles);
-                } else if (this.settings.customLevel === 'editor' || this.settings.customLevel === 'imported') {
-                    this.obstacles = this.customLevelData ? [...this.customLevelData] : [];
-                } else if (this.settings.customLevel !== 'none') {
-                    this.obstacles = LevelStorage.load(this.settings.customLevel);
+                if (!this.classicMode) {
+                    if (this.settings.obstacles !== 'off') {
+                        this.obstacles = LevelGenerator.generate(this.settings.obstacles);
+                    } else if (this.settings.customLevel === 'editor' || this.settings.customLevel === 'imported') {
+                        this.obstacles = this.customLevelData ? [...this.customLevelData] : [];
+                    } else if (this.settings.customLevel !== 'none') {
+                        this.obstacles = LevelStorage.load(this.settings.customLevel);
+                    }
                 }
 
                 // Create players
@@ -1780,7 +1852,12 @@
                     1
                 );
 
-                if (numPlayers === 2) {
+                // Adjust player speed for classic mode
+                if (this.classicMode) {
+                    this.players[0].baseSpeed = 8 * this.classicSpeedMultiplier;
+                }
+
+                if (numPlayers === 2 && !this.classicMode) {
                     this.players[1] = new Snake(
                         Math.floor(GRID_WIDTH * 3 / 4),
                         Math.floor(GRID_HEIGHT / 2),
@@ -1792,25 +1869,32 @@
                     this.players[1].nextDirection = { x: -1, y: 0 };
                 }
 
-                // Create AI snakes
+                // Create AI snakes (only for ecosystem mode)
                 this.aiSnakes = [];
                 this.aiControllers = [];
 
-                for (let i = 0; i < settings.aiCount; i++) {
-                    this.spawnAISnake(i);
+                if (!this.classicMode) {
+                    for (let i = 0; i < settings.aiCount; i++) {
+                        this.spawnAISnake(i);
+                    }
                 }
 
-                // Create boss AI if enabled
+                // Create boss AI if enabled (only for ecosystem mode)
                 this.bossAI = null;
                 this.bossController = null;
-                if (this.settings.aiOpponent !== 'off') {
+                if (!this.classicMode && this.settings.aiOpponent !== 'off') {
                     this.spawnBossAI();
                 }
 
                 // Create food
                 this.food = [];
-                for (let i = 0; i < settings.foodMax; i++) {
+                if (this.classicMode) {
+                    // Classic mode: just 1 food item
                     this.spawnFood();
+                } else {
+                    for (let i = 0; i < settings.foodMax; i++) {
+                        this.spawnFood();
+                    }
                 }
 
                 // Update UI
@@ -1818,7 +1902,7 @@
                 document.getElementById('hud').classList.remove('hidden');
                 document.getElementById('bottomHud').classList.remove('hidden');
 
-                if (numPlayers === 2) {
+                if (numPlayers === 2 && !this.classicMode) {
                     document.getElementById('p2ScoreContainer').classList.remove('hidden');
                 } else {
                     document.getElementById('p2ScoreContainer').classList.add('hidden');
@@ -2038,12 +2122,17 @@
                 // Update food
                 this.food.forEach(f => f.update(deltaTime));
 
-                // Food spawning (different for bonus round)
+                // Food spawning (different for bonus round and classic mode)
                 this.foodSpawnTimer += deltaTime * 1000;
                 if (this.bonusRound) {
                     // Keep 3 food items on screen during bonus round
                     if (this.food.length < 3) {
                         this.spawnBonusFood();
+                    }
+                } else if (this.classicMode) {
+                    // Classic mode: keep 1 food on screen at all times
+                    if (this.food.length < 1) {
+                        this.spawnFood();
                     }
                 } else {
                     if (this.foodSpawnTimer >= settings.foodSpawnRate && this.food.length < settings.foodMax) {
@@ -2220,11 +2309,20 @@
                                     (this.bossAI && this.bossAI.alive ? 1 : 0);
 
                 // Debug: Log when enemies reach 0
-                if (aliveEnemies === 0 && alivePlayers.length > 0 && !this.bonusRound) {
+                if (aliveEnemies === 0 && alivePlayers.length > 0 && !this.bonusRound && !this.classicMode) {
                     console.log('All enemies dead! numPlayers:', numPlayers, 'triggering bonus round...');
                 }
 
-                if (this.bonusRound) {
+                if (this.classicMode) {
+                    // Classic mode conditions
+                    if (alivePlayers.length === 0) {
+                        this.gameOver();
+                    } else if (this.players[0] && this.classicTargetLength !== Infinity &&
+                               this.players[0].length >= this.classicTargetLength) {
+                        // Won classic mode by reaching target length!
+                        this.gameOver('victory');
+                    }
+                } else if (this.bonusRound) {
                     // Bonus round conditions
                     if (alivePlayers.length === 0) {
                         this.bonusRound = false;
@@ -2282,10 +2380,13 @@
                 document.getElementById('p1Score').querySelector('.score').textContent =
                     player ? player.score : 0;
 
-                // In bonus round, show progress toward target
+                // In bonus round or classic mode with target, show progress toward target
                 if (this.bonusRound && player) {
                     document.getElementById('p1Size').querySelector('span').textContent =
                         `${player.length}/${this.bonusTargetLength}`;
+                } else if (this.classicMode && player && this.classicTargetLength !== Infinity) {
+                    document.getElementById('p1Size').querySelector('span').textContent =
+                        `${player.length}/${this.classicTargetLength}`;
                 } else {
                     document.getElementById('p1Size').querySelector('span').textContent =
                         player ? player.length : 0;
