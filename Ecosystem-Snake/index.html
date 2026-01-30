@@ -368,19 +368,19 @@
             <p class="subtitle">Survive and dominate the food chain</p>
 
             <div class="settings-section">
-                <h3>Game Type</h3>
+                <h3>Choose Your Mode</h3>
                 <div class="setting-row">
                     <div>
-                        <label>Mode</label>
+                        <label>Game Type</label>
                     </div>
                     <div class="toggle-group">
-                        <button class="toggle-btn active" data-setting="gameType" data-value="ecosystem">Ecosystem</button>
+                        <button class="toggle-btn" data-setting="gameType" data-value="ecosystem">Ecosystem</button>
                         <button class="toggle-btn" data-setting="gameType" data-value="classic">Classic Snake</button>
                     </div>
                 </div>
             </div>
 
-            <div class="settings-section" id="ecosystemSettings">
+            <div class="settings-section hidden" id="ecosystemSettings">
                 <h3>Ecosystem Settings</h3>
                 <div class="setting-row">
                     <div>
@@ -431,7 +431,7 @@
                 </div>
             </div>
 
-            <div class="settings-section">
+            <div class="settings-section hidden" id="stretchSettings">
                 <h3>Stretch Challenges</h3>
                 <div class="setting-row">
                     <div>
@@ -469,12 +469,12 @@
                 </div>
             </div>
 
-            <div class="button-row">
+            <div class="button-row hidden" id="gameButtons">
                 <button class="menu-btn" id="startBtn">Start Game</button>
                 <button class="menu-btn secondary" id="editorBtn">Level Editor</button>
             </div>
 
-            <div class="controls-info">
+            <div class="controls-info hidden" id="controlsInfo">
                 <p><strong>P1:</strong> WASD to move | <strong>P2:</strong> Arrow keys</p>
                 <p>Eat food to grow | Hunt smaller snakes | Avoid larger ones</p>
             </div>
@@ -1518,14 +1518,18 @@
 
                         // Toggle settings sections based on game type
                         if (setting === 'gameType') {
+                            // Always show buttons and controls once a mode is selected
+                            document.getElementById('gameButtons').classList.remove('hidden');
+                            document.getElementById('controlsInfo').classList.remove('hidden');
+
                             if (value === 'ecosystem') {
                                 document.getElementById('ecosystemSettings').classList.remove('hidden');
+                                document.getElementById('stretchSettings').classList.remove('hidden');
                                 document.getElementById('classicSettings').classList.add('hidden');
-                                document.querySelector('.settings-section:has([data-setting="aiOpponent"])').classList.remove('hidden');
                             } else {
                                 document.getElementById('ecosystemSettings').classList.add('hidden');
+                                document.getElementById('stretchSettings').classList.add('hidden');
                                 document.getElementById('classicSettings').classList.remove('hidden');
-                                document.querySelector('.settings-section:has([data-setting="aiOpponent"])').classList.add('hidden');
                             }
                         }
                     };
@@ -1969,6 +1973,15 @@
                 document.getElementById('hud').classList.add('hidden');
                 document.getElementById('bottomHud').classList.add('hidden');
                 document.getElementById('startMenu').classList.remove('hidden');
+
+                // Reset to initial state - only show game type selection
+                document.querySelectorAll('[data-setting="gameType"]').forEach(b => b.classList.remove('active'));
+                document.getElementById('ecosystemSettings').classList.add('hidden');
+                document.getElementById('classicSettings').classList.add('hidden');
+                document.getElementById('stretchSettings').classList.add('hidden');
+                document.getElementById('gameButtons').classList.add('hidden');
+                document.getElementById('controlsInfo').classList.add('hidden');
+                this.settings.gameType = 'ecosystem'; // Reset default
 
                 // Reset custom level button text
                 document.querySelector('[data-setting="customLevel"][data-value="select"]').textContent = 'Select...';
