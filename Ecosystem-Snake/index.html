@@ -878,21 +878,33 @@
                 // Draw player label above head
                 if (this.isPlayer) {
                     const label = this.playerNum === 1 ? 'P1' : 'P2';
-                    const labelY = headY - 18;
+                    const labelY = headY - 22;
 
-                    ctx.font = 'bold 12px Arial';
+                    ctx.font = 'bold 14px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
 
-                    // Label background
+                    // Label background with border
                     ctx.fillStyle = this.playerNum === 1 ? '#0ea5e9' : '#ef4444';
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.roundRect(headX - 12, labelY - 8, 24, 16, 4);
+                    ctx.roundRect(headX - 14, labelY - 10, 28, 20, 5);
                     ctx.fill();
+                    ctx.stroke();
 
                     // Label text
                     ctx.fillStyle = '#fff';
                     ctx.fillText(label, headX, labelY);
+
+                    // Draw arrow pointing to snake
+                    ctx.fillStyle = this.playerNum === 1 ? '#0ea5e9' : '#ef4444';
+                    ctx.beginPath();
+                    ctx.moveTo(headX - 5, labelY + 10);
+                    ctx.lineTo(headX + 5, labelY + 10);
+                    ctx.lineTo(headX, labelY + 16);
+                    ctx.closePath();
+                    ctx.fill();
                 }
             }
 
@@ -1877,12 +1889,19 @@
                 }
 
                 let winnerText = '';
-                if (this.settings.players === '2' || parseInt(this.settings.players) === 2) {
+                let titleText = 'Game Over';
+                const numPlayers = parseInt(this.settings.players);
+
+                if (winner === 'victory') {
+                    titleText = 'Victory!';
+                    winnerText = '<span class="gold-color">You dominated the ecosystem!</span>';
+                } else if (numPlayers === 2) {
                     if (winner === 1) winnerText = '<span class="p1-color">Player 1 Wins!</span>';
                     else if (winner === 2) winnerText = '<span class="p2-color">Player 2 Wins!</span>';
                     else winnerText = 'Draw!';
                 }
 
+                document.querySelector('#gameOverMenu h2').textContent = titleText;
                 document.getElementById('winnerText').innerHTML = winnerText;
                 document.getElementById('finalScore').textContent = totalScore;
                 document.getElementById('finalTime').textContent = this.formatTime(this.gameTime);
@@ -2093,9 +2112,16 @@
 
                 // Check game over conditions
                 const alivePlayers = this.players.filter(p => p && p.alive);
+                const aliveEnemies = this.aiSnakes.filter(s => s.alive).length +
+                                    (this.bossAI && this.bossAI.alive ? 1 : 0);
 
-                if (numPlayers === 1 && alivePlayers.length === 0) {
-                    this.gameOver();
+                if (numPlayers === 1) {
+                    if (alivePlayers.length === 0) {
+                        this.gameOver();
+                    } else if (aliveEnemies === 0) {
+                        // Victory - all enemies eliminated!
+                        this.gameOver('victory');
+                    }
                 } else if (numPlayers === 2) {
                     if (alivePlayers.length === 0) {
                         this.gameOver(null); // Draw
