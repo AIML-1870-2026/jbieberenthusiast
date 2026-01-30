@@ -1966,8 +1966,8 @@
                 this.effects = [];
 
                 // Create player in center of bonus grid
-                const centerX = Math.floor(this.bonusGridWidth / 2);
-                const centerY = Math.floor(this.bonusGridHeight / 2);
+                const centerX = Math.floor(BONUS_GRID_WIDTH / 2);
+                const centerY = Math.floor(BONUS_GRID_HEIGHT / 2);
 
                 this.players = [];
                 this.players[0] = new Snake(centerX, centerY, true, COLORS.player1, 1);
@@ -1985,17 +1985,21 @@
                 const foodPositions = this.food.map(f => f.position);
                 const avoid = [...positions, ...foodPositions];
 
+                // Use constants directly to ensure correct grid size
+                const maxX = BONUS_GRID_WIDTH - 2;  // 18
+                const maxY = BONUS_GRID_HEIGHT - 2; // 13
+
                 let pos;
                 let attempts = 0;
                 do {
                     pos = {
-                        x: randomInt(1, this.bonusGridWidth - 2),
-                        y: randomInt(1, this.bonusGridHeight - 2)
+                        x: randomInt(1, maxX),
+                        y: randomInt(1, maxY)
                     };
                     attempts++;
                 } while (avoid.some(p => p.x === pos.x && p.y === pos.y) && attempts < 100);
 
-                console.log('Spawning bonus food at:', pos.x, pos.y, 'Grid size:', this.bonusGridWidth, 'x', this.bonusGridHeight);
+                console.log('Bonus food at:', pos.x, pos.y, '(max:', maxX, maxY, ')');
                 this.food.push(new Food(pos.x, pos.y, false));
             }
 
@@ -2092,8 +2096,8 @@
                     if (!player || !player.alive) continue;
 
                     // Wall collision (use bonus grid size if in bonus round)
-                    const gridW = this.bonusRound ? this.bonusGridWidth : GRID_WIDTH;
-                    const gridH = this.bonusRound ? this.bonusGridHeight : GRID_HEIGHT;
+                    const gridW = this.bonusRound ? BONUS_GRID_WIDTH : GRID_WIDTH;
+                    const gridH = this.bonusRound ? BONUS_GRID_HEIGHT : GRID_HEIGHT;
                     if (player.head.x < 0 || player.head.x >= gridW ||
                         player.head.y < 0 || player.head.y >= gridH) {
                         player.alive = false;
@@ -2261,9 +2265,9 @@
             }
 
             addEffect(pos, type) {
-                // Calculate offset for bonus round
-                const offsetX = this.bonusRound ? (CANVAS_WIDTH - this.bonusGridWidth * CELL_SIZE) / 2 : 0;
-                const offsetY = this.bonusRound ? (CANVAS_HEIGHT - this.bonusGridHeight * CELL_SIZE) / 2 : 0;
+                // Calculate offset for bonus round (use constants)
+                const offsetX = this.bonusRound ? (CANVAS_WIDTH - BONUS_GRID_WIDTH * CELL_SIZE) / 2 : 0;
+                const offsetY = this.bonusRound ? (CANVAS_HEIGHT - BONUS_GRID_HEIGHT * CELL_SIZE) / 2 : 0;
 
                 this.effects.push({
                     x: pos.x * CELL_SIZE + CELL_SIZE / 2 + offsetX,
@@ -2315,13 +2319,13 @@
                 ctx.fillStyle = COLORS.background;
                 ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-                // Determine grid size based on mode
-                const gridW = this.bonusRound ? this.bonusGridWidth : GRID_WIDTH;
-                const gridH = this.bonusRound ? this.bonusGridHeight : GRID_HEIGHT;
+                // Determine grid size based on mode (use constants directly)
+                const gridW = this.bonusRound ? BONUS_GRID_WIDTH : GRID_WIDTH;
+                const gridH = this.bonusRound ? BONUS_GRID_HEIGHT : GRID_HEIGHT;
 
                 // Calculate offset to center bonus round grid
-                const offsetX = this.bonusRound ? (CANVAS_WIDTH - gridW * CELL_SIZE) / 2 : 0;
-                const offsetY = this.bonusRound ? (CANVAS_HEIGHT - gridH * CELL_SIZE) / 2 : 0;
+                const offsetX = this.bonusRound ? (CANVAS_WIDTH - BONUS_GRID_WIDTH * CELL_SIZE) / 2 : 0;
+                const offsetY = this.bonusRound ? (CANVAS_HEIGHT - BONUS_GRID_HEIGHT * CELL_SIZE) / 2 : 0;
 
                 // If bonus round, draw outer dark area and border
                 if (this.bonusRound) {
