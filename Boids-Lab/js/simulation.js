@@ -397,9 +397,10 @@ class Simulation {
         const p2 = trail[j + 1];
 
         // Skip if points are too far apart (boid wrapped around screen)
+        // Max speed is 8, so normal movement is <10px per frame. Use 20 as threshold.
         const dx = Math.abs(p1.x - p2.x);
         const dy = Math.abs(p1.y - p2.y);
-        if (dx > 100 || dy > 100) continue;
+        if (dx > 20 || dy > 20) continue;
 
         const alpha = (1 - j / trail.length) * 0.5;
         const width = (1 - j / trail.length) * 2.5;
