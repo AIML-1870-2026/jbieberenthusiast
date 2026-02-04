@@ -396,11 +396,11 @@ class Simulation {
         const p1 = trail[j];
         const p2 = trail[j + 1];
 
-        // Skip if points are too far apart (boid wrapped around screen)
-        // Max speed is 8, so normal movement is <10px per frame. Use 20 as threshold.
-        const dx = Math.abs(p1.x - p2.x);
-        const dy = Math.abs(p1.y - p2.y);
-        if (dx > 20 || dy > 20) continue;
+        // Skip if boid wrapped around screen
+        // Check if points are on opposite sides of canvas (wrap detection)
+        const wrappedX = (p1.x < 50 && p2.x > this.width - 50) || (p2.x < 50 && p1.x > this.width - 50);
+        const wrappedY = (p1.y < 50 && p2.y > this.height - 50) || (p2.y < 50 && p1.y > this.height - 50);
+        if (wrappedX || wrappedY) continue;
 
         const alpha = (1 - j / trail.length) * 0.5;
         const width = (1 - j / trail.length) * 2.5;
