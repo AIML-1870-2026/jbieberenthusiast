@@ -189,8 +189,13 @@ class Boid {
     return magnitude(this.vx, this.vy);
   }
 
+  // Get hue value based on speed (for trails)
+  getSpeedHue(maxSpeed) {
+    return speedToHue(this.getSpeed(), maxSpeed);
+  }
+
   // Draw the boid as a triangle pointing in direction of motion
-  draw(ctx, colorBySpeed, maxSpeed) {
+  draw(ctx, colorBySpeed, maxSpeed, theme = null) {
     const speed = this.getSpeed();
     const angle = Math.atan2(this.vy, this.vx);
 
@@ -201,12 +206,22 @@ class Boid {
     ctx.translate(this.x, this.y);
     ctx.rotate(angle);
 
-    // Color based on speed or default white
+    // Color based on speed, theme, or default
     if (colorBySpeed) {
-      const hue = speedToHue(speed, maxSpeed);
+      let hue;
+      if (theme && theme.natureColors) {
+        // Nature theme: green to yellow-green range
+        hue = 80 + (speed / maxSpeed) * 40;
+      } else {
+        hue = speedToHue(speed, maxSpeed);
+      }
       ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
       ctx.shadowColor = `hsl(${hue}, 80%, 60%)`;
       ctx.shadowBlur = 4;
+    } else if (theme && theme.boidColor) {
+      ctx.fillStyle = theme.boidColor;
+      ctx.shadowColor = theme.boidGlow || 'rgba(255, 255, 255, 0.2)';
+      ctx.shadowBlur = 2;
     } else {
       ctx.fillStyle = 'rgba(220, 220, 220, 0.9)';
       ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';

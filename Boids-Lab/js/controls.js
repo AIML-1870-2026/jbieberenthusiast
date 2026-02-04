@@ -51,6 +51,9 @@ class Controls {
       resetBtn: document.getElementById('resetBtn'),
       pauseBtn: document.getElementById('pauseBtn'),
       boundaryBtn: document.getElementById('boundaryBtn'),
+      mouseModeBtn: document.getElementById('mouseModeBtn'),
+      themeBtn: document.getElementById('themeBtn'),
+      clearObstaclesBtn: document.getElementById('clearObstaclesBtn'),
       schoolingBtn: document.getElementById('schoolingBtn'),
       chaoticBtn: document.getElementById('chaoticBtn'),
       clusterBtn: document.getElementById('clusterBtn'),
@@ -58,6 +61,7 @@ class Controls {
       // Checkboxes
       colorBySpeedCheckbox: document.getElementById('colorBySpeed'),
       showHeatmapCheckbox: document.getElementById('showHeatmap'),
+      showTrailsCheckbox: document.getElementById('showTrails'),
 
       // Stats display
       fpsDisplay: document.getElementById('fps'),
@@ -96,11 +100,9 @@ class Controls {
       const display = this.elements[config.value];
 
       if (slider && display) {
-        // Set initial value
         slider.value = this.simulation.params[config.param];
         display.textContent = slider.value;
 
-        // Bind input event
         slider.addEventListener('input', () => {
           const value = parseFloat(slider.value);
           this.simulation.setParam(config.param, value);
@@ -109,7 +111,7 @@ class Controls {
       }
     }
 
-    // Heatmap intensity slider (special case)
+    // Heatmap intensity slider
     const heatmapSlider = this.elements.heatmapIntensitySlider;
     const heatmapDisplay = this.elements.heatmapIntensityValue;
     if (heatmapSlider && heatmapDisplay) {
@@ -149,6 +151,33 @@ class Controls {
       });
     }
 
+    // Mouse mode toggle
+    if (this.elements.mouseModeBtn) {
+      this.elements.mouseModeBtn.addEventListener('click', () => {
+        const mode = this.simulation.cycleMouseMode();
+        const labels = { off: 'Mouse: Off', attract: 'Mouse: Attract', repel: 'Mouse: Repel' };
+        this.elements.mouseModeBtn.textContent = labels[mode];
+        this.elements.mouseModeBtn.className = `control-btn full-width mouse-${mode}`;
+      });
+    }
+
+    // Theme toggle
+    if (this.elements.themeBtn) {
+      this.elements.themeBtn.addEventListener('click', () => {
+        const theme = this.simulation.cycleTheme();
+        const labels = { minimal: 'Theme: Minimal', neon: 'Theme: Neon', nature: 'Theme: Nature' };
+        this.elements.themeBtn.textContent = labels[theme];
+        this.elements.themeBtn.className = `control-btn full-width theme-${theme}`;
+      });
+    }
+
+    // Clear obstacles button
+    if (this.elements.clearObstaclesBtn) {
+      this.elements.clearObstaclesBtn.addEventListener('click', () => {
+        this.simulation.clearObstacles();
+      });
+    }
+
     // Preset buttons
     if (this.elements.schoolingBtn) {
       this.elements.schoolingBtn.addEventListener('click', () => {
@@ -176,7 +205,6 @@ class Controls {
 
     this.simulation.applyPreset(preset);
 
-    // Update slider positions and displays
     const sliderMap = {
       separation: { slider: 'separationSlider', display: 'separationValue' },
       alignment: { slider: 'alignmentSlider', display: 'alignmentValue' },
@@ -212,6 +240,18 @@ class Controls {
         this.simulation.showHeatmap = e.target.checked;
       });
     }
+
+    // Show trails toggle
+    if (this.elements.showTrailsCheckbox) {
+      this.elements.showTrailsCheckbox.checked = this.simulation.showTrails;
+      this.elements.showTrailsCheckbox.addEventListener('change', (e) => {
+        this.simulation.showTrails = e.target.checked;
+        // Clear trails when disabled
+        if (!e.target.checked) {
+          this.simulation.trails = this.simulation.trails.map(() => []);
+        }
+      });
+    }
   }
 
   // Bind info panel toggle
@@ -225,15 +265,13 @@ class Controls {
     }
   }
 
-  // Update stats display periodically
+  // Update stats display
   startStatsUpdate() {
     setInterval(() => {
       const stats = this.simulation.getStats();
 
       if (this.elements.fpsDisplay) {
         this.elements.fpsDisplay.textContent = stats.fps;
-
-        // Low FPS warning
         if (stats.fps < 45 && stats.fps > 0) {
           this.elements.fpsDisplay.classList.add('warning');
         } else {

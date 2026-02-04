@@ -61,6 +61,15 @@ canvas {
   height: auto;
 }
 
+.canvas-hint {
+  text-align: center;
+  padding: 8px;
+  font-size: 0.75rem;
+  color: #666;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid #1a1a2e;
+}
+
 /* Controls Panel */
 .controls-panel {
   width: 280px;
@@ -223,6 +232,64 @@ input[type="range"]::-moz-range-thumb {
 
 .control-btn.full-width:hover {
   background: rgba(0, 255, 255, 0.15);
+}
+
+/* Mouse Mode Button Variants */
+.control-btn.mouse-off {
+  border-color: #666;
+  color: #666;
+}
+
+.control-btn.mouse-off:hover {
+  background: rgba(100, 100, 100, 0.15);
+  border-color: #888;
+  color: #888;
+}
+
+.control-btn.mouse-attract {
+  border-color: #0f6;
+  color: #0f6;
+}
+
+.control-btn.mouse-attract:hover {
+  background: rgba(0, 255, 100, 0.15);
+}
+
+.control-btn.mouse-repel {
+  border-color: #f66;
+  color: #f66;
+}
+
+.control-btn.mouse-repel:hover {
+  background: rgba(255, 100, 100, 0.15);
+}
+
+/* Theme Button Variants */
+.control-btn.theme-minimal {
+  border-color: #aaa;
+  color: #aaa;
+}
+
+.control-btn.theme-minimal:hover {
+  background: rgba(170, 170, 170, 0.15);
+}
+
+.control-btn.theme-neon {
+  border-color: #0ff;
+  color: #0ff;
+}
+
+.control-btn.theme-neon:hover {
+  background: rgba(0, 255, 255, 0.15);
+}
+
+.control-btn.theme-nature {
+  border-color: #6c6;
+  color: #6c6;
+}
+
+.control-btn.theme-nature:hover {
+  background: rgba(100, 200, 100, 0.15);
 }
 
 /* Stats Group */
