@@ -1,7 +1,7 @@
 // Main Simulation Loop and State Management
-import { Boid } from './boid.js';
-import { Heatmap } from './heatmap.js';
-import { random, distanceSquared } from './utils.js';
+import { Boid } from './boid.js?v=2';
+import { Heatmap } from './heatmap.js?v=2';
+import { random, distanceSquared } from './utils.js?v=2';
 
 // Theme configurations
 const THEMES = {

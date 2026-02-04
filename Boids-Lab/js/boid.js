@@ -1,5 +1,5 @@
 // Boid Class - Individual agent with flocking behavior
-import { magnitude, normalize, limit, setMagnitude, distanceSquared, speedToHue } from './utils.js';
+import { magnitude, normalize, limit, setMagnitude, distanceSquared, speedToHue } from './utils.js?v=2';
 
 class Boid {
   constructor(x, y, canvasWidth, canvasHeight) {
