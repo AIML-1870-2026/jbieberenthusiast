@@ -393,21 +393,29 @@ class Simulation {
       const boid = this.boids[i];
 
       for (let j = 0; j < trail.length - 1; j++) {
-        const alpha = (1 - j / trail.length) * 0.4;
-        const width = (1 - j / trail.length) * 3;
+        const p1 = trail[j];
+        const p2 = trail[j + 1];
+
+        // Skip if points are too far apart (boid wrapped around screen)
+        const dx = Math.abs(p1.x - p2.x);
+        const dy = Math.abs(p1.y - p2.y);
+        if (dx > 100 || dy > 100) continue;
+
+        const alpha = (1 - j / trail.length) * 0.5;
+        const width = (1 - j / trail.length) * 2.5;
 
         this.ctx.beginPath();
-        this.ctx.moveTo(trail[j].x, trail[j].y);
-        this.ctx.lineTo(trail[j + 1].x, trail[j + 1].y);
+        this.ctx.moveTo(p1.x, p1.y);
+        this.ctx.lineTo(p2.x, p2.y);
 
         if (this.theme.useSpeedColor && this.colorBySpeed) {
           const speed = boid.getSpeed();
           const hue = this.theme.natureColors
-            ? 80 + (speed / this.params.maxSpeed) * 40 // Green to yellow-green
+            ? 80 + (speed / this.params.maxSpeed) * 40
             : boid.getSpeedHue(this.params.maxSpeed);
           this.ctx.strokeStyle = `hsla(${hue}, 70%, 50%, ${alpha})`;
         } else {
-          this.ctx.strokeStyle = this.theme.trailColor.replace(')', `, ${alpha})`).replace('rgba', 'rgba');
+          this.ctx.strokeStyle = this.theme.trailColor.replace('0.', `${alpha * 0.5}.`);
         }
 
         this.ctx.lineWidth = width;

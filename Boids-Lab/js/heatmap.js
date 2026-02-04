@@ -1,7 +1,7 @@
 // Heatmap Overlay System - Visualizes spatial density and movement patterns
 
 class Heatmap {
-  constructor(canvasWidth, canvasHeight, gridSize = 30) {
+  constructor(canvasWidth, canvasHeight, gridSize = 40) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
     this.gridSize = gridSize;
@@ -10,12 +10,12 @@ class Heatmap {
     this.cellWidth = canvasWidth / gridSize;
     this.cellHeight = canvasHeight / gridSize;
 
-    // Initialize grid with zeros
+    // Initialize grid
     this.grid = [];
     this.reset();
 
     // Decay factor - old data fades over time
-    this.decayRate = 0.95;
+    this.decayRate = 0.92;
 
     // Track max value for normalization
     this.maxValue = 1;
@@ -53,8 +53,8 @@ class Heatmap {
       }
     }
 
-    // Update max value for normalization
-    this.maxValue = 1;
+    // Update max value for normalization (with minimum floor)
+    this.maxValue = 5; // Minimum threshold
     for (let i = 0; i < this.gridSize; i++) {
       for (let j = 0; j < this.gridSize; j++) {
         if (this.grid[i][j] > this.maxValue) {
@@ -64,52 +64,45 @@ class Heatmap {
     }
   }
 
-  // Map normalized value (0-1) to heatmap color
-  // Low: Transparent/Dark Blue, Medium: Purple/Magenta, High: Orange/Yellow
+  // Simple smooth color gradient: transparent -> blue -> cyan -> white
   getColor(normalizedValue, intensity) {
-    const alpha = normalizedValue * 0.8 * intensity;
-
-    if (normalizedValue < 0.05) {
-      // Very low - nearly transparent
-      return `rgba(0, 0, 0, 0)`;
-    } else if (normalizedValue < 0.33) {
-      // Low density - dark blue to purple
-      const r = Math.floor(normalizedValue * 3 * 100);
-      const b = Math.floor(150 + normalizedValue * 3 * 50);
-      return `rgba(${r}, 0, ${b}, ${alpha * 0.5})`;
-    } else if (normalizedValue < 0.66) {
-      // Medium density - purple to magenta
-      const t = (normalizedValue - 0.33) * 3;
-      const r = Math.floor(100 + t * 155);
-      const g = Math.floor(t * 50);
-      const b = Math.floor(200 - t * 50);
-      return `rgba(${r}, ${g}, ${b}, ${alpha * 0.7})`;
-    } else {
-      // High density - orange to yellow
-      const t = (normalizedValue - 0.66) * 3;
-      const r = 255;
-      const g = Math.floor(100 + t * 155);
-      const b = Math.floor(150 - t * 150);
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    if (normalizedValue < 0.02) {
+      return null; // Skip very low values
     }
+
+    // Smooth gradient using a single color ramp
+    const v = Math.min(normalizedValue, 1);
+    const alpha = v * 0.6 * intensity;
+
+    // Blue to cyan to white gradient
+    const r = Math.floor(v * v * 200);
+    const g = Math.floor(v * 220);
+    const b = Math.floor(180 + v * 75);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
-  // Draw the heatmap overlay
+  // Draw the heatmap overlay with soft edges
   draw(ctx, intensity = 0.7) {
+    // Draw cells with slight overlap for smoother appearance
+    const overlap = 1;
+
     for (let i = 0; i < this.gridSize; i++) {
       for (let j = 0; j < this.gridSize; j++) {
         const value = this.grid[i][j];
-        if (value < 0.1) continue; // Skip nearly empty cells
+        if (value < 0.1) continue;
 
         const normalizedValue = value / this.maxValue;
         const color = this.getColor(normalizedValue, intensity);
 
+        if (!color) continue;
+
         ctx.fillStyle = color;
         ctx.fillRect(
-          i * this.cellWidth,
-          j * this.cellHeight,
-          this.cellWidth,
-          this.cellHeight
+          i * this.cellWidth - overlap,
+          j * this.cellHeight - overlap,
+          this.cellWidth + overlap * 2,
+          this.cellHeight + overlap * 2
         );
       }
     }
