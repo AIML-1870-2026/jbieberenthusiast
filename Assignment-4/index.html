@@ -976,8 +976,14 @@
         document.getElementById('toggleCompBtn').addEventListener('click', () => {
             const container = document.getElementById('comparisonContainer');
             const btn = document.getElementById('toggleCompBtn');
+            const wasHidden = container.classList.contains('hidden');
             container.classList.toggle('hidden');
             btn.classList.toggle('on');
+
+            // Reinitialize comparison when showing it
+            if (wasHidden) {
+                compSim.init();
+            }
         });
 
         // Sliders
