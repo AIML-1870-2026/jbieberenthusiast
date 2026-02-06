@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turing Patterns Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 15px 30px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: #fff;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .main-container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Parameter Space Sidebar */
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar.collapsed {
+            width: 40px;
+        }
+
+        .sidebar-section {
+            background: #151520;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #252535;
+        }
+
+        .sidebar-section h3 {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .parameter-map {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #0a0a10;
+            border-radius: 8px;
+            cursor: crosshair;
+            position: relative;
+            border: 1px solid #333;
+        }
+
+        .parameter-map canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        .map-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .map-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .simulation-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .simulation-container.main {
+            flex: 1;
+            max-width: 550px;
+        }
+
+        .simulation-container.comparison {
+            flex: 0.7;
+            max-width: 400px;
+        }
+
+        .simulation-container.comparison.hidden {
+            display: none;
+        }
+
+        .canvas-wrapper {
+            background: #000;
+            border-radius: 10px;
+            padding: 5px;
+            border: 1px solid #333;
+        }
+
+        .canvas-wrapper canvas {
+            display: block;
+            width: 100%;
+            border-radius: 6px;
+            cursor: crosshair;
+        }
+
+        .canvas-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .canvas-label span {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .canvas-label .values {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #5af;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: #151520;
+            border-top: 1px solid #252535;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .controls-grid {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .control-group {
+            background: #1a1a28;
+            border-radius: 10px;
+            padding: 15px 20px;
+            border: 1px solid #252535;
+        }
+
+        .control-group h4 {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #252535;
+            border: 1px solid #353545;
+            color: #ccc;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #353545;
+            color: #fff;
+        }
+
+        button.active {
+            background: #4a6fa5;
+            border-color: #5a8fd5;
+            color: #fff;
+        }
+
+        button.preset-btn {
+            min-width: 80px;
+        }
+
+        button.size-btn {
+            min-width: 50px;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-row label {
+            font-size: 0.8rem;
+            color: #888;
+            min-width: 60px;
+        }
+
+        .slider-row input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #252535;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .slider-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4a6fa5;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-row .value {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #5af;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .color-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            padding: 0;
+            border-width: 2px;
+        }
+
+        .color-btn.classic { background: linear-gradient(135deg, #222, #888); }
+        .color-btn.vibrant { background: linear-gradient(135deg, #f0f, #0ff); }
+        .color-btn.cool { background: linear-gradient(135deg, #00f, #0ff); }
+        .color-btn.warm { background: linear-gradient(135deg, #f80, #f00); }
+
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .play-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-btn {
+            font-size: 0.75rem;
+        }
+
+        .toggle-btn.on {
+            background: #2a5a3a;
+            border-color: #3a7a4a;
+        }
+
+        /* Info panel */
+        .info-text {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Morphing indicator */
+        .morphing-indicator {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(74, 111, 165, 0.9);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .morphing-indicator.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TURING PATTERNS EXPLORER</h1>
+        <p>Gray-Scott Reaction-Diffusion Simulation</p>
+    </header>
+
+    <div class="morphing-indicator" id="morphIndicator">Morphing parameters...</div>
+
+    <div class="main-container">
+        <!-- Sidebar: Parameter Space Map -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <h3>Parameter Space</h3>
+                <div class="parameter-map" id="parameterMap">
+                    <canvas id="mapCanvas"></canvas>
+                    <div class="map-marker" id="mapMarker"></div>
+                </div>
+                <div class="map-labels">
+                    <span>F: 0.01</span>
+                    <span>0.08</span>
+                </div>
+                <div class="map-labels">
+                    <span>K: 0.045 - 0.065</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Current Values</h3>
+                <div class="slider-container">
+                    <div class="slider-row">
+                        <label>Feed (F)</label>
+                        <input type="range" id="feedSlider" min="0.01" max="0.08" step="0.001" value="0.055">
+                        <span class="value" id="feedValue">0.055</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Kill (K)</label>
+                        <input type="range" id="killSlider" min="0.045" max="0.065" step="0.001" value="0.062">
+                        <span class="value" id="killValue">0.062</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+            <!-- Main Simulation -->
+            <div class="simulation-container main">
+                <div class="canvas-label">
+                    <span>Main Simulation</span>
+                    <span class="values" id="mainValues">F: 0.055 | K: 0.062</span>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="mainCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Comparison Simulation -->
+            <div class="simulation-container comparison" id="comparisonContainer">
+                <div class="canvas-label">
+                    <span>Comparison</span>
+                    <span class="values" id="compValues">F: 0.035 | K: 0.060</span>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="compCanvas"></canvas>
+                </div>
+                <div class="slider-container" style="margin-top: 10px;">
+                    <div class="slider-row">
+                        <label>Feed (F)</label>
+                        <input type="range" id="compFeedSlider" min="0.01" max="0.08" step="0.001" value="0.035">
+                        <span class="value" id="compFeedValue">0.035</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Kill (K)</label>
+                        <input type="range" id="compKillSlider" min="0.045" max="0.065" step="0.001" value="0.060">
+                        <span class="value" id="compKillValue">0.060</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <div class="controls-grid">
+            <!-- Presets -->
+            <div class="control-group">
+                <h4>Pattern Presets</h4>
+                <div class="button-row">
+                    <button class="preset-btn active" data-preset="spots">Spots</button>
+                    <button class="preset-btn" data-preset="stripes">Stripes</button>
+                    <button class="preset-btn" data-preset="maze">Maze</button>
+                    <button class="preset-btn" data-preset="spirals">Spirals</button>
+                    <button class="preset-btn" data-preset="waves">Waves</button>
+                    <button class="preset-btn" data-preset="mitosis">Mitosis</button>
+                </div>
+            </div>
+
+            <!-- Brush Tools -->
+            <div class="control-group">
+                <h4>Brush Tools</h4>
+                <div class="button-row" style="margin-bottom: 10px;">
+                    <button id="chemABtn" class="active">Chem A</button>
+                    <button id="chemBBtn">Chem B</button>
+                </div>
+                <div class="button-row" style="margin-bottom: 10px;">
+                    <button class="size-btn" data-size="small">S</button>
+                    <button class="size-btn active" data-size="medium">M</button>
+                    <button class="size-btn" data-size="large">L</button>
+                </div>
+                <div class="button-row">
+                    <button id="clearMainBtn">Clear Main</button>
+                    <button id="clearCompBtn">Clear Comp</button>
+                </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="control-group">
+                <h4>Color Palette</h4>
+                <div class="button-row">
+                    <button class="color-btn classic active" data-palette="classic" title="Classic"></button>
+                    <button class="color-btn vibrant" data-palette="vibrant" title="Vibrant"></button>
+                    <button class="color-btn cool" data-palette="cool" title="Cool"></button>
+                    <button class="color-btn warm" data-palette="warm" title="Warm"></button>
+                </div>
+            </div>
+
+            <!-- Playback -->
+            <div class="control-group">
+                <h4>Playback</h4>
+                <div class="playback-controls">
+                    <button class="play-btn" id="playPauseBtn">II</button>
+                    <button id="stepBtn">Step</button>
+                    <div class="slider-row" style="flex: 1;">
+                        <label>Speed</label>
+                        <input type="range" id="speedSlider" min="1" max="20" value="10">
+                        <span class="value" id="speedValue">10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilities -->
+            <div class="control-group">
+                <h4>Utilities</h4>
+                <div class="button-row">
+                    <button id="saveMainBtn">Save Main</button>
+                    <button id="saveCompBtn">Save Comp</button>
+                    <button id="randomizeBtn">Randomize</button>
+                    <button id="toggleCompBtn" class="toggle-btn on">Comparison</button>
+                </div>
+            </div>
+        </div>
+        <p class="info-text">Click and drag on canvas to paint chemicals. Click parameter map to explore pattern space.</p>
+    </div>
+
+    <script>
+        // ============================================
+        // TURING PATTERNS EXPLORER
+        // Gray-Scott Reaction-Diffusion Simulation
+        // ============================================
+
+        // Configuration
+        const CONFIG = {
+            gridSize: 200,
+            Da: 1.0,      // Diffusion rate for Chemical A
+            Db: 0.5,      // Diffusion rate for Chemical B
+            dt: 1.0,      // Time step
+        };
+
+        // Pattern Presets (F and K values)
+        const PRESETS = {
+            spots:   { f: 0.055, k: 0.062 },
+            stripes: { f: 0.035, k: 0.060 },
+            maze:    { f: 0.029, k: 0.057 },
+            spirals: { f: 0.018, k: 0.051 },
+            waves:   { f: 0.014, k: 0.045 },
+            mitosis: { f: 0.042, k: 0.059 }
+        };
+
+        // Color Palettes
+        const PALETTES = {
+            classic: (b) => {
+                const v = Math.floor((1 - b) * 255);
+                return [v, v, v];
+            },
+            vibrant: (b) => {
+                const h = (1 - b) * 300;
+                return hslToRgb(h / 360, 1, 0.5);
+            },
+            cool: (b) => {
+                const h = 180 + (1 - b) * 60;
+                return hslToRgb(h / 360, 0.8, 0.3 + b * 0.4);
+            },
+            warm: (b) => {
+                const h = (1 - b) * 60;
+                return hslToRgb(h / 360, 1, 0.3 + b * 0.4);
+            }
+        };
+
+        // Brush sizes
+        const BRUSH_SIZES = {
+            small: 3,
+            medium: 8,
+            large: 15
+        };
+
+        // ============================================
+        // SIMULATION CLASS
+        // ============================================
+        class Simulation {
+            constructor(canvas, isComparison = false) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.isComparison = isComparison;
+                this.size = CONFIG.gridSize;
+
+                // Set canvas size
+                this.canvas.width = this.size;
+                this.canvas.height = this.size;
+
+                // Parameters
+                this.f = isComparison ? PRESETS.stripes.f : PRESETS.spots.f;
+                this.k = isComparison ? PRESETS.stripes.k : PRESETS.spots.k;
+                this.targetF = this.f;
+                this.targetK = this.k;
+
+                // Chemical grids
+                this.a = new Float32Array(this.size * this.size);
+                this.b = new Float32Array(this.size * this.size);
+                this.aNext = new Float32Array(this.size * this.size);
+                this.bNext = new Float32Array(this.size * this.size);
+
+                // Image data for rendering
+                this.imageData = this.ctx.createImageData(this.size, this.size);
+
+                this.init();
+            }
+
+            init() {
+                // Fill with Chemical A, add seed of Chemical B in center
+                for (let i = 0; i < this.size * this.size; i++) {
+                    this.a[i] = 1.0;
+                    this.b[i] = 0.0;
+                }
+
+                // Add initial seed in center
+                this.addSeed(this.size / 2, this.size / 2, 20);
+            }
+
+            addSeed(cx, cy, radius) {
+                for (let y = 0; y < this.size; y++) {
+                    for (let x = 0; x < this.size; x++) {
+                        const dx = x - cx;
+                        const dy = y - cy;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < radius) {
+                            const idx = y * this.size + x;
+                            this.b[idx] = 1.0;
+                            this.a[idx] = 0.0;
+                        }
+                    }
+                }
+            }
+
+            paint(x, y, radius, chemical) {
+                const cx = Math.floor(x * this.size / this.canvas.clientWidth);
+                const cy = Math.floor(y * this.size / this.canvas.clientHeight);
+
+                for (let dy = -radius; dy <= radius; dy++) {
+                    for (let dx = -radius; dx <= radius; dx++) {
+                        if (dx * dx + dy * dy <= radius * radius) {
+                            const px = (cx + dx + this.size) % this.size;
+                            const py = (cy + dy + this.size) % this.size;
+                            const idx = py * this.size + px;
+
+                            if (chemical === 'A') {
+                                this.a[idx] = 1.0;
+                                this.b[idx] = 0.0;
+                            } else {
+                                this.b[idx] = 1.0;
+                                this.a[idx] = 0.0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            randomize() {
+                for (let i = 0; i < this.size * this.size; i++) {
+                    this.a[i] = 1.0;
+                    this.b[i] = 0.0;
+                }
+
+                // Add random seeds
+                const numSeeds = 5 + Math.floor(Math.random() * 10);
+                for (let i = 0; i < numSeeds; i++) {
+                    const x = Math.random() * this.size;
+                    const y = Math.random() * this.size;
+                    const r = 5 + Math.random() * 15;
+                    this.addSeed(x, y, r);
+                }
+            }
+
+            step() {
+                // Smooth morphing to target parameters
+                this.f += (this.targetF - this.f) * 0.02;
+                this.k += (this.targetK - this.k) * 0.02;
+
+                const { Da, Db, dt } = CONFIG;
+                const size = this.size;
+
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        const idx = y * size + x;
+
+                        // Get neighbors with wrapping
+                        const left = y * size + ((x - 1 + size) % size);
+                        const right = y * size + ((x + 1) % size);
+                        const up = ((y - 1 + size) % size) * size + x;
+                        const down = ((y + 1) % size) * size + x;
+
+                        // Current values
+                        const a = this.a[idx];
+                        const b = this.b[idx];
+
+                        // Laplacian (5-point stencil)
+                        const laplaceA = this.a[left] + this.a[right] + this.a[up] + this.a[down] - 4 * a;
+                        const laplaceB = this.b[left] + this.b[right] + this.b[up] + this.b[down] - 4 * b;
+
+                        // Reaction term
+                        const abb = a * b * b;
+
+                        // Gray-Scott equations
+                        this.aNext[idx] = a + dt * (Da * laplaceA - abb + this.f * (1 - a));
+                        this.bNext[idx] = b + dt * (Db * laplaceB + abb - (this.k + this.f) * b);
+
+                        // Clamp values
+                        this.aNext[idx] = Math.max(0, Math.min(1, this.aNext[idx]));
+                        this.bNext[idx] = Math.max(0, Math.min(1, this.bNext[idx]));
+                    }
+                }
+
+                // Swap buffers
+                [this.a, this.aNext] = [this.aNext, this.a];
+                [this.b, this.bNext] = [this.bNext, this.b];
+            }
+
+            render(palette) {
+                const data = this.imageData.data;
+                const colorFn = PALETTES[palette];
+
+                for (let i = 0; i < this.size * this.size; i++) {
+                    const b = this.b[i];
+                    const [r, g, bl] = colorFn(b);
+
+                    const idx = i * 4;
+                    data[idx] = r;
+                    data[idx + 1] = g;
+                    data[idx + 2] = bl;
+                    data[idx + 3] = 255;
+                }
+
+                this.ctx.putImageData(this.imageData, 0, 0);
+            }
+
+            setParameters(f, k, immediate = false) {
+                this.targetF = f;
+                this.targetK = k;
+                if (immediate) {
+                    this.f = f;
+                    this.k = k;
+                }
+            }
+        }
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        // ============================================
+        // MAIN APPLICATION
+        // ============================================
+        const mainCanvas = document.getElementById('mainCanvas');
+        const compCanvas = document.getElementById('compCanvas');
+        const mapCanvas = document.getElementById('mapCanvas');
+
+        const mainSim = new Simulation(mainCanvas, false);
+        const compSim = new Simulation(compCanvas, true);
+
+        // State
+        let isPlaying = true;
+        let speed = 10;
+        let currentPalette = 'classic';
+        let currentChemical = 'B';
+        let brushSize = BRUSH_SIZES.medium;
+        let isPainting = false;
+        let paintingCanvas = null;
+
+        // ============================================
+        // PARAMETER SPACE MAP
+        // ============================================
+        function initParameterMap() {
+            const canvas = mapCanvas;
+            const ctx = canvas.getContext('2d');
+            const size = 180;
+            canvas.width = size;
+            canvas.height = size;
+
+            // Draw gradient representing pattern regions
+            const imageData = ctx.createImageData(size, size);
+            const data = imageData.data;
+
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const f = 0.01 + (x / size) * 0.07;
+                    const k = 0.045 + (y / size) * 0.02;
+
+                    // Color based on expected pattern type
+                    let r, g, b;
+
+                    // Simple heuristic for coloring
+                    const ratio = (k - 0.045) / (f - 0.01 + 0.001);
+                    const hue = (1 - Math.min(1, ratio / 3)) * 240;
+                    [r, g, b] = hslToRgb(hue / 360, 0.6, 0.3);
+
+                    const idx = (y * size + x) * 4;
+                    data[idx] = r;
+                    data[idx + 1] = g;
+                    data[idx + 2] = b;
+                    data[idx + 3] = 255;
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            // Add preset markers
+            ctx.fillStyle = '#fff';
+            Object.entries(PRESETS).forEach(([name, {f, k}]) => {
+                const x = ((f - 0.01) / 0.07) * size;
+                const y = ((k - 0.045) / 0.02) * size;
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function updateMapMarker() {
+            const marker = document.getElementById('mapMarker');
+            const f = mainSim.targetF;
+            const k = mainSim.targetK;
+
+            const x = ((f - 0.01) / 0.07) * 100;
+            const y = ((k - 0.045) / 0.02) * 100;
+
+            marker.style.left = `${x}%`;
+            marker.style.top = `${y}%`;
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+
+        // Parameter map click
+        document.getElementById('parameterMap').addEventListener('click', (e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+
+            const f = 0.01 + x * 0.07;
+            const k = 0.045 + y * 0.02;
+
+            mainSim.setParameters(f, k);
+            updateSliders();
+            showMorphingIndicator();
+
+            // Deselect preset buttons
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        });
+
+        // Preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const preset = btn.dataset.preset;
+                const { f, k } = PRESETS[preset];
+
+                mainSim.setParameters(f, k);
+                updateSliders();
+                showMorphingIndicator();
+
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Chemical selection
+        document.getElementById('chemABtn').addEventListener('click', () => {
+            currentChemical = 'A';
+            document.getElementById('chemABtn').classList.add('active');
+            document.getElementById('chemBBtn').classList.remove('active');
+        });
+
+        document.getElementById('chemBBtn').addEventListener('click', () => {
+            currentChemical = 'B';
+            document.getElementById('chemBBtn').classList.add('active');
+            document.getElementById('chemABtn').classList.remove('active');
+        });
+
+        // Brush size
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                brushSize = BRUSH_SIZES[btn.dataset.size];
+                document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Color palette
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentPalette = btn.dataset.palette;
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Play/Pause
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            document.getElementById('playPauseBtn').textContent = isPlaying ? 'II' : '>';
+        });
+
+        // Step
+        document.getElementById('stepBtn').addEventListener('click', () => {
+            for (let i = 0; i < speed; i++) {
+                mainSim.step();
+                compSim.step();
+            }
+        });
+
+        // Speed slider
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            speed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = speed;
+        });
+
+        // Clear buttons
+        document.getElementById('clearMainBtn').addEventListener('click', () => mainSim.init());
+        document.getElementById('clearCompBtn').addEventListener('click', () => compSim.init());
+
+        // Randomize
+        document.getElementById('randomizeBtn').addEventListener('click', () => {
+            mainSim.randomize();
+        });
+
+        // Save buttons
+        document.getElementById('saveMainBtn').addEventListener('click', () => saveCanvas(mainCanvas, 'turing-main.png'));
+        document.getElementById('saveCompBtn').addEventListener('click', () => saveCanvas(compCanvas, 'turing-comparison.png'));
+
+        function saveCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Toggle comparison
+        document.getElementById('toggleCompBtn').addEventListener('click', () => {
+            const container = document.getElementById('comparisonContainer');
+            const btn = document.getElementById('toggleCompBtn');
+            container.classList.toggle('hidden');
+            btn.classList.toggle('on');
+        });
+
+        // Sliders
+        document.getElementById('feedSlider').addEventListener('input', (e) => {
+            const f = parseFloat(e.target.value);
+            mainSim.setParameters(f, mainSim.targetK, true);
+            document.getElementById('feedValue').textContent = f.toFixed(3);
+            updateMapMarker();
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        });
+
+        document.getElementById('killSlider').addEventListener('input', (e) => {
+            const k = parseFloat(e.target.value);
+            mainSim.setParameters(mainSim.targetF, k, true);
+            document.getElementById('killValue').textContent = k.toFixed(3);
+            updateMapMarker();
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        });
+
+        // Comparison sliders
+        document.getElementById('compFeedSlider').addEventListener('input', (e) => {
+            const f = parseFloat(e.target.value);
+            compSim.setParameters(f, compSim.targetK, true);
+            document.getElementById('compFeedValue').textContent = f.toFixed(3);
+        });
+
+        document.getElementById('compKillSlider').addEventListener('input', (e) => {
+            const k = parseFloat(e.target.value);
+            compSim.setParameters(compSim.targetF, k, true);
+            document.getElementById('compKillValue').textContent = k.toFixed(3);
+        });
+
+        // Canvas painting
+        function setupCanvasPainting(canvas, sim) {
+            canvas.addEventListener('mousedown', (e) => {
+                isPainting = true;
+                paintingCanvas = sim;
+                paint(e, sim);
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (isPainting && paintingCanvas === sim) {
+                    paint(e, sim);
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isPainting = false;
+                paintingCanvas = null;
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                if (paintingCanvas === sim) {
+                    isPainting = false;
+                    paintingCanvas = null;
+                }
+            });
+        }
+
+        function paint(e, sim) {
+            const rect = sim.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            sim.paint(x, y, brushSize, currentChemical);
+        }
+
+        setupCanvasPainting(mainCanvas, mainSim);
+        setupCanvasPainting(compCanvas, compSim);
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateSliders() {
+            document.getElementById('feedSlider').value = mainSim.targetF;
+            document.getElementById('feedValue').textContent = mainSim.targetF.toFixed(3);
+            document.getElementById('killSlider').value = mainSim.targetK;
+            document.getElementById('killValue').textContent = mainSim.targetK.toFixed(3);
+            updateMapMarker();
+        }
+
+        function updateDisplayValues() {
+            document.getElementById('mainValues').textContent =
+                `F: ${mainSim.f.toFixed(3)} | K: ${mainSim.k.toFixed(3)}`;
+            document.getElementById('compValues').textContent =
+                `F: ${compSim.f.toFixed(3)} | K: ${compSim.k.toFixed(3)}`;
+        }
+
+        function showMorphingIndicator() {
+            const indicator = document.getElementById('morphIndicator');
+            indicator.classList.add('visible');
+            setTimeout(() => indicator.classList.remove('visible'), 2000);
+        }
+
+        // ============================================
+        // ANIMATION LOOP
+        // ============================================
+        function animate() {
+            if (isPlaying) {
+                for (let i = 0; i < speed; i++) {
+                    mainSim.step();
+                    compSim.step();
+                }
+            }
+
+            mainSim.render(currentPalette);
+            compSim.render(currentPalette);
+            updateDisplayValues();
+
+            requestAnimationFrame(animate);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        initParameterMap();
+        updateMapMarker();
+        animate();
+    </script>
+</body>
+</html>
