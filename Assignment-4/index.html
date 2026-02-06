@@ -510,20 +510,20 @@
 
         // Configuration
         const CONFIG = {
-            gridSize: 200,
-            Da: 1.0,      // Diffusion rate for Chemical A
-            Db: 0.5,      // Diffusion rate for Chemical B
+            gridSize: 256,
+            Da: 0.2097,   // Diffusion rate for Chemical A
+            Db: 0.105,    // Diffusion rate for Chemical B
             dt: 1.0,      // Time step
         };
 
-        // Pattern Presets (F and K values)
+        // Pattern Presets (F and K values) - well-tested values
         const PRESETS = {
-            spots:   { f: 0.055, k: 0.062 },
-            stripes: { f: 0.035, k: 0.060 },
+            spots:   { f: 0.037, k: 0.06 },
+            stripes: { f: 0.04, k: 0.06 },
             maze:    { f: 0.029, k: 0.057 },
-            spirals: { f: 0.018, k: 0.051 },
-            waves:   { f: 0.014, k: 0.045 },
-            mitosis: { f: 0.042, k: 0.059 }
+            spirals: { f: 0.014, k: 0.045 },
+            waves:   { f: 0.025, k: 0.05 },
+            mitosis: { f: 0.0367, k: 0.0649 }
         };
 
         // Color Palettes
@@ -586,14 +586,30 @@
             }
 
             init() {
-                // Fill with Chemical A, add seed of Chemical B in center
+                // Fill with Chemical A, add small random noise to break symmetry
                 for (let i = 0; i < this.size * this.size; i++) {
                     this.a[i] = 1.0;
                     this.b[i] = 0.0;
                 }
 
-                // Add initial seed in center
-                this.addSeed(this.size / 2, this.size / 2, 20);
+                // Add initial seeds with some randomness
+                const cx = this.size / 2;
+                const cy = this.size / 2;
+                const radius = 20;
+
+                for (let y = 0; y < this.size; y++) {
+                    for (let x = 0; x < this.size; x++) {
+                        const dx = x - cx;
+                        const dy = y - cy;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < radius) {
+                            const idx = y * this.size + x;
+                            // Add some noise for organic patterns
+                            this.a[idx] = 0.5 + Math.random() * 0.02 - 0.01;
+                            this.b[idx] = 0.25 + Math.random() * 0.02 - 0.01;
+                        }
+                    }
+                }
             }
 
             addSeed(cx, cy, radius) {
@@ -604,8 +620,9 @@
                         const dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < radius) {
                             const idx = y * this.size + x;
-                            this.b[idx] = 1.0;
-                            this.a[idx] = 0.0;
+                            // Use proper concentration values with noise
+                            this.a[idx] = 0.5 + Math.random() * 0.02 - 0.01;
+                            this.b[idx] = 0.25 + Math.random() * 0.02 - 0.01;
                         }
                     }
                 }
@@ -626,8 +643,9 @@
                                 this.a[idx] = 1.0;
                                 this.b[idx] = 0.0;
                             } else {
-                                this.b[idx] = 1.0;
-                                this.a[idx] = 0.0;
+                                // Seed with B chemical
+                                this.a[idx] = 0.5 + Math.random() * 0.02;
+                                this.b[idx] = 0.25 + Math.random() * 0.02;
                             }
                         }
                     }
@@ -635,17 +653,18 @@
             }
 
             randomize() {
+                // Reset to uniform A
                 for (let i = 0; i < this.size * this.size; i++) {
                     this.a[i] = 1.0;
                     this.b[i] = 0.0;
                 }
 
-                // Add random seeds
-                const numSeeds = 5 + Math.floor(Math.random() * 10);
+                // Add random seeds with noise
+                const numSeeds = 8 + Math.floor(Math.random() * 8);
                 for (let i = 0; i < numSeeds; i++) {
-                    const x = Math.random() * this.size;
-                    const y = Math.random() * this.size;
-                    const r = 5 + Math.random() * 15;
+                    const x = 20 + Math.random() * (this.size - 40);
+                    const y = 20 + Math.random() * (this.size - 40);
+                    const r = 8 + Math.random() * 12;
                     this.addSeed(x, y, r);
                 }
             }
