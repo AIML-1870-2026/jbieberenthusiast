@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Julia Set Explorer - Interactive Fractal Visualization</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Julia Set Explorer</h1>
+      <p class="subtitle">Interactive Fractal Visualization</p>
+    </header>
+
+    <main>
+      <div class="canvas-area">
+        <div class="canvas-wrapper" id="juliaWrapper">
+          <canvas id="juliaCanvas"></canvas>
+          <div class="canvas-label">Julia Set</div>
+        </div>
+        <div class="canvas-wrapper hidden" id="mandelbrotWrapper">
+          <canvas id="mandelbrotCanvas"></canvas>
+          <div class="canvas-label">Mandelbrot Set <span class="hint">(Click to select c)</span></div>
+        </div>
+      </div>
+
+      <aside class="controls-panel">
+        <!-- Parameters Section -->
+        <section class="control-group">
+          <h3>Complex Parameter c</h3>
+          <div id="cDisplay" class="c-display">c = -0.700 + 0.270i</div>
+
+          <div class="slider-control">
+            <label>
+              Real (a): <span id="realValue">-0.700</span>
+            </label>
+            <input type="range" id="realSlider" min="-2" max="2" step="0.01" value="-0.7">
+          </div>
+
+          <div class="slider-control">
+            <label>
+              Imaginary (b): <span id="imagValue">0.270</span>
+            </label>
+            <input type="range" id="imagSlider" min="-2" max="2" step="0.01" value="0.27015">
+          </div>
+        </section>
+
+        <!-- Presets Section -->
+        <section class="control-group">
+          <h3>Presets</h3>
+          <select id="presetSelect" class="select-control">
+            <option value="">Select a preset...</option>
+          </select>
+        </section>
+
+        <!-- Detail & Color Section -->
+        <section class="control-group">
+          <h3>Rendering</h3>
+
+          <div class="slider-control">
+            <label>
+              Detail Level: <span id="iterValue">100</span>
+            </label>
+            <input type="range" id="iterSlider" min="50" max="500" step="10" value="100">
+          </div>
+
+          <div class="select-wrapper">
+            <label>Color Scheme:</label>
+            <select id="colorScheme" class="select-control"></select>
+          </div>
+        </section>
+
+        <!-- View Controls Section -->
+        <section class="control-group">
+          <h3>View</h3>
+          <div class="stats-row">
+            <div class="stat">
+              <span class="stat-label">Zoom:</span>
+              <span id="zoomLevel" class="stat-value">1.0x</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Render:</span>
+              <span id="renderTime" class="stat-value">0ms</span>
+            </div>
+          </div>
+          <div class="stat center-stat">
+            <span class="stat-label">Center:</span>
+            <span id="centerDisplay" class="stat-value">(0.000, 0.000)</span>
+          </div>
+
+          <div class="button-row">
+            <button id="resetViewBtn" class="control-btn">Reset View</button>
+            <button id="saveImageBtn" class="control-btn">Save Image</button>
+          </div>
+        </section>
+
+        <!-- Mode Section -->
+        <section class="control-group">
+          <h3>Mode</h3>
+          <div class="button-row">
+            <button id="toggleModeBtn" class="control-btn full-width">Mode: Julia</button>
+          </div>
+          <div class="button-row">
+            <button id="toggleSplitBtn" class="control-btn full-width accent">Split View</button>
+          </div>
+        </section>
+
+        <!-- Animation Section -->
+        <section class="control-group">
+          <h3>Animation</h3>
+
+          <div class="select-wrapper">
+            <label>Path:</label>
+            <select id="animPathSelect" class="select-control">
+              <option value="circular">Circular</option>
+              <option value="linear">Linear</option>
+              <option value="presetTour">Preset Tour</option>
+              <option value="lissajous">Lissajous</option>
+              <option value="randomWalk">Random Walk</option>
+            </select>
+          </div>
+
+          <div class="slider-control">
+            <label>
+              Speed: <span id="animSpeedValue">1.0x</span>
+            </label>
+            <input type="range" id="animSpeedSlider" min="0.1" max="3" step="0.1" value="1">
+          </div>
+
+          <div class="checkbox-control">
+            <label>
+              <input type="checkbox" id="animLoopCheckbox" checked>
+              Loop Animation
+            </label>
+          </div>
+
+          <progress id="animProgress" value="0" max="100" class="anim-progress"></progress>
+
+          <button id="playPauseBtn" class="control-btn full-width play-btn">Play</button>
+        </section>
+
+        <!-- Info Panel -->
+        <section class="control-group info-group">
+          <button id="infoToggle" class="info-toggle">Show Info ▼</button>
+          <div id="infoContent" class="info-content collapsed">
+            <h4>What is a Julia Set?</h4>
+            <p>
+              Julia sets are fractals defined by iterating the function f(z) = z² + c,
+              where c is a complex constant. Each different value of c produces a unique Julia set.
+            </p>
+            <p>
+              Points that remain bounded under iteration belong to the set (shown in black),
+              while points that escape to infinity are colored based on how quickly they escape.
+            </p>
+
+            <h4>How to Explore</h4>
+            <ul>
+              <li><strong>Adjust sliders</strong> to change c and see different Julia sets</li>
+              <li><strong>Click</strong> on the canvas to zoom in</li>
+              <li><strong>Right-click</strong> or Shift+click to zoom out</li>
+              <li><strong>Scroll</strong> to zoom smoothly</li>
+              <li><strong>Click and drag</strong> to pan around</li>
+              <li>Try the <strong>presets</strong> to see interesting patterns</li>
+            </ul>
+
+            <h4>Keyboard Shortcuts</h4>
+            <ul>
+              <li><strong>R</strong> - Reset view</li>
+              <li><strong>+/-</strong> - Zoom in/out</li>
+              <li><strong>Arrow keys</strong> - Pan view</li>
+              <li><strong>Space</strong> - Play/pause animation</li>
+              <li><strong>M</strong> - Toggle Julia/Mandelbrot mode</li>
+            </ul>
+
+            <h4>Mandelbrot Connection</h4>
+            <p>
+              Each Julia set corresponds to a point c in the Mandelbrot set.
+              Points inside the Mandelbrot set produce connected Julia sets,
+              while points outside produce disconnected "dust" patterns.
+            </p>
+            <p class="info-footer">
+              Use <strong>Split View</strong> to explore this connection interactively!
+            </p>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
