@@ -85,6 +85,8 @@ main {
 
 .canvas-area.split-view {
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .canvas-wrapper {
@@ -594,8 +596,9 @@ input[type="range"]::-moz-range-thumb {
 
 /* Split View Specific */
 .canvas-area.split-view .canvas-wrapper {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 300px;
+  max-width: 450px;
 }
 
 /* Smooth focus states */

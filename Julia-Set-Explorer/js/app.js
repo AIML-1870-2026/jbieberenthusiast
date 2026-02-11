@@ -524,6 +524,9 @@ class JuliaExplorer {
       const { real, imag } = pathFn.getPoint(this.animationTime);
       this.juliaRenderer.setC(real, imag);
 
+      // Ensure we're in Julia mode during animation
+      this.juliaRenderer.setMode('julia');
+
       // Update sliders
       const realSlider = document.getElementById('realSlider');
       const imagSlider = document.getElementById('imagSlider');
@@ -542,13 +545,17 @@ class JuliaExplorer {
         progress.value = this.animationTime * 100;
       }
 
-      // Use preview for faster animation rendering
-      this.juliaRenderer.renderPreview(0.5);
+      // Render the Julia set (use full render for quality)
+      this.juliaRenderer.render();
 
       // Update Mandelbrot marker in split view
       if (this.viewMode === 'split') {
         this.updateMandelbrotMarkerFromSliders();
       }
+
+      // Update mode button to reflect Julia mode
+      const modeBtn = document.getElementById('toggleModeBtn');
+      if (modeBtn) modeBtn.textContent = 'Mode: Julia';
     }
 
     this.animationFrame = requestAnimationFrame(() => this.animate());
