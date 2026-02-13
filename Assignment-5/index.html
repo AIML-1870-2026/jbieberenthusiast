@@ -232,15 +232,15 @@
 
       <div class="input-slider-group">
         <div class="input-slider-header">
-          <span class="input-slider-name">&#9200; Time Since Last Conversation</span>
+          <span class="input-slider-name">&#9200; Conversation Recency</span>
           <span class="input-slider-val" id="inputVal1">5.0</span>
         </div>
-        <div class="input-slider-desc">How long since you last talked?</div>
+        <div class="input-slider-desc">How active is your conversation?</div>
         <div class="input-slider-track">
           <input type="range" id="inputSlider1" min="0" max="10" step="0.1" value="5" oninput="updateInput(1,this.value)">
           <span class="weight-badge pos" id="wb1">w: +0.00</span>
         </div>
-        <div class="slider-range-labels"><span>Already chatting</span><span>Out of the blue</span></div>
+        <div class="slider-range-labels"><span>Out of the blue</span><span>Already chatting</span></div>
       </div>
 
       <div class="input-slider-group">
@@ -334,7 +334,7 @@
       <h2>&#128202; Neuron Weights</h2>
       <div id="weightsList">
         <div class="metric-row"><span class="name">&#128170; Confidence</span><span class="val" id="w0">0.00</span></div>
-        <div class="metric-row"><span class="name">&#9200; Time Since Last</span><span class="val" id="w1">0.00</span></div>
+        <div class="metric-row"><span class="name">&#9200; Convo Recency</span><span class="val" id="w1">0.00</span></div>
         <div class="metric-row"><span class="name">&#128149; Interest Level</span><span class="val" id="w2">0.00</span></div>
         <div class="metric-row"><span class="name">&#128336; Time of Day</span><span class="val" id="w3">0.00</span></div>
         <div class="metric-row"><span class="name">&#128560; Anxiety/Fear</span><span class="val" id="w4">0.00</span></div>
@@ -404,7 +404,7 @@
 // ── State ──
 const FEATURES = [
   { name: 'Confidence', icon: '\u{1F4AA}', expectedSign: 1 },
-  { name: 'Time Since Last', icon: '\u23F0', expectedSign: -1 },
+  { name: 'Conversation Recency', icon: '\u23F0', expectedSign: 1 },
   { name: 'Interest Level', icon: '\u{1F495}', expectedSign: 1 },
   { name: 'Time of Day', icon: '\u{1F550}', expectedSign: 1 },
   { name: 'Anxiety/Fear', icon: '\u{1F630}', expectedSign: -1 },
