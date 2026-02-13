@@ -302,8 +302,8 @@
       </div>
 
       <div class="slider-group">
-        <div class="slider-label"><span>&#127919; Baseline Tendency (Bias)</span><span id="biasVal">-3.00</span></div>
-        <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="-3" oninput="setBias(this.value)">
+        <div class="slider-label"><span>&#127919; Baseline Tendency (Bias)</span><span id="biasVal">-4.00</span></div>
+        <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="-4" oninput="setBias(this.value)">
       </div>
       <div class="slider-group">
         <div class="slider-label"><span>&#128218; Learning Rate</span><span id="lrVal">0.10</span></div>
@@ -384,7 +384,7 @@
 // ── Floating Hearts ──
 (function spawnHearts() {
   const bg = document.getElementById('heartsBg');
-  const hearts = ['\u2764','\u{1F495}','\u{1F497}','\u{1F496}','\u{1F49C}','\u{1F49D}','\u{1F493}','\u2665'];
+  const hearts = ['\u2764','\u{1F495}','\u{1F497}','\u{1F496}','\u{1F49C}','\u{1F49D}','\u{1F493}','\u2665','\u{1F48B}','\u{1F339}','\u{1F48C}','\u{1F970}','\u{1F618}','\u{1F60D}','\u{1F61C}','\u{1F48D}','\u{1F490}','\u{2728}'];
   function addHeart() {
     const el = document.createElement('div');
     el.className = 'floating-heart';
