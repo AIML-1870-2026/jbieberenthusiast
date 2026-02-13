@@ -302,8 +302,8 @@
       </div>
 
       <div class="slider-group">
-        <div class="slider-label"><span>&#127919; Baseline Tendency (Bias)</span><span id="biasVal">0.00</span></div>
-        <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="0" oninput="setBias(this.value)">
+        <div class="slider-label"><span>&#127919; Baseline Tendency (Bias)</span><span id="biasVal">-3.00</span></div>
+        <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="-3" oninput="setBias(this.value)">
       </div>
       <div class="slider-group">
         <div class="slider-label"><span>&#128218; Learning Rate</span><span id="lrVal">0.10</span></div>
@@ -490,7 +490,8 @@ function initWeights() {
   if (initMode === 'random') {
     weights = Array.from({ length: 5 }, () => (Math.random() - 0.5));
   } else if (initMode === 'smart') {
-    weights = FEATURES.map(f => f.expectedSign * (Math.random() * 0.3 + 0.2));
+    // Calibrated: need genuinely good conditions to pass 50%
+    weights = [0.20, 0.20, 0.35, 0.10, -0.40];
   } else {
     weights = [0, 0, 0, 0, 0];
   }
