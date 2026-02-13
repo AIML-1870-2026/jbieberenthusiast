@@ -284,7 +284,7 @@
 
       <div class="prediction-output" id="predictionBox">
         <div class="prediction-heart" style="animation:heartbeat 1.5s infinite">&#10084;&#65039;</div>
-        <div class="prediction-label">Text Probability</div>
+        <div class="prediction-label">Chance You Should Text</div>
         <div class="prediction-pct" id="predPct">50%</div>
         <div class="prediction-verdict go" id="predVerdict">GO FOR IT</div>
       </div>
@@ -296,8 +296,8 @@
 
       <div style="font-size:.78rem;font-weight:600;color:var(--text-light);margin-bottom:.3rem">Weight Initialization</div>
       <div class="init-row">
-        <button class="init-btn active" data-init="random" onclick="setInit('random')">Random</button>
-        <button class="init-btn" data-init="smart" onclick="setInit('smart')">Smart Defaults</button>
+        <button class="init-btn" data-init="random" onclick="setInit('random')">Random</button>
+        <button class="init-btn active" data-init="smart" onclick="setInit('smart')">Smart Defaults</button>
         <button class="init-btn" data-init="zero" onclick="setInit('zero')">Zeros</button>
       </div>
 
@@ -418,7 +418,7 @@ let currentLabel = 1;
 let points = [];
 let stepCounter = 0;
 let isTraining = false;
-let initMode = 'random';
+let initMode = 'smart';
 let sensOpen = false;
 let liveInputs = [...FIXED_DEFAULTS];
 
