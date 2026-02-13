@@ -302,8 +302,8 @@
       </div>
 
       <div class="slider-group">
-        <div class="slider-label"><span>&#127919; Baseline Tendency (Bias)</span><span id="biasVal">-4.00</span></div>
-        <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="-4" oninput="setBias(this.value)">
+        <div class="slider-label"><span>&#127919; Baseline Tendency (Bias)</span><span id="biasVal">0.00</span></div>
+        <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="0" oninput="setBias(this.value)">
       </div>
       <div class="slider-group">
         <div class="slider-label"><span>&#128218; Learning Rate</span><span id="lrVal">0.10</span></div>
@@ -464,7 +464,7 @@ function updatePrediction() {
   const pct = (prob * 100).toFixed(1);
   document.getElementById('predPct').textContent = pct + '%';
   const verdict = document.getElementById('predVerdict');
-  if (prob >= 0.5) {
+  if (prob >= 0.6) {
     verdict.textContent = '\u2764 GO FOR IT';
     verdict.className = 'prediction-verdict go';
   } else {
@@ -603,7 +603,7 @@ function updateMetrics() {
     let correct = 0;
     for (const p of points) {
       const pred = predict(p.inputs);
-      if ((pred >= 0.5 && p.label === 1) || (pred < 0.5 && p.label === 0)) correct++;
+      if ((pred >= 0.6 && p.label === 1) || (pred < 0.6 && p.label === 0)) correct++;
     }
     const acc = (correct / points.length * 100).toFixed(1);
     document.getElementById('accuracy').textContent = acc + '%';
@@ -644,10 +644,10 @@ function drawRegions(w, h) {
       const dx = (px / pw) * 10;
       const dy = ((ph - py) / ph) * 10;
       const prob = predict(makeInputs(dx, dy));
-      if (prob >= 0.5) {
-        ctx.fillStyle = `rgba(255,200,215,${0.2 + (prob - 0.5) * 1.0})`;
+      if (prob >= 0.6) {
+        ctx.fillStyle = `rgba(255,200,215,${0.15 + (prob - 0.6) * 1.5})`;
       } else {
-        ctx.fillStyle = `rgba(225,190,231,${0.2 + (0.5 - prob) * 1.0})`;
+        ctx.fillStyle = `rgba(225,190,231,${0.15 + (0.6 - prob) * 0.7})`;
       }
       ctx.fillRect(MARGIN.left + px, MARGIN.top + py, res, res);
     }
@@ -674,9 +674,10 @@ function drawBoundary(w, h) {
   ctx.clip();
 
   const fixedSum = weights[1] * liveInputs[1] + weights[3] * liveInputs[3] + weights[4] * liveInputs[4];
+  const threshold = Math.log(0.6 / 0.4); // z where sigmoid(z) = 0.6
   const pts = [];
   for (let px = -1; px <= 11; px += 0.2) {
-    const y = -(weights[0] * px + fixedSum + bias) / weights[2];
+    const y = -(weights[0] * px + fixedSum + bias - threshold) / weights[2];
     pts.push({ x: px, y });
   }
 
