@@ -7,86 +7,126 @@
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --pink:#FF69B4;--soft-pink:#FFE4E8;--rose:#E91E63;
-    --purple:#9C27B0;--light-purple:#E1BEE7;--lavender:#F3E5F5;
-    --bg:#FFF5F7;--card:#fff;--text:#4A4A4A;--text-light:#888;
-    --gold:#D4A574;--shadow:0 4px 20px rgba(156,39,176,.12);
-    --radius:14px;
+    --pink:#FF69B4;--hot-pink:#FF1493;--soft-pink:#FFE4E8;--rose:#E91E63;
+    --deep-rose:#C2185B;--purple:#9C27B0;--light-purple:#E1BEE7;--lavender:#F3E5F5;
+    --bg:#FFF0F3;--card:rgba(255,255,255,.92);--text:#4A4A4A;--text-light:#999;
+    --gold:#D4A574;--shadow:0 4px 24px rgba(233,30,99,.15);
+    --radius:16px;--glow:0 0 20px rgba(255,105,180,.3);
   }
   html{font-size:15px}
-  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative}
   h1,h2,h3{font-weight:700}
 
+  /* ── Floating Hearts Background ── */
+  .hearts-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+  .floating-heart{position:absolute;color:rgba(255,105,180,.12);font-size:2rem;animation:floatUp linear infinite;pointer-events:none}
+  @keyframes floatUp{
+    0%{transform:translateY(100vh) rotate(0deg) scale(1);opacity:0}
+    10%{opacity:1}
+    90%{opacity:.8}
+    100%{transform:translateY(-10vh) rotate(360deg) scale(.6);opacity:0}
+  }
+  .cupid-arrow{position:fixed;pointer-events:none;z-index:0;opacity:.06}
+  .cupid-arrow svg{width:100%;height:100%}
+  .cupid-arrow.tl{top:3%;left:2%;width:180px;transform:rotate(-25deg)}
+  .cupid-arrow.br{bottom:5%;right:3%;width:160px;transform:rotate(155deg)}
+  .cupid-arrow.mr{top:40%;right:1%;width:120px;transform:rotate(90deg)}
+
   /* ── Header ── */
-  .header{text-align:center;padding:1.2rem 1rem .8rem;background:linear-gradient(135deg,var(--soft-pink),var(--lavender));border-bottom:2px solid var(--light-purple)}
-  .header h1{font-size:1.6rem;color:var(--rose);margin-bottom:.2rem}
-  .header p{font-size:.92rem;color:var(--purple);opacity:.85}
+  .header{position:relative;z-index:1;text-align:center;padding:1.5rem 1rem 1rem;background:linear-gradient(135deg,#FFD6E0,#F8BBD0,#E1BEE7);border-bottom:3px solid var(--hot-pink);overflow:hidden}
+  .header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Ctext x='40' y='45' text-anchor='middle' font-size='20' opacity='.06'%3E%E2%9D%A4%3C/text%3E%3C/svg%3E") repeat;pointer-events:none}
+  .header h1{font-size:1.8rem;color:var(--deep-rose);margin-bottom:.15rem;text-shadow:0 2px 8px rgba(233,30,99,.15);position:relative}
+  .header h1::before{content:'\2764\FE0F';margin-right:.4rem}
+  .header h1::after{content:'\1F48C';margin-left:.4rem}
+  .header p{font-size:.9rem;color:var(--purple);opacity:.85;position:relative}
 
   /* ── Layout ── */
-  .app{display:flex;gap:1.2rem;padding:1.2rem;max-width:1400px;margin:0 auto}
-  .left-panel{flex:0 0 360px;display:flex;flex-direction:column;gap:1rem}
+  .app{position:relative;z-index:1;display:flex;gap:1.2rem;padding:1.2rem;max-width:1440px;margin:0 auto}
+  .left-panel{flex:0 0 370px;display:flex;flex-direction:column;gap:1rem}
   .right-panel{flex:1;min-width:0;display:flex;flex-direction:column;gap:1rem}
 
   /* ── Cards ── */
-  .card{background:var(--card);border-radius:var(--radius);padding:1rem 1.1rem;box-shadow:var(--shadow);border:1px solid rgba(255,105,180,.12)}
-  .card h2{font-size:1rem;margin-bottom:.7rem;color:var(--purple);display:flex;align-items:center;gap:.4rem}
-  .card h2 .icon{font-size:1.1rem}
+  .card{background:var(--card);border-radius:var(--radius);padding:1rem 1.1rem;box-shadow:var(--shadow);border:1.5px solid rgba(255,105,180,.18);backdrop-filter:blur(8px);position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rose),var(--pink),var(--purple),var(--pink),var(--rose));opacity:.7}
+  .card h2{font-size:1rem;margin-bottom:.7rem;color:var(--deep-rose);display:flex;align-items:center;gap:.4rem}
+
+  /* ── Live Predictor ── */
+  .predictor-card{background:linear-gradient(135deg,rgba(255,240,243,.95),rgba(243,229,245,.95));border:2px solid var(--pink)}
+  .predictor-card::before{height:4px;background:linear-gradient(90deg,var(--rose),var(--hot-pink),var(--rose))}
+  .input-slider-group{margin-bottom:.75rem;position:relative}
+  .input-slider-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem}
+  .input-slider-name{font-size:.82rem;font-weight:700;color:var(--text)}
+  .input-slider-val{font-size:.95rem;font-weight:800;color:var(--deep-rose);min-width:36px;text-align:right}
+  .input-slider-desc{font-size:.68rem;color:var(--text-light);margin-bottom:.3rem;font-style:italic}
+  .input-slider-track{position:relative;display:flex;align-items:center;gap:.5rem}
+  .input-slider-track input[type=range]{flex:1}
+  .weight-badge{display:inline-flex;align-items:center;padding:.15rem .45rem;border-radius:6px;font-size:.68rem;font-weight:800;font-family:monospace;white-space:nowrap}
+  .weight-badge.pos{background:rgba(233,30,99,.12);color:var(--rose)}
+  .weight-badge.neg{background:rgba(156,39,176,.12);color:var(--purple)}
+
+  /* ── Prediction Output ── */
+  .prediction-output{text-align:center;padding:1rem;margin-top:.3rem;background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(255,228,232,.5));border-radius:14px;border:2px solid rgba(255,105,180,.2);position:relative}
+  .prediction-label{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--text-light);font-weight:700;margin-bottom:.2rem}
+  .prediction-pct{font-size:2.8rem;font-weight:900;background:linear-gradient(135deg,var(--rose),var(--hot-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+  .prediction-verdict{font-size:1rem;font-weight:700;margin-top:.2rem;padding:.3rem .8rem;border-radius:20px;display:inline-block}
+  .prediction-verdict.go{background:var(--rose);color:#fff;box-shadow:0 0 16px rgba(233,30,99,.35)}
+  .prediction-verdict.hold{background:var(--purple);color:#fff;box-shadow:0 0 16px rgba(156,39,176,.35)}
+  .prediction-heart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:6rem;opacity:.06;pointer-events:none}
 
   /* ── Label Toggle ── */
   .label-toggle{display:flex;gap:.5rem;margin-bottom:.8rem}
-  .label-btn{flex:1;padding:.6rem .5rem;border:2px solid transparent;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:.35rem}
+  .label-btn{flex:1;padding:.6rem .5rem;border:2.5px solid transparent;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:.35rem}
   .label-btn.go{background:var(--soft-pink);color:var(--rose)}
-  .label-btn.go.active{background:var(--rose);color:#fff;border-color:#c2185b;box-shadow:0 0 14px rgba(233,30,99,.35)}
+  .label-btn.go.active{background:var(--rose);color:#fff;border-color:var(--deep-rose);box-shadow:0 0 18px rgba(233,30,99,.4)}
   .label-btn.hold{background:var(--lavender);color:var(--purple)}
-  .label-btn.hold.active{background:var(--purple);color:#fff;border-color:#7b1fa2;box-shadow:0 0 14px rgba(156,39,176,.35)}
+  .label-btn.hold.active{background:var(--purple);color:#fff;border-color:#7b1fa2;box-shadow:0 0 18px rgba(156,39,176,.4)}
 
   /* ── Buttons ── */
-  .btn{padding:.55rem 1rem;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.3rem}
-  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
-  .btn:hover:not(:disabled){transform:translateY(-1px)}
-  .btn-primary{background:linear-gradient(135deg,var(--rose),var(--pink));color:#fff;font-size:.95rem;padding:.7rem 1.4rem;box-shadow:0 3px 12px rgba(233,30,99,.3)}
-  .btn-secondary{background:linear-gradient(135deg,var(--purple),#BA68C8);color:#fff;box-shadow:0 3px 10px rgba(156,39,176,.25)}
-  .btn-danger{background:#f5f5f5;color:#999;border:1px solid #ddd;font-size:.78rem}
+  .btn{padding:.55rem 1rem;border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.3rem}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+  .btn:hover:not(:disabled){transform:translateY(-2px)}
+  .btn-primary{background:linear-gradient(135deg,var(--rose),var(--hot-pink));color:#fff;font-size:.95rem;padding:.7rem 1.4rem;box-shadow:0 4px 16px rgba(233,30,99,.35)}
+  .btn-secondary{background:linear-gradient(135deg,var(--purple),#BA68C8);color:#fff;box-shadow:0 3px 12px rgba(156,39,176,.25)}
+  .btn-danger{background:#fff;color:#ccc;border:1.5px solid #e0e0e0;font-size:.78rem}
   .btn-danger:hover:not(:disabled){background:#fce4ec;color:var(--rose);border-color:var(--rose)}
-  .training-btns{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
+  .training-btns{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem}
 
   /* ── Sliders ── */
   .slider-group{margin-bottom:.6rem}
   .slider-label{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.25rem;color:var(--text-light);font-weight:600}
-  .slider-label span:last-child{color:var(--purple);font-weight:700}
-  input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--soft-pink),var(--light-purple));outline:none}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--rose);cursor:pointer;box-shadow:0 2px 6px rgba(233,30,99,.3)}
-  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--rose);cursor:pointer;border:none}
+  .slider-label span:last-child{color:var(--deep-rose);font-weight:700}
+  input[type=range]{-webkit-appearance:none;width:100%;height:7px;border-radius:4px;background:linear-gradient(90deg,var(--soft-pink),var(--pink),var(--light-purple));outline:none;transition:opacity .2s}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--hot-pink));cursor:pointer;box-shadow:0 2px 8px rgba(233,30,99,.4);transition:transform .15s}
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--hot-pink));cursor:pointer;border:none}
 
   /* ── Init Options ── */
   .init-row{display:flex;gap:.4rem;margin-bottom:.6rem}
-  .init-btn{flex:1;padding:.4rem;border:1.5px solid var(--light-purple);border-radius:8px;background:var(--card);font-size:.72rem;font-weight:600;color:var(--purple);cursor:pointer;transition:all .2s}
+  .init-btn{flex:1;padding:.4rem;border:2px solid var(--light-purple);border-radius:8px;background:var(--card);font-size:.72rem;font-weight:600;color:var(--purple);cursor:pointer;transition:all .2s}
   .init-btn.active,.init-btn:hover{background:var(--lavender);border-color:var(--purple)}
 
   /* ── Metrics ── */
-  .metric-row{display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;border-bottom:1px solid rgba(255,105,180,.08);font-size:.82rem}
+  .metric-row{display:flex;justify-content:space-between;align-items:center;padding:.35rem 0;border-bottom:1px solid rgba(255,105,180,.1);font-size:.82rem}
   .metric-row:last-child{border-bottom:none}
   .metric-row .name{display:flex;align-items:center;gap:.3rem}
-  .metric-row .val{font-weight:700;color:var(--purple);font-variant-numeric:tabular-nums;transition:color .3s}
-  .metric-row .val.positive{color:#43a047}
-  .metric-row .val.negative{color:var(--rose)}
-  .stat-row{display:flex;gap:.8rem;margin-top:.5rem}
-  .stat-box{flex:1;text-align:center;padding:.5rem;background:var(--lavender);border-radius:10px}
-  .stat-box .num{font-size:1.2rem;font-weight:800;color:var(--purple)}
+  .metric-row .val{font-weight:700;font-variant-numeric:tabular-nums;transition:color .3s;font-family:monospace;font-size:.85rem}
+  .metric-row .val.positive{color:#e91e63}
+  .metric-row .val.negative{color:var(--purple)}
+  .stat-row{display:flex;gap:.6rem;margin-top:.5rem}
+  .stat-box{flex:1;text-align:center;padding:.5rem;background:linear-gradient(135deg,var(--soft-pink),var(--lavender));border-radius:12px;border:1px solid rgba(255,105,180,.15)}
+  .stat-box .num{font-size:1.15rem;font-weight:800;color:var(--deep-rose)}
   .stat-box .lbl{font-size:.68rem;color:var(--text-light);font-weight:600}
 
   /* ── Plot ── */
-  .plot-wrap{position:relative;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(255,105,180,.12);padding:.6rem}
+  .plot-wrap{position:relative;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1.5px solid rgba(255,105,180,.18);padding:.6rem;backdrop-filter:blur(8px)}
+  .plot-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rose),var(--pink),var(--purple),var(--pink),var(--rose));opacity:.7;border-radius:var(--radius) var(--radius) 0 0}
   .plot-container{position:relative;width:100%;aspect-ratio:1/1;max-height:560px}
-  canvas.plot-canvas{width:100%;height:100%;border-radius:10px;cursor:crosshair;display:block}
-  .plot-label{position:absolute;font-size:.72rem;font-weight:700;color:var(--text-light)}
-  .plot-label.x-label{bottom:-1.4rem;left:50%;transform:translateX(-50%)}
-  .plot-label.y-label{left:-2.8rem;top:50%;transform:translateY(-50%) rotate(-90deg);white-space:nowrap}
-  .plot-legend{display:flex;gap:1rem;justify-content:center;margin-top:.5rem;font-size:.78rem;font-weight:600}
-  .plot-legend span{display:flex;align-items:center;gap:.3rem}
-  .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  canvas.plot-canvas{width:100%;height:100%;border-radius:12px;cursor:crosshair;display:block}
+  .plot-legend{display:flex;gap:1.2rem;justify-content:center;margin-top:.5rem;font-size:.78rem;font-weight:700}
+  .plot-legend span{display:flex;align-items:center;gap:.35rem}
+  .legend-dot{width:11px;height:11px;border-radius:50%;display:inline-block;box-shadow:0 0 6px rgba(0,0,0,.15)}
 
-  .tooltip{position:fixed;background:rgba(74,74,74,.95);color:#fff;padding:.5rem .7rem;border-radius:8px;font-size:.72rem;line-height:1.5;pointer-events:none;z-index:100;opacity:0;transition:opacity .15s;white-space:nowrap;backdrop-filter:blur(4px)}
+  .tooltip{position:fixed;background:rgba(233,30,99,.92);color:#fff;padding:.5rem .7rem;border-radius:10px;font-size:.72rem;line-height:1.5;pointer-events:none;z-index:100;opacity:0;transition:opacity .15s;white-space:nowrap;backdrop-filter:blur(4px);box-shadow:0 4px 12px rgba(233,30,99,.3)}
   .tooltip.show{opacity:1}
 
   /* ── Sensitivity ── */
@@ -94,16 +134,19 @@
   .sensitivity-panel{overflow:hidden;max-height:0;transition:max-height .4s ease-in-out;margin-top:.6rem}
   .sensitivity-panel.open{max-height:600px}
   .sensitivity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
-  .mini-chart{background:var(--lavender);border-radius:10px;padding:.5rem;text-align:center}
-  .mini-chart .chart-title{font-size:.7rem;font-weight:700;color:var(--purple);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mini-chart canvas{width:100%;height:80px;border-radius:6px;background:#fff}
-  .mini-chart .score{font-size:.65rem;color:var(--text-light);margin-top:.2rem}
+  .mini-chart{background:linear-gradient(135deg,var(--soft-pink),var(--lavender));border-radius:10px;padding:.5rem;text-align:center;border:1px solid rgba(255,105,180,.12)}
+  .mini-chart .chart-title{font-size:.7rem;font-weight:700;color:var(--deep-rose);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini-chart canvas{width:100%;height:80px;border-radius:6px;background:rgba(255,255,255,.7)}
+  .mini-chart .score{font-size:.65rem;color:var(--text-light);margin-top:.2rem;font-weight:600}
 
   /* ── Status ── */
-  .status-bar{text-align:center;font-size:.78rem;font-weight:600;padding:.3rem;border-radius:8px;transition:all .3s}
+  .status-bar{text-align:center;font-size:.78rem;font-weight:600;padding:.35rem;border-radius:10px;transition:all .3s}
   .status-bar.idle{color:var(--text-light)}
-  .status-bar.training{color:var(--rose);background:var(--soft-pink)}
+  .status-bar.training{color:var(--rose);background:var(--soft-pink);box-shadow:0 0 12px rgba(233,30,99,.15)}
   .status-bar.done{color:#43a047;background:#e8f5e9}
+
+  /* ── Section Divider ── */
+  .heart-divider{text-align:center;margin:.3rem 0;font-size:.7rem;color:rgba(255,105,180,.35);letter-spacing:4px}
 
   /* ── Responsive ── */
   @media(max-width:900px){
@@ -117,28 +160,132 @@
     .left-panel{flex:none}
     .sensitivity-grid{grid-template-columns:repeat(2,1fr)}
     .mini-chart:last-child{grid-column:span 2}
+    .prediction-pct{font-size:2.2rem}
   }
 
   /* ── Animations ── */
-  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
-  @keyframes dropIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  @keyframes heartbeat{0%,100%{transform:translate(-50%,-50%) scale(1)}14%{transform:translate(-50%,-50%) scale(1.1)}28%{transform:translate(-50%,-50%) scale(1)}42%{transform:translate(-50%,-50%) scale(1.08)}70%{transform:translate(-50%,-50%) scale(1)}}
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
   .pulse{animation:pulse .5s ease-in-out}
 </style>
 </head>
 <body>
 
+<!-- Floating Hearts Background -->
+<div class="hearts-bg" id="heartsBg"></div>
+
+<!-- Cupid Arrows -->
+<div class="cupid-arrow tl">
+  <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="10" y1="30" x2="170" y2="30" stroke="#E91E63" stroke-width="3"/>
+    <polygon points="170,20 200,30 170,40" fill="#E91E63"/>
+    <path d="M10,30 C10,20 0,15 0,25 C0,35 10,30 10,30 C10,30 20,35 20,25 C20,15 10,20 10,30Z" fill="#E91E63"/>
+    <line x1="45" y1="10" x2="25" y2="50" stroke="#E91E63" stroke-width="2"/>
+    <line x1="55" y1="10" x2="35" y2="50" stroke="#E91E63" stroke-width="2"/>
+  </svg>
+</div>
+<div class="cupid-arrow br">
+  <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="10" y1="30" x2="170" y2="30" stroke="#9C27B0" stroke-width="3"/>
+    <polygon points="170,20 200,30 170,40" fill="#9C27B0"/>
+    <path d="M10,30 C10,20 0,15 0,25 C0,35 10,30 10,30 C10,30 20,35 20,25 C20,15 10,20 10,30Z" fill="#9C27B0"/>
+    <line x1="45" y1="10" x2="25" y2="50" stroke="#9C27B0" stroke-width="2"/>
+    <line x1="55" y1="10" x2="35" y2="50" stroke="#9C27B0" stroke-width="2"/>
+  </svg>
+</div>
+<div class="cupid-arrow mr">
+  <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="10" y1="30" x2="170" y2="30" stroke="#FF69B4" stroke-width="3"/>
+    <polygon points="170,20 200,30 170,40" fill="#FF69B4"/>
+    <path d="M10,30 C10,20 0,15 0,25 C0,35 10,30 10,30 C10,30 20,35 20,25 C20,15 10,20 10,30Z" fill="#FF69B4"/>
+  </svg>
+</div>
+
 <div class="header">
   <h1>Should I Text My Crush?</h1>
-  <p>Interactive Decision Neuron &mdash; Train a single neuron to decide for you</p>
+  <p>Train a single neuron to make the hardest decision of your life</p>
 </div>
 
 <div class="app">
   <!-- LEFT PANEL -->
   <div class="left-panel">
 
+    <!-- Live Predictor -->
+    <div class="card predictor-card">
+      <h2>&#128140; Try It &mdash; Adjust Your Situation</h2>
+
+      <div class="input-slider-group">
+        <div class="input-slider-header">
+          <span class="input-slider-name">&#128170; Confidence Level</span>
+          <span class="input-slider-val" id="inputVal0">5.0</span>
+        </div>
+        <div class="input-slider-desc">How bold are you feeling right now?</div>
+        <div class="input-slider-track">
+          <input type="range" id="inputSlider0" min="0" max="10" step="0.1" value="5" oninput="updateInput(0,this.value)">
+          <span class="weight-badge pos" id="wb0">w: +0.00</span>
+        </div>
+      </div>
+
+      <div class="input-slider-group">
+        <div class="input-slider-header">
+          <span class="input-slider-name">&#9200; Time Since Last Conversation</span>
+          <span class="input-slider-val" id="inputVal1">5.0</span>
+        </div>
+        <div class="input-slider-desc">How long since you last talked?</div>
+        <div class="input-slider-track">
+          <input type="range" id="inputSlider1" min="0" max="10" step="0.1" value="5" oninput="updateInput(1,this.value)">
+          <span class="weight-badge pos" id="wb1">w: +0.00</span>
+        </div>
+      </div>
+
+      <div class="input-slider-group">
+        <div class="input-slider-header">
+          <span class="input-slider-name">&#128149; Likelihood They're Interested</span>
+          <span class="input-slider-val" id="inputVal2">5.0</span>
+        </div>
+        <div class="input-slider-desc">Based on vibes... are they into you?</div>
+        <div class="input-slider-track">
+          <input type="range" id="inputSlider2" min="0" max="10" step="0.1" value="5" oninput="updateInput(2,this.value)">
+          <span class="weight-badge pos" id="wb2">w: +0.00</span>
+        </div>
+      </div>
+
+      <div class="input-slider-group">
+        <div class="input-slider-header">
+          <span class="input-slider-name">&#128336; Time of Day Appropriateness</span>
+          <span class="input-slider-val" id="inputVal3">7.0</span>
+        </div>
+        <div class="input-slider-desc">Is it a reasonable hour? (not 3am...)</div>
+        <div class="input-slider-track">
+          <input type="range" id="inputSlider3" min="0" max="10" step="0.1" value="7" oninput="updateInput(3,this.value)">
+          <span class="weight-badge pos" id="wb3">w: +0.00</span>
+        </div>
+      </div>
+
+      <div class="input-slider-group">
+        <div class="input-slider-header">
+          <span class="input-slider-name">&#128560; Anxiety / Fear Factor</span>
+          <span class="input-slider-val" id="inputVal4">5.0</span>
+        </div>
+        <div class="input-slider-desc">How nervous / scared of being annoying?</div>
+        <div class="input-slider-track">
+          <input type="range" id="inputSlider4" min="0" max="10" step="0.1" value="5" oninput="updateInput(4,this.value)">
+          <span class="weight-badge neg" id="wb4">w: +0.00</span>
+        </div>
+      </div>
+
+      <div class="prediction-output" id="predictionBox">
+        <div class="prediction-heart" style="animation:heartbeat 1.5s infinite">&#10084;&#65039;</div>
+        <div class="prediction-label">Text Probability</div>
+        <div class="prediction-pct" id="predPct">50%</div>
+        <div class="prediction-verdict go" id="predVerdict">GO FOR IT</div>
+      </div>
+    </div>
+
     <!-- Setup -->
     <div class="card">
-      <h2><span class="icon">&#9881;</span> Setup</h2>
+      <h2>&#9881;&#65039; Setup</h2>
 
       <div style="font-size:.78rem;font-weight:600;color:var(--text-light);margin-bottom:.3rem">Weight Initialization</div>
       <div class="init-row">
@@ -148,19 +295,19 @@
       </div>
 
       <div class="slider-group">
-        <div class="slider-label"><span>Baseline Tendency (Bias)</span><span id="biasVal">0.00</span></div>
+        <div class="slider-label"><span>&#127919; Baseline Tendency (Bias)</span><span id="biasVal">0.00</span></div>
         <input type="range" id="biasSlider" min="-5" max="5" step="0.1" value="0" oninput="setBias(this.value)">
       </div>
       <div class="slider-group">
-        <div class="slider-label"><span>Learning Rate</span><span id="lrVal">0.10</span></div>
+        <div class="slider-label"><span>&#128218; Learning Rate</span><span id="lrVal">0.10</span></div>
         <input type="range" id="lrSlider" min="0.01" max="1" step="0.01" value="0.1" oninput="setLR(this.value)">
       </div>
     </div>
 
     <!-- Training -->
     <div class="card">
-      <h2><span class="icon">&#9889;</span> Training</h2>
-      <div style="font-size:.78rem;color:var(--text-light);margin-bottom:.5rem">Select a label, then click the plot to add points</div>
+      <h2>&#9889; Training</h2>
+      <div style="font-size:.78rem;color:var(--text-light);margin-bottom:.5rem">Select a label, then click the plot to add data points</div>
 
       <div class="label-toggle">
         <button class="label-btn go active" id="btnGo" onclick="setLabel(1)">&#10084; GO FOR IT</button>
@@ -168,7 +315,7 @@
       </div>
 
       <div class="training-btns">
-        <button class="btn btn-primary" id="btnStep" onclick="trainStep()" disabled>Step</button>
+        <button class="btn btn-primary" id="btnStep" onclick="trainStep()" disabled>&#10084; Step</button>
         <button class="btn btn-secondary" id="btnTrain" onclick="trainMultiple()" disabled>Train &times;10</button>
         <button class="btn btn-danger" id="btnReset" onclick="resetAll()">Reset</button>
       </div>
@@ -177,7 +324,7 @@
 
     <!-- Metrics -->
     <div class="card">
-      <h2><span class="icon">&#128202;</span> Neuron Weights</h2>
+      <h2>&#128202; Neuron Weights</h2>
       <div id="weightsList">
         <div class="metric-row"><span class="name">&#128170; Confidence</span><span class="val" id="w0">0.00</span></div>
         <div class="metric-row"><span class="name">&#9200; Time Since Last</span><span class="val" id="w1">0.00</span></div>
@@ -206,13 +353,13 @@
   <!-- RIGHT PANEL -->
   <div class="right-panel">
     <div class="plot-wrap">
-      <div style="font-size:.85rem;font-weight:700;color:var(--purple);margin-bottom:.4rem;text-align:center">Decision Boundary &mdash; Click to add points</div>
+      <div style="font-size:.85rem;font-weight:700;color:var(--deep-rose);margin-bottom:.4rem;text-align:center">&#128152; Decision Boundary &mdash; Click to add points &#128152;</div>
       <div class="plot-container" id="plotContainer">
         <canvas class="plot-canvas" id="mainCanvas"></canvas>
       </div>
       <div class="plot-legend">
-        <span><span class="legend-dot" style="background:var(--rose)"></span> GO FOR IT</span>
-        <span><span class="legend-dot" style="background:var(--purple)"></span> HOLD OFF</span>
+        <span><span class="legend-dot" style="background:var(--rose)"></span> GO FOR IT &#10084;</span>
+        <span><span class="legend-dot" style="background:var(--purple)"></span> HOLD OFF &#128156;</span>
       </div>
     </div>
   </div>
@@ -221,10 +368,31 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-/* ═══════════════════════════════════════════
+/* =============================================
    Interactive Decision Neuron
    "Should I text my crush?"
-   ═══════════════════════════════════════════ */
+   Valentine's Edition
+   ============================================= */
+
+// ── Floating Hearts ──
+(function spawnHearts() {
+  const bg = document.getElementById('heartsBg');
+  const hearts = ['\u2764','\u{1F495}','\u{1F497}','\u{1F496}','\u{1F49C}','\u{1F49D}','\u{1F493}','\u2665'];
+  function addHeart() {
+    const el = document.createElement('div');
+    el.className = 'floating-heart';
+    el.textContent = hearts[Math.random() * hearts.length | 0];
+    el.style.left = (Math.random() * 100) + '%';
+    el.style.fontSize = (1.2 + Math.random() * 2.5) + 'rem';
+    el.style.animationDuration = (8 + Math.random() * 12) + 's';
+    el.style.animationDelay = (Math.random() * 2) + 's';
+    bg.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+  // initial batch
+  for (let i = 0; i < 15; i++) setTimeout(addHeart, i * 400);
+  setInterval(addHeart, 1800);
+})();
 
 // ── State ──
 const FEATURES = [
@@ -234,17 +402,18 @@ const FEATURES = [
   { name: 'Time of Day', icon: '\u{1F550}', expectedSign: 1 },
   { name: 'Anxiety/Fear', icon: '\u{1F630}', expectedSign: -1 },
 ];
-const FIXED = { timeSince: 5, timeOfDay: 7, anxiety: 5 }; // fixed values for non-plotted axes
+const FIXED_DEFAULTS = [5, 5, 5, 7, 5]; // default slider values
 
 let weights = [0, 0, 0, 0, 0];
 let bias = 0;
 let learningRate = 0.1;
-let currentLabel = 1; // 1 = go, 0 = hold
-let points = []; // { x, y, label, inputs:[5] }
+let currentLabel = 1;
+let points = [];
 let stepCounter = 0;
 let isTraining = false;
 let initMode = 'random';
 let sensOpen = false;
+let liveInputs = [...FIXED_DEFAULTS];
 
 // ── Canvas Setup ──
 const canvas = document.getElementById('mainCanvas');
@@ -273,7 +442,35 @@ function predict(inputs) {
   return sigmoid(z);
 }
 function makeInputs(confidence, interest) {
-  return [confidence, FIXED.timeSince, interest, FIXED.timeOfDay, FIXED.anxiety];
+  return [confidence, liveInputs[1], interest, liveInputs[3], liveInputs[4]];
+}
+
+// ── Live Input Sliders ──
+function updateInput(idx, val) {
+  liveInputs[idx] = parseFloat(val);
+  document.getElementById('inputVal' + idx).textContent = parseFloat(val).toFixed(1);
+  updatePrediction();
+  render();
+}
+function updatePrediction() {
+  const prob = predict(liveInputs);
+  const pct = (prob * 100).toFixed(1);
+  document.getElementById('predPct').textContent = pct + '%';
+  const verdict = document.getElementById('predVerdict');
+  if (prob >= 0.5) {
+    verdict.textContent = '\u2764 GO FOR IT';
+    verdict.className = 'prediction-verdict go';
+  } else {
+    verdict.textContent = '\u{1F49C} HOLD OFF';
+    verdict.className = 'prediction-verdict hold';
+  }
+  // Update weight badges
+  for (let i = 0; i < 5; i++) {
+    const wb = document.getElementById('wb' + i);
+    const w = weights[i];
+    wb.textContent = 'w: ' + (w >= 0 ? '+' : '') + w.toFixed(2);
+    wb.className = 'weight-badge ' + (w >= 0 ? 'pos' : 'neg');
+  }
 }
 
 // ── Init ──
@@ -293,6 +490,7 @@ function initWeights() {
   bias = parseFloat(document.getElementById('biasSlider').value);
   stepCounter = 0;
   updateMetrics();
+  updatePrediction();
   render();
 }
 
@@ -301,6 +499,7 @@ function setBias(v) {
   bias = parseFloat(v);
   document.getElementById('biasVal').textContent = bias.toFixed(2);
   updateMetrics();
+  updatePrediction();
   render();
 }
 function setLR(v) {
@@ -324,13 +523,13 @@ function trainStep() {
     }
     bias += learningRate * error;
   }
-  // Sync bias slider
   const clamped = Math.max(-5, Math.min(5, bias));
   document.getElementById('biasSlider').value = clamped;
   document.getElementById('biasVal').textContent = bias.toFixed(2);
 
   stepCounter++;
   updateMetrics();
+  updatePrediction();
   render();
 }
 
@@ -415,10 +614,6 @@ function toDataX(cx) { return Math.max(0, Math.min(10, ((cx - MARGIN.left) / plo
 function toDataY(cy) { return Math.max(0, Math.min(10, ((MARGIN.top + plotH() - cy) / plotH()) * 10)); }
 
 // ── Rendering ──
-let animTarget = null;
-let animWeights = [...weights];
-let animBias = bias;
-
 function render() {
   const w = canvas.width / (window.devicePixelRatio || 1);
   const h = canvas.height / (window.devicePixelRatio || 1);
@@ -428,22 +623,23 @@ function render() {
   drawGrid(w, h);
   drawBoundary(w, h);
   drawAxes(w, h);
+  drawLiveCrosshair();
   drawPoints();
 }
 
 function drawRegions(w, h) {
   const pw = plotW();
   const ph = plotH();
-  const res = 4; // pixel step for performance
+  const res = 4;
   for (let px = 0; px < pw; px += res) {
     for (let py = 0; py < ph; py += res) {
       const dx = (px / pw) * 10;
       const dy = ((ph - py) / ph) * 10;
       const prob = predict(makeInputs(dx, dy));
       if (prob >= 0.5) {
-        ctx.fillStyle = `rgba(255,228,232,${0.25 + (prob - 0.5) * 0.9})`;
+        ctx.fillStyle = `rgba(255,200,215,${0.2 + (prob - 0.5) * 1.0})`;
       } else {
-        ctx.fillStyle = `rgba(243,229,245,${0.25 + (0.5 - prob) * 0.9})`;
+        ctx.fillStyle = `rgba(225,190,231,${0.2 + (0.5 - prob) * 1.0})`;
       }
       ctx.fillRect(MARGIN.left + px, MARGIN.top + py, res, res);
     }
@@ -451,7 +647,7 @@ function drawRegions(w, h) {
 }
 
 function drawGrid(w, h) {
-  ctx.strokeStyle = 'rgba(156,39,176,0.08)';
+  ctx.strokeStyle = 'rgba(233,30,99,0.06)';
   ctx.lineWidth = 1;
   for (let i = 0; i <= 10; i++) {
     const x = toCanvasX(i);
@@ -462,24 +658,25 @@ function drawGrid(w, h) {
 }
 
 function drawBoundary(w, h) {
-  // Decision boundary: w0*x + w2*y + w1*5 + w3*7 + w4*5 + bias = 0
-  // y = -(w0*x + w1*5 + w3*7 + w4*5 + bias) / w2
-  if (Math.abs(weights[2]) < 0.001) return; // near-horizontal or degenerate
+  if (Math.abs(weights[2]) < 0.001) return;
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(MARGIN.left, MARGIN.top, plotW(), plotH());
   ctx.clip();
 
+  const fixedSum = weights[1] * liveInputs[1] + weights[3] * liveInputs[3] + weights[4] * liveInputs[4];
   const pts = [];
   for (let px = -1; px <= 11; px += 0.2) {
-    const y = -(weights[0] * px + weights[1] * FIXED.timeSince + weights[3] * FIXED.timeOfDay + weights[4] * FIXED.anxiety + bias) / weights[2];
+    const y = -(weights[0] * px + fixedSum + bias) / weights[2];
     pts.push({ x: px, y });
   }
 
-  ctx.strokeStyle = 'rgba(233,30,99,0.7)';
-  ctx.lineWidth = 2.5;
-  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = 'rgba(233,30,99,0.75)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([8, 5]);
+  ctx.shadowColor = 'rgba(233,30,99,0.3)';
+  ctx.shadowBlur = 8;
   ctx.beginPath();
   let started = false;
   for (const p of pts) {
@@ -489,24 +686,54 @@ function drawBoundary(w, h) {
   }
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function drawLiveCrosshair() {
+  const cx = toCanvasX(liveInputs[0]);
+  const cy = toCanvasY(liveInputs[2]);
+  // Crosshair lines
+  ctx.save();
+  ctx.strokeStyle = 'rgba(233,30,99,0.25)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(cx, MARGIN.top); ctx.lineTo(cx, MARGIN.top + plotH()); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(MARGIN.left, cy); ctx.lineTo(MARGIN.left + plotW(), cy); ctx.stroke();
+  ctx.setLineDash([]);
+  // Diamond marker
+  const prob = predict(liveInputs);
+  const color = prob >= 0.5 ? 'rgba(233,30,99,0.8)' : 'rgba(156,39,176,0.8)';
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 7); ctx.lineTo(cx + 7, cy); ctx.lineTo(cx, cy + 7); ctx.lineTo(cx - 7, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Percentage label
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // Only if diamond is big enough
   ctx.restore();
 }
 
 function drawAxes(w, h) {
-  ctx.strokeStyle = 'rgba(74,74,74,0.3)';
+  ctx.strokeStyle = 'rgba(74,74,74,0.25)';
   ctx.lineWidth = 1.5;
-  // X axis
   ctx.beginPath();
   ctx.moveTo(MARGIN.left, MARGIN.top + plotH());
   ctx.lineTo(MARGIN.left + plotW(), MARGIN.top + plotH());
   ctx.stroke();
-  // Y axis
   ctx.beginPath();
   ctx.moveTo(MARGIN.left, MARGIN.top);
   ctx.lineTo(MARGIN.left, MARGIN.top + plotH());
   ctx.stroke();
 
-  ctx.fillStyle = '#888';
+  ctx.fillStyle = '#999';
   ctx.font = '11px "Segoe UI", system-ui, sans-serif';
   ctx.textAlign = 'center';
   for (let i = 0; i <= 10; i += 2) {
@@ -518,8 +745,7 @@ function drawAxes(w, h) {
     ctx.fillText(i, MARGIN.left - 8, toCanvasY(i));
   }
 
-  // Labels
-  ctx.fillStyle = '#4A4A4A';
+  ctx.fillStyle = '#E91E63';
   ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
@@ -536,13 +762,11 @@ function drawPoints() {
   for (const p of points) {
     const cx = toCanvasX(p.inputs[0]);
     const cy = toCanvasY(p.inputs[2]);
-    const r = 7;
-    ctx.beginPath();
+    const r = 8;
     if (p.label === 1) {
-      // Heart shape for "go"
-      drawHeart(cx, cy, r, 'rgba(233,30,99,0.9)', 'rgba(233,30,99,0.15)');
+      drawHeart(cx, cy, r, 'rgba(233,30,99,0.9)', 'rgba(233,30,99,0.2)');
     } else {
-      drawHeart(cx, cy, r, 'rgba(156,39,176,0.9)', 'rgba(156,39,176,0.15)');
+      drawHeart(cx, cy, r, 'rgba(156,39,176,0.9)', 'rgba(156,39,176,0.2)');
     }
   }
 }
@@ -552,6 +776,8 @@ function drawHeart(cx, cy, size, fill, stroke) {
   ctx.fillStyle = fill;
   ctx.strokeStyle = stroke;
   ctx.lineWidth = 2;
+  ctx.shadowColor = fill;
+  ctx.shadowBlur = 6;
   ctx.beginPath();
   const s = size * 0.9;
   const topY = cy - s * 0.4;
@@ -559,6 +785,7 @@ function drawHeart(cx, cy, size, fill, stroke) {
   ctx.bezierCurveTo(cx - s * 1.2, cy - s * 0.2, cx - s * 0.7, topY - s * 0.7, cx, topY + s * 0.1);
   ctx.bezierCurveTo(cx + s * 0.7, topY - s * 0.7, cx + s * 1.2, cy - s * 0.2, cx, cy + s * 0.6);
   ctx.fill();
+  ctx.shadowBlur = 0;
   ctx.stroke();
   ctx.restore();
 }
@@ -570,7 +797,6 @@ canvas.addEventListener('click', function (e) {
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
 
-  // Check if clicking an existing point to toggle
   for (const p of points) {
     const px = toCanvasX(p.inputs[0]);
     const py = toCanvasY(p.inputs[2]);
@@ -578,6 +804,7 @@ canvas.addEventListener('click', function (e) {
       p.label = p.label === 1 ? 0 : 1;
       updateButtons();
       updateMetrics();
+      updatePrediction();
       render();
       return;
     }
@@ -587,16 +814,16 @@ canvas.addEventListener('click', function (e) {
   const dy = toDataY(my);
   if (dx < 0 || dx > 10 || dy < 0 || dy > 10) return;
 
-  const inputs = makeInputs(dx, dy);
+  const inputs = [dx, liveInputs[1], dy, liveInputs[3], liveInputs[4]];
   points.push({ inputs, label: currentLabel });
   updateButtons();
   updateMetrics();
+  updatePrediction();
   render();
   setStatus('idle', `${points.length} point${points.length > 1 ? 's' : ''} \u2014 Ready to train`);
 });
 
 // Tooltip
-let hoveredPoint = null;
 canvas.addEventListener('mousemove', function (e) {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
@@ -655,7 +882,7 @@ function buildSensCharts() {
 }
 
 function renderSensitivity() {
-  const defaults = [5, FIXED.timeSince, 5, FIXED.timeOfDay, FIXED.anxiety]; // default sweep center
+  const defaults = [...liveInputs];
   for (let fi = 0; fi < 5; fi++) {
     const c = document.getElementById('sensCanvas' + fi);
     if (!c) return;
@@ -679,25 +906,22 @@ function renderSensitivity() {
     const pw = w - pad.left - pad.right;
     const ph = h - pad.top - pad.bottom;
 
-    // Y axis (0-100%)
-    cx.strokeStyle = 'rgba(156,39,176,0.15)';
+    cx.strokeStyle = 'rgba(233,30,99,0.1)';
     cx.lineWidth = 0.5;
     cx.font = '10px sans-serif';
-    cx.fillStyle = '#aaa';
+    cx.fillStyle = '#bbb';
     cx.textAlign = 'right';
     for (let p = 0; p <= 100; p += 25) {
       const y = pad.top + ph - (p / 100) * ph;
       cx.beginPath(); cx.moveTo(pad.left, y); cx.lineTo(pad.left + pw, y); cx.stroke();
       cx.fillText(p + '%', pad.left - 3, y + 3);
     }
-    // X axis
     cx.textAlign = 'center';
     for (let v = 0; v <= 10; v += 5) {
       const x = pad.left + (v / 10) * pw;
       cx.fillText(v, x, h - 3);
     }
 
-    // Gradient line
     const grad = cx.createLinearGradient(pad.left, 0, pad.left + pw, 0);
     grad.addColorStop(0, '#E91E63');
     grad.addColorStop(1, '#9C27B0');
@@ -711,17 +935,23 @@ function renderSensitivity() {
     }
     cx.stroke();
 
-    // Default marker
+    // Current value marker
     const defV = defaults[fi];
-    const defProb = predict(defaults);
     const mx = pad.left + (defV / 10) * pw;
-    cx.strokeStyle = 'rgba(233,30,99,0.4)';
+    cx.strokeStyle = 'rgba(233,30,99,0.35)';
     cx.lineWidth = 1;
     cx.setLineDash([3, 3]);
     cx.beginPath(); cx.moveTo(mx, pad.top); cx.lineTo(mx, pad.top + ph); cx.stroke();
     cx.setLineDash([]);
 
-    // Score
+    // Heart at current value intersection
+    const curProb = predict(defaults);
+    const hy = pad.top + ph - curProb * ph;
+    cx.fillStyle = '#E91E63';
+    cx.font = '10px sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText('\u2764', mx, hy - 2);
+
     const score = ((maxP - minP) * 100).toFixed(0);
     const scoreEl = document.getElementById('sensScore' + fi);
     if (scoreEl) scoreEl.textContent = `Sensitivity: ${score}%`;
@@ -733,6 +963,7 @@ function init() {
   initWeights();
   resizeCanvas();
   updateButtons();
+  updatePrediction();
 }
 init();
 </script>
