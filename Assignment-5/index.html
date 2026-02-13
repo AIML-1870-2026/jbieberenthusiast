@@ -240,7 +240,7 @@
           <input type="range" id="inputSlider1" min="0" max="10" step="0.1" value="5" oninput="updateInput(1,this.value)">
           <span class="weight-badge pos" id="wb1">w: +0.00</span>
         </div>
-        <div class="slider-range-labels"><span>Just talked</span><span>Been a while</span></div>
+        <div class="slider-range-labels"><span>Already chatting</span><span>Out of the blue</span></div>
       </div>
 
       <div class="input-slider-group">
@@ -347,14 +347,6 @@
       </div>
     </div>
 
-    <!-- Sensitivity -->
-    <div class="card">
-      <button class="btn btn-secondary sensitivity-toggle" id="sensToggle" onclick="toggleSensitivity()">&#128202; Show Sensitivity Analysis</button>
-      <div class="sensitivity-panel" id="sensPanel">
-        <div class="sensitivity-grid" id="sensGrid"></div>
-      </div>
-    </div>
-
   </div>
 
   <!-- RIGHT PANEL -->
@@ -367,6 +359,14 @@
       <div class="plot-legend">
         <span><span class="legend-dot" style="background:var(--rose)"></span> GO FOR IT &#10084;</span>
         <span><span class="legend-dot" style="background:var(--purple)"></span> HOLD OFF &#128156;</span>
+      </div>
+    </div>
+
+    <!-- Sensitivity -->
+    <div class="card">
+      <button class="btn btn-secondary sensitivity-toggle" id="sensToggle" onclick="toggleSensitivity()">&#128202; Show Sensitivity Analysis</button>
+      <div class="sensitivity-panel" id="sensPanel">
+        <div class="sensitivity-grid" id="sensGrid"></div>
       </div>
     </div>
   </div>
