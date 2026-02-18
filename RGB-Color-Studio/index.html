@@ -399,12 +399,12 @@ function drawStarburst(){
 
   ctx.globalCompositeOperation='screen';
 
-  // Each primary occupies a sector; brightness falls off with angular distance
-  // This creates vivid color in its sector, blending where sectors overlap
+  // Each primary always renders at full 255 brightness in its sector
+  // Sliders control the "selected" color, but the wheel stays vivid
   const layers=[
-    {center:0,            cr:primaries.r?R:0, cg:0, cb:0},
-    {center:Math.PI*2/3,  cr:0, cg:primaries.g?G:0, cb:0},
-    {center:Math.PI*4/3,  cr:0, cg:0, cb:primaries.b?B:0}
+    {center:0,            cr:primaries.r?255:0, cg:0, cb:0},
+    {center:Math.PI*2/3,  cr:0, cg:primaries.g?255:0, cb:0},
+    {center:Math.PI*4/3,  cr:0, cg:0, cb:primaries.b?255:0}
   ];
 
   layers.forEach(layer=>{
@@ -422,7 +422,7 @@ function drawStarburst(){
       const falloff=Math.pow(Math.max(0,Math.cos(diff*0.75)),1.5);
       if(falloff<0.01)continue;
 
-      const brightness=falloff*(maxC/255);
+      const brightness=falloff;
       const petalLen=maxR*(0.82+0.18*Math.sin(i*0.7+animT*0.015));
 
       ctx.beginPath();
@@ -431,7 +431,7 @@ function drawStarburst(){
       ctx.lineTo(cx+Math.cos(nextAngle)*petalLen,cy+Math.sin(nextAngle)*petalLen);
       ctx.closePath();
 
-      // Solid bright fill — no fading gradient
+      // Solid bright fill — always vivid
       const r=clamp(layer.cr*brightness);
       const g=clamp(layer.cg*brightness);
       const b=clamp(layer.cb*brightness);
@@ -646,12 +646,30 @@ document.querySelectorAll('.harmony-tab').forEach(tab=>{
   });
 });
 
-// Canvas click
+// Canvas click — derive color from angle on the wheel (additive RGB mixing)
 function canvasColorFromPos(e){
   const rect=canvas.getBoundingClientRect();
-  const x=(e.clientX-rect.left)/rect.width;
-  const y=(e.clientY-rect.top)/rect.height;
-  return [clamp(x*255),clamp(y*255),clamp((1-x)*0.5*255+(1-y)*0.5*255)];
+  const px=e.clientX-rect.left-rect.width/2;
+  const py=e.clientY-rect.top-rect.height/2;
+  const angle=Math.atan2(py,px); // -PI to PI
+  const dist=Math.sqrt(px*px+py*py)/Math.min(rect.width,rect.height)*2;
+  const sat=Math.min(dist,1); // distance from center = saturation
+
+  // Red at 0°, Green at 120°, Blue at 240° — same as the starburst sectors
+  // Each channel peaks in its sector and falls off smoothly
+  function chanBrightness(centerAngle){
+    let diff=angle-centerAngle;
+    diff=Math.atan2(Math.sin(diff),Math.cos(diff));
+    return Math.pow(Math.max(0,Math.cos(diff*0.75)),1.5);
+  }
+  const rr=chanBrightness(0);
+  const gg=chanBrightness(Math.PI*2/3);
+  const bb=chanBrightness(Math.PI*4/3);
+  // Blend: at center (sat=0) → white, at edge (sat=1) → pure additive mix
+  const r=clamp(255*(1-sat)+255*rr*sat);
+  const g=clamp(255*(1-sat)+255*gg*sat);
+  const b=clamp(255*(1-sat)+255*bb*sat);
+  return [r,g,b];
 }
 canvas.addEventListener('mousedown',e=>{isDragging=true;const[r,g,b]=canvasColorFromPos(e);R=r;G=g;B=b;rSlider.value=R;gSlider.value=G;bSlider.value=B;updateDisplay()});
 canvas.addEventListener('mousemove',e=>{if(!isDragging)return;const[r,g,b]=canvasColorFromPos(e);R=r;G=g;B=b;rSlider.value=R;gSlider.value=G;bSlider.value=B;updateDisplay()});
