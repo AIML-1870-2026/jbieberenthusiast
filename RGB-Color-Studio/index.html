@@ -21,6 +21,10 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Rajdhani',sans-serif}
 .canvas-area{flex:1;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 #mainCanvas{display:block;cursor:crosshair}
 
+/* CVD banner on canvas */
+.cvd-banner{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(255,60,60,0.15);backdrop-filter:blur(10px);border:1px solid rgba(255,100,100,0.3);border-radius:20px;padding:6px 20px;font-family:'Space Mono',monospace;font-size:0.75rem;color:#ff9999;text-transform:uppercase;letter-spacing:2px;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:10;white-space:nowrap}
+.cvd-banner.visible{opacity:1}
+
 /* Floating color readout on canvas — big & prominent */
 .canvas-overlay{position:absolute;bottom:24px;left:24px;background:rgba(10,10,15,0.9);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;pointer-events:none;display:flex;align-items:center;gap:16px;transition:border-color 0.3s}
 .overlay-swatch{width:80px;height:80px;border-radius:10px;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;transition:background 0.1s}
@@ -133,6 +137,7 @@ input.b-s::-webkit-slider-thumb{background:#4488ff}
   <!-- LEFT: Big canvas visualization -->
   <div class="canvas-area">
     <canvas id="mainCanvas"></canvas>
+    <div class="cvd-banner" id="cvdBanner"></div>
     <div class="canvas-overlay">
       <div class="overlay-swatch" id="overlaySwatch"></div>
       <div class="overlay-info">
@@ -192,6 +197,19 @@ input.b-s::-webkit-slider-thumb{background:#4488ff}
       </div>
     </div>
 
+    <!-- Color Vision Simulator — moved up for visibility -->
+    <div class="sidebar-section">
+      <div class="section-title">Color Vision Simulator</div>
+      <div class="cvd-btns" id="cvdBtns">
+        <button class="cvd-btn active" data-cvd="normal"><div class="cvd-dot" id="cvdDotNormal"></div><div><div class="cvd-name">Normal</div><div class="cvd-desc">Full color vision</div></div></button>
+        <button class="cvd-btn" data-cvd="protanopia"><div class="cvd-dot" id="cvdDotProt"></div><div><div class="cvd-name">Protanopia</div><div class="cvd-desc">Red-blind (no L-cones)</div></div></button>
+        <button class="cvd-btn" data-cvd="deuteranopia"><div class="cvd-dot" id="cvdDotDeut"></div><div><div class="cvd-name">Deuteranopia</div><div class="cvd-desc">Green-blind (no M-cones)</div></div></button>
+        <button class="cvd-btn" data-cvd="tritanopia"><div class="cvd-dot" id="cvdDotTrit"></div><div><div class="cvd-name">Tritanopia</div><div class="cvd-desc">Blue-blind (no S-cones)</div></div></button>
+        <button class="cvd-btn" data-cvd="achromatopsia"><div class="cvd-dot" id="cvdDotAchro"></div><div><div class="cvd-name">Achromatopsia</div><div class="cvd-desc">Full color blindness</div></div></button>
+      </div>
+      <div class="cvd-active-label" id="cvdLabel">Viewing: Normal vision</div>
+    </div>
+
     <!-- Color Recipe -->
     <div class="sidebar-section">
       <div class="section-title">Color Recipe</div>
@@ -228,19 +246,6 @@ input.b-s::-webkit-slider-thumb{background:#4488ff}
       </div>
       <div class="wheel-wrap"><canvas id="hslWheel" width="100" height="100"></canvas></div>
       <div class="swatches" id="swatches"></div>
-    </div>
-
-    <!-- Color Blindness Simulator -->
-    <div class="sidebar-section">
-      <div class="section-title">Color Vision Simulator</div>
-      <div class="cvd-btns" id="cvdBtns">
-        <button class="cvd-btn active" data-cvd="normal"><div class="cvd-dot" id="cvdDotNormal"></div><div><div class="cvd-name">Normal</div><div class="cvd-desc">Full color vision</div></div></button>
-        <button class="cvd-btn" data-cvd="protanopia"><div class="cvd-dot" id="cvdDotProt"></div><div><div class="cvd-name">Protanopia</div><div class="cvd-desc">Red-blind (no L-cones)</div></div></button>
-        <button class="cvd-btn" data-cvd="deuteranopia"><div class="cvd-dot" id="cvdDotDeut"></div><div><div class="cvd-name">Deuteranopia</div><div class="cvd-desc">Green-blind (no M-cones)</div></div></button>
-        <button class="cvd-btn" data-cvd="tritanopia"><div class="cvd-dot" id="cvdDotTrit"></div><div><div class="cvd-name">Tritanopia</div><div class="cvd-desc">Blue-blind (no S-cones)</div></div></button>
-        <button class="cvd-btn" data-cvd="achromatopsia"><div class="cvd-dot" id="cvdDotAchro"></div><div><div class="cvd-name">Achromatopsia</div><div class="cvd-desc">Full color blindness</div></div></button>
-      </div>
-      <div class="cvd-active-label" id="cvdLabel">Viewing: Normal vision</div>
     </div>
 
   </div>
@@ -696,6 +701,7 @@ document.querySelectorAll('.harmony-tab').forEach(tab=>{
 });
 
 // CVD toggle buttons
+const cvdBanner=document.getElementById('cvdBanner');
 const cvdNames={normal:'Normal vision',protanopia:'Protanopia (red-blind)',deuteranopia:'Deuteranopia (green-blind)',tritanopia:'Tritanopia (blue-blind)',achromatopsia:'Achromatopsia (grayscale)'};
 document.querySelectorAll('.cvd-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -703,6 +709,13 @@ document.querySelectorAll('.cvd-btn').forEach(btn=>{
     btn.classList.add('active');
     cvdMode=btn.dataset.cvd;
     cvdLabel.textContent='Viewing: '+cvdNames[cvdMode];
+    // Show/hide canvas banner
+    if(cvdMode!=='normal'){
+      cvdBanner.textContent='Simulating: '+cvdNames[cvdMode];
+      cvdBanner.classList.add('visible');
+    } else {
+      cvdBanner.classList.remove('visible');
+    }
   });
 });
 
