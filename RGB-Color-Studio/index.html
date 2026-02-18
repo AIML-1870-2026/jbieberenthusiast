@@ -651,9 +651,9 @@ function setBaseColor(r,g,b){
 }
 
 // ===== Events =====
-rSlider.addEventListener('input',()=>{R=+rSlider.value;updateDisplay()});
-gSlider.addEventListener('input',()=>{G=+gSlider.value;updateDisplay()});
-bSlider.addEventListener('input',()=>{B=+bSlider.value;updateDisplay()});
+rSlider.addEventListener('input',()=>{R=+rSlider.value;updateClickPosFromRGB();updateDisplay()});
+gSlider.addEventListener('input',()=>{G=+gSlider.value;updateClickPosFromRGB();updateDisplay()});
+bSlider.addEventListener('input',()=>{B=+bSlider.value;updateClickPosFromRGB();updateDisplay()});
 
 // Primary toggle buttons
 document.querySelectorAll('.primary-btn').forEach(btn=>{
@@ -671,6 +671,7 @@ document.querySelectorAll('.primary-btn').forEach(btn=>{
       if(p==='g'){G=255;gSlider.value=255}
       if(p==='b'){B=255;bSlider.value=255}
     }
+    updateClickPosFromRGB();
     updateDisplay();
   });
 });
@@ -718,6 +719,32 @@ document.querySelectorAll('.cvd-btn').forEach(btn=>{
     }
   });
 });
+
+// Reverse mapping: RGB slider values → position on starburst wheel
+function updateClickPosFromRGB(){
+  const rect=canvas.getBoundingClientRect();
+  const cx=rect.width/2, cy=rect.height/2;
+  const maxDist=Math.min(rect.width,rect.height)*0.46*0.85;
+
+  const [h,s,l]=rgbToHsl(R,G,B);
+
+  // If the color is very dark or gray, place near center
+  if(s<5||l<5){
+    clickPos={x:cx,y:cy};
+    return;
+  }
+
+  // HSL hue maps directly: Red=0°, Green=120°, Blue=240°
+  const angle=h*Math.PI/180;
+
+  // Distance: min(R,G,B)/255 is the white component → center; pure colors → edge
+  const sat=1-Math.min(R,G,B)/255;
+
+  clickPos={
+    x:cx+Math.cos(angle)*maxDist*Math.max(0.08,sat),
+    y:cy+Math.sin(angle)*maxDist*Math.max(0.08,sat)
+  };
+}
 
 // Canvas click — derive color from angle on the wheel (additive RGB mixing)
 function canvasColorFromPos(e){
