@@ -528,24 +528,31 @@ function drawStarburst(){
 
   ctx.globalCompositeOperation='source-over';
 
-  // Draw pick indicator circle at last click position
+  // Draw pick indicator circle at last click/slider position
   if(clickPos){
     const ix=clickPos.x, iy=clickPos.y;
     const hex=toHex(R,G,B);
     const [,,ll]=rgbToHsl(R,G,B);
-    // Outer ring
+    const ringPulse=0.5+0.5*Math.sin(animT*0.08);
+    // Pulsing outer glow ring so you can see it move
     ctx.beginPath();
-    ctx.arc(ix,iy,24,0,Math.PI*2);
+    ctx.arc(ix,iy,32+ringPulse*4,0,Math.PI*2);
+    ctx.lineWidth=2;
+    ctx.strokeStyle=`rgba(255,255,255,${0.15+ringPulse*0.15})`;
+    ctx.stroke();
+    // Filled color circle
+    ctx.beginPath();
+    ctx.arc(ix,iy,26,0,Math.PI*2);
     ctx.fillStyle=hex;
     ctx.fill();
     ctx.lineWidth=3;
-    ctx.strokeStyle=ll<30?'rgba(255,255,255,0.8)':'rgba(0,0,0,0.5)';
+    ctx.strokeStyle=ll<30?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.6)';
     ctx.stroke();
     // Inner bright border
     ctx.beginPath();
-    ctx.arc(ix,iy,22,0,Math.PI*2);
+    ctx.arc(ix,iy,24,0,Math.PI*2);
     ctx.lineWidth=1.5;
-    ctx.strokeStyle=ll<30?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.6)';
+    ctx.strokeStyle=ll<30?'rgba(255,255,255,0.4)':'rgba(255,255,255,0.7)';
     ctx.stroke();
   }
 }
@@ -803,8 +810,8 @@ function copyHex(text){
   });
 }
 
-// Resize
-window.addEventListener('resize',resizeCanvas);
+// Resize — also update the pick indicator position since it's based on canvas size
+window.addEventListener('resize',()=>{resizeCanvas();updateClickPosFromRGB()});
 
 // ===== Animation Loop =====
 function animate(){
@@ -815,6 +822,7 @@ function animate(){
 
 // ===== Init =====
 resizeCanvas();
+updateClickPosFromRGB(); // Show the pick indicator on load
 updateDisplay();
 setBaseColor(R,G,B);
 animate();
