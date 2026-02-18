@@ -387,35 +387,43 @@ function drawStarburst(){
   const w=canvas.width/window.devicePixelRatio;
   const h=canvas.height/window.devicePixelRatio;
   const cx=w/2, cy=h/2;
-  const maxR=Math.min(w,h)*0.47;
+  const maxR=Math.min(w,h)*0.46;
 
   ctx.globalCompositeOperation='source-over';
   ctx.fillStyle='#000';
   ctx.fillRect(0,0,w,h);
 
-  const numPetals=48;
+  const numPetals=60;
   const petalAngle=Math.PI*2/numPetals;
   const spin=modes.animate?animT*0.003:0;
 
   ctx.globalCompositeOperation='screen';
 
-  // Draw three layers of petals for R, G, B
+  // Each primary occupies a sector; brightness falls off with angular distance
+  // This creates vivid color in its sector, blending where sectors overlap
   const layers=[
-    {offset:0, cr:primaries.r?R:0, cg:0, cb:0},
-    {offset:Math.PI*2/3, cr:0, cg:primaries.g?G:0, cb:0},
-    {offset:Math.PI*4/3, cr:0, cg:0, cb:primaries.b?B:0}
+    {center:0,            cr:primaries.r?R:0, cg:0, cb:0},
+    {center:Math.PI*2/3,  cr:0, cg:primaries.g?G:0, cb:0},
+    {center:Math.PI*4/3,  cr:0, cg:0, cb:primaries.b?B:0}
   ];
 
   layers.forEach(layer=>{
-    if(layer.cr===0&&layer.cg===0&&layer.cb===0)return;
-    const intensity=Math.max(layer.cr,layer.cg,layer.cb)/255;
+    const maxC=Math.max(layer.cr,layer.cg,layer.cb);
+    if(maxC===0)return;
 
     for(let i=0;i<numPetals;i++){
-      const angle=i*petalAngle+spin+layer.offset;
-      const nextAngle=angle+petalAngle*0.8;
+      const angle=i*petalAngle+spin;
+      const nextAngle=angle+petalAngle*0.85;
 
-      // Petal as a triangle from center
-      const petalLen=maxR*(0.7+0.3*Math.sin(i*0.5+animT*0.02));
+      // Angular distance from this petal to the layer's center sector
+      let diff=angle+petalAngle*0.4-layer.center-spin;
+      diff=Math.atan2(Math.sin(diff),Math.cos(diff)); // normalize to [-PI, PI]
+      // Smooth falloff: full brightness in sector, fades in neighboring sectors
+      const falloff=Math.pow(Math.max(0,Math.cos(diff*0.75)),1.5);
+      if(falloff<0.01)continue;
+
+      const brightness=falloff*(maxC/255);
+      const petalLen=maxR*(0.82+0.18*Math.sin(i*0.7+animT*0.015));
 
       ctx.beginPath();
       ctx.moveTo(cx,cy);
@@ -423,30 +431,29 @@ function drawStarburst(){
       ctx.lineTo(cx+Math.cos(nextAngle)*petalLen,cy+Math.sin(nextAngle)*petalLen);
       ctx.closePath();
 
-      const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,petalLen);
-      const a=intensity;
-      grad.addColorStop(0,`rgba(${layer.cr},${layer.cg},${layer.cb},${a})`);
-      grad.addColorStop(0.6,`rgba(${layer.cr},${layer.cg},${layer.cb},${a*0.7})`);
-      grad.addColorStop(1,`rgba(${layer.cr},${layer.cg},${layer.cb},${a*0.15})`);
-      ctx.fillStyle=grad;
+      // Solid bright fill — no fading gradient
+      const r=clamp(layer.cr*brightness);
+      const g=clamp(layer.cg*brightness);
+      const b=clamp(layer.cb*brightness);
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
       ctx.fill();
     }
   });
 
-  // Beams mode: long light rays
+  // Beams mode
   if(modes.beams){
     ctx.globalCompositeOperation='screen';
-    const beamCount=6;
+    const beamCount=8;
     for(let i=0;i<beamCount;i++){
-      const ba=animT*0.015+i*Math.PI*2/beamCount;
-      const bLen=maxR*1.3;
+      const ba=animT*0.012+i*Math.PI*2/beamCount;
+      const bLen=maxR*1.4;
       const bx=cx+Math.cos(ba)*bLen;
       const by=cy+Math.sin(ba)*bLen;
       const grad=ctx.createLinearGradient(cx,cy,bx,by);
-      grad.addColorStop(0,`rgba(${clamp(R)},${clamp(G)},${clamp(B)},0.2)`);
+      grad.addColorStop(0,`rgba(${clamp(R)},${clamp(G)},${clamp(B)},0.35)`);
       grad.addColorStop(1,`rgba(${clamp(R)},${clamp(G)},${clamp(B)},0)`);
       ctx.strokeStyle=grad;
-      ctx.lineWidth=maxR*0.06;
+      ctx.lineWidth=maxR*0.08;
       ctx.lineCap='round';
       ctx.beginPath();
       ctx.moveTo(cx,cy);
@@ -458,44 +465,35 @@ function drawStarburst(){
   // Particles
   if(modes.particles){
     ctx.globalCompositeOperation='screen';
-    if(Math.random()<0.4){
+    if(Math.random()<0.5){
       const a=Math.random()*Math.PI*2;
-      particles.push({x:cx,y:cy,vx:Math.cos(a)*1.5,vy:Math.sin(a)*1.5,life:1,
-        r:R*Math.random(),g:G*Math.random(),b:B*Math.random(),size:Math.random()*4+1});
+      const spd=1+Math.random()*2;
+      particles.push({x:cx,y:cy,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,life:1,
+        r:50+R*Math.random()*0.8,g:50+G*Math.random()*0.8,b:50+B*Math.random()*0.8,size:Math.random()*4+2});
     }
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i];
-      p.x+=p.vx;p.y+=p.vy;p.vx*=1.01;p.vy*=1.01;p.life-=0.006;
+      p.x+=p.vx;p.y+=p.vy;p.vx*=1.008;p.vy*=1.008;p.life-=0.005;
       if(p.life<=0){particles.splice(i,1);continue}
-      ctx.fillStyle=`rgba(${clamp(p.r)},${clamp(p.g)},${clamp(p.b)},${p.life*0.8})`;
+      ctx.fillStyle=`rgba(${clamp(p.r)},${clamp(p.g)},${clamp(p.b)},${p.life})`;
       ctx.beginPath();
       ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);
       ctx.fill();
     }
-    if(particles.length>400)particles.splice(0,60);
+    if(particles.length>500)particles.splice(0,80);
   }
 
-  // Center pulse glow
+  // Bright center glow with pulse
   ctx.globalCompositeOperation='screen';
   const pulse=0.5+0.5*Math.sin(animT*0.04);
-  const pr=maxR*0.2*(0.6+pulse*0.4);
-  const pg=ctx.createRadialGradient(cx,cy,0,cx,cy,pr);
-  const pa=0.2+pulse*0.3;
-  pg.addColorStop(0,`rgba(${clamp(R)},${clamp(G)},${clamp(B)},${pa})`);
-  pg.addColorStop(0.5,`rgba(${clamp(R)},${clamp(G)},${clamp(B)},${pa*0.4})`);
-  pg.addColorStop(1,`rgba(${clamp(R)},${clamp(G)},${clamp(B)},0)`);
-  ctx.fillStyle=pg;
+  const glowR=maxR*0.18*(0.7+pulse*0.3);
+  const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,glowR);
+  glow.addColorStop(0,`rgba(255,255,255,${0.4+pulse*0.3})`);
+  glow.addColorStop(0.3,`rgba(${clamp(R)},${clamp(G)},${clamp(B)},${0.3+pulse*0.2})`);
+  glow.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=glow;
   ctx.beginPath();
-  ctx.arc(cx,cy,pr,0,Math.PI*2);
-  ctx.fill();
-
-  // Bright white center dot
-  const cg2=ctx.createRadialGradient(cx,cy,0,cx,cy,maxR*0.04);
-  cg2.addColorStop(0,`rgba(255,255,255,${0.3+pulse*0.2})`);
-  cg2.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=cg2;
-  ctx.beginPath();
-  ctx.arc(cx,cy,maxR*0.04,0,Math.PI*2);
+  ctx.arc(cx,cy,glowR,0,Math.PI*2);
   ctx.fill();
 
   ctx.globalCompositeOperation='source-over';
