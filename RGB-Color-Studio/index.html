@@ -35,7 +35,8 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Rajdhani',sans-serif}
 .section-title{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:2.5px;color:#556;margin-bottom:12px}
 
 /* Selected Color display */
-.selected-color-preview{width:100%;height:48px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);margin-bottom:12px;transition:background 0.15s}
+.selected-color-preview{width:100%;height:48px;border-radius:8px;border:2px solid rgba(255,255,255,0.18);margin-bottom:12px;transition:background 0.15s;position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06)}
+.selected-color-bright{width:100%;height:20px;border-radius:0 0 6px 6px;position:absolute;bottom:0;left:0;right:0;opacity:0.6;border-top:1px solid rgba(255,255,255,0.1)}
 .color-info-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .color-info-row .label{font-family:'Space Mono',monospace;font-size:0.75rem;color:#556}
 .color-info-row .value{font-family:'Space Mono',monospace;font-size:0.75rem;color:#ccc}
@@ -141,7 +142,7 @@ input.b-s::-webkit-slider-thumb{background:#4488ff}
     <!-- Selected Color -->
     <div class="sidebar-section">
       <div class="section-title">Selected Color</div>
-      <div class="selected-color-preview" id="selPreview"></div>
+      <div class="selected-color-preview" id="selPreview"><div class="selected-color-bright" id="selBright"></div></div>
       <div class="color-info-row"><span class="label">R:</span><span class="value" id="infoR">255</span></div>
       <div class="color-info-row"><span class="label">G:</span><span class="value" id="infoG">100</span></div>
       <div class="color-info-row"><span class="label">B:</span><span class="value" id="infoB">80</span></div>
@@ -540,6 +541,9 @@ function updateDisplay(){
 
   // Sidebar
   selPreview.style.background=hex;
+  // Show a full-saturation reference strip so dark colors still show their hue
+  const [br,bg,bb]=hslToRgb(h,Math.max(s,60),Math.max(l,45));
+  document.getElementById('selBright').style.background=toHex(br,bg,bb);
   infoR.textContent=R;
   infoG.textContent=G;
   infoB.textContent=B;
@@ -548,9 +552,9 @@ function updateDisplay(){
   gVal.textContent=G;
   bVal.textContent=B;
 
-  // Canvas overlay
+  // Canvas overlay — keep text bright/readable, use colored border instead
   overlayHex.textContent=hex;
-  overlayHex.style.color=hex;
+  overlayHex.style.color=l<25?'#fff':hex;
   overlayRgb.textContent=`${R}, ${G}, ${B}`;
   overlayHsl.textContent=`${Math.round(h)}\u00B0, ${Math.round(s)}%, ${Math.round(l)}%`;
 
