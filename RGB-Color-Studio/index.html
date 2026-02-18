@@ -594,7 +594,6 @@ function updateDisplay(){
   overlayHsl.textContent=`${Math.round(h)}\u00B0, ${Math.round(s)}%, ${Math.round(l)}%`;
 
   // Recipe
-  const recipe=getRecipe(R,G,B);
   recipeBox.innerHTML=`<div class="recipe-line">${recipe.mix}</div>&rarr; ${recipe.result}`;
 }
 
