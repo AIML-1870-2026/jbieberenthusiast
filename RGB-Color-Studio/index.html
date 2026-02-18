@@ -104,13 +104,16 @@ input.b-s::-webkit-slider-thumb{background:#4488ff}
 .swatch-hex{font-family:'Space Mono',monospace;font-size:0.7rem;color:#bbb;margin-top:1px}
 .swatch-rgb{font-family:'Space Mono',monospace;font-size:0.6rem;color:#556;margin-top:1px}
 
-/* CVD Section */
-.cvd-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.cvd-grid .cvd-card-full{grid-column:1/-1}
-.cvd-card{text-align:center;background:rgba(255,255,255,0.02);border:1px solid #1a1a28;border-radius:6px;padding:8px}
-.cvd-swatch{width:100%;height:32px;border-radius:4px;margin-bottom:4px;border:1px solid rgba(255,255,255,0.04)}
-.cvd-label{font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:#667;text-transform:uppercase;letter-spacing:0.5px}
-.cvd-hex{font-family:'Space Mono',monospace;font-size:0.65rem;color:#999;margin-top:1px}
+/* CVD Section — toggle buttons */
+.cvd-btns{display:flex;flex-direction:column;gap:5px}
+.cvd-btn{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #1a1a28;border-radius:8px;background:transparent;color:#778;cursor:pointer;transition:all 0.3s;text-align:left}
+.cvd-btn:hover{border-color:#444;color:#bbb}
+.cvd-btn.active{border-color:#668;color:#fff;background:rgba(255,255,255,0.05);box-shadow:0 0 12px rgba(100,130,255,0.1)}
+.cvd-btn .cvd-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.15);flex-shrink:0}
+.cvd-btn.active .cvd-dot{border-color:rgba(255,255,255,0.4);box-shadow:0 0 6px rgba(255,255,255,0.15)}
+.cvd-btn .cvd-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:1px}
+.cvd-btn .cvd-desc{font-family:'Space Mono',monospace;font-size:0.6rem;color:#556}
+.cvd-active-label{font-family:'Space Mono',monospace;font-size:0.65rem;color:#889;text-align:center;margin-top:6px;min-height:1em}
 
 /* Toast */
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);font-family:'Space Mono',monospace;font-size:0.8rem;padding:8px 20px;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:20px;color:#fff;transition:transform 0.4s ease;pointer-events:none;z-index:100}
@@ -229,8 +232,15 @@ input.b-s::-webkit-slider-thumb{background:#4488ff}
 
     <!-- Color Blindness Simulator -->
     <div class="sidebar-section">
-      <div class="section-title">Color Blindness Simulator</div>
-      <div class="cvd-grid" id="cvdGrid"></div>
+      <div class="section-title">Color Vision Simulator</div>
+      <div class="cvd-btns" id="cvdBtns">
+        <button class="cvd-btn active" data-cvd="normal"><div class="cvd-dot" id="cvdDotNormal"></div><div><div class="cvd-name">Normal</div><div class="cvd-desc">Full color vision</div></div></button>
+        <button class="cvd-btn" data-cvd="protanopia"><div class="cvd-dot" id="cvdDotProt"></div><div><div class="cvd-name">Protanopia</div><div class="cvd-desc">Red-blind (no L-cones)</div></div></button>
+        <button class="cvd-btn" data-cvd="deuteranopia"><div class="cvd-dot" id="cvdDotDeut"></div><div><div class="cvd-name">Deuteranopia</div><div class="cvd-desc">Green-blind (no M-cones)</div></div></button>
+        <button class="cvd-btn" data-cvd="tritanopia"><div class="cvd-dot" id="cvdDotTrit"></div><div><div class="cvd-name">Tritanopia</div><div class="cvd-desc">Blue-blind (no S-cones)</div></div></button>
+        <button class="cvd-btn" data-cvd="achromatopsia"><div class="cvd-dot" id="cvdDotAchro"></div><div><div class="cvd-name">Achromatopsia</div><div class="cvd-desc">Full color blindness</div></div></button>
+      </div>
+      <div class="cvd-active-label" id="cvdLabel">Viewing: Normal vision</div>
     </div>
 
   </div>
@@ -245,6 +255,7 @@ let baseColor = {r:255, g:100, b:80};
 let harmony = 'complementary';
 let modes = {animate:true, particles:false, beams:false};
 let primaries = {r:true, g:true, b:false};
+let cvdMode = 'normal';
 let animT = 0;
 let particles = [];
 let isDragging = false;
@@ -272,7 +283,7 @@ const overlayName = document.getElementById('overlayName');
 const recipeBox = document.getElementById('recipeBox');
 const basePicker = document.getElementById('basePicker');
 const swatchesEl = document.getElementById('swatches');
-const cvdGrid = document.getElementById('cvdGrid');
+const cvdLabel = document.getElementById('cvdLabel');
 const wheelCanvas = document.getElementById('hslWheel');
 const wheelCtx = wheelCanvas.getContext('2d');
 const toast = document.getElementById('toast');
@@ -442,11 +453,14 @@ function drawStarburst(){
       ctx.lineTo(cx+Math.cos(nextAngle)*petalLen,cy+Math.sin(nextAngle)*petalLen);
       ctx.closePath();
 
-      // Solid bright fill — always vivid
-      const r=clamp(layer.cr*brightness);
-      const g=clamp(layer.cg*brightness);
-      const b=clamp(layer.cb*brightness);
-      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      // Solid bright fill — apply CVD filter if active
+      let pr=clamp(layer.cr*brightness);
+      let pg=clamp(layer.cg*brightness);
+      let pb=clamp(layer.cb*brightness);
+      if(cvdMode!=='normal'){
+        [pr,pg,pb]=simulateCVD(pr,pg,pb,cvdMode);
+      }
+      ctx.fillStyle=`rgb(${pr},${pg},${pb})`;
       ctx.fill();
     }
   });
@@ -598,16 +612,13 @@ function updateDisplay(){
 }
 
 function updateCVD(){
-  const types=['normal','protanopia','deuteranopia','tritanopia','achromatopsia'];
-  const labels=['Normal','Protanopia','Deuteranopia','Tritanopia','Achromatopsia'];
-  cvdGrid.innerHTML='';
-  types.forEach((type,i)=>{
+  // Update the small dot previews on each CVD button to show base color through that filter
+  const dotMap={normal:'cvdDotNormal',protanopia:'cvdDotProt',deuteranopia:'cvdDotDeut',tritanopia:'cvdDotTrit',achromatopsia:'cvdDotAchro'};
+  Object.keys(dotMap).forEach(type=>{
+    const el=document.getElementById(dotMap[type]);
+    if(!el)return;
     const [sr,sg,sb]=simulateCVD(baseColor.r,baseColor.g,baseColor.b,type);
-    const hex=toHex(sr,sg,sb);
-    const card=document.createElement('div');
-    card.className='cvd-card'+(i===0?' cvd-card-full':'');
-    card.innerHTML=`<div class="cvd-swatch" style="background:${hex}"></div><div class="cvd-label">${labels[i]}</div><div class="cvd-hex">${hex}</div>`;
-    cvdGrid.appendChild(card);
+    el.style.background=toHex(sr,sg,sb);
   });
 }
 
@@ -681,6 +692,17 @@ document.querySelectorAll('.harmony-tab').forEach(tab=>{
     tab.classList.add('active');
     harmony=tab.dataset.harmony;
     updatePalette();
+  });
+});
+
+// CVD toggle buttons
+const cvdNames={normal:'Normal vision',protanopia:'Protanopia (red-blind)',deuteranopia:'Deuteranopia (green-blind)',tritanopia:'Tritanopia (blue-blind)',achromatopsia:'Achromatopsia (grayscale)'};
+document.querySelectorAll('.cvd-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.cvd-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    cvdMode=btn.dataset.cvd;
+    cvdLabel.textContent='Viewing: '+cvdNames[cvdMode];
   });
 });
 
