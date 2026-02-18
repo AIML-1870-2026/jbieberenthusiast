@@ -21,10 +21,13 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Rajdhani',sans-serif}
 .canvas-area{flex:1;position:relative;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
 #mainCanvas{display:block;cursor:crosshair}
 
-/* Floating color readout on canvas */
-.canvas-overlay{position:absolute;bottom:20px;left:20px;background:rgba(10,10,15,0.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;pointer-events:none}
-.canvas-overlay .hex-big{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;letter-spacing:1px}
-.canvas-overlay .sub-vals{font-family:'Space Mono',monospace;font-size:0.7rem;color:#777;margin-top:4px;line-height:1.6}
+/* Floating color readout on canvas — big & prominent */
+.canvas-overlay{position:absolute;bottom:24px;left:24px;background:rgba(10,10,15,0.9);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;pointer-events:none;display:flex;align-items:center;gap:16px;transition:border-color 0.3s}
+.overlay-swatch{width:80px;height:80px;border-radius:10px;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;transition:background 0.1s}
+.overlay-info{display:flex;flex-direction:column;gap:2px}
+.canvas-overlay .hex-big{font-family:'Space Mono',monospace;font-size:1.8rem;font-weight:700;letter-spacing:1px}
+.canvas-overlay .sub-vals{font-family:'Space Mono',monospace;font-size:0.75rem;color:#888;line-height:1.8}
+.canvas-overlay .color-name{font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:#aaa;text-transform:uppercase;letter-spacing:1.5px}
 
 /* === RIGHT: Sidebar === */
 .sidebar{width:320px;min-width:320px;background:linear-gradient(180deg,#0d0d18,#0a0a12);border-left:1px solid #1a1a2e;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
@@ -128,10 +131,14 @@ input.b-s::-webkit-slider-thumb{background:#4488ff}
   <div class="canvas-area">
     <canvas id="mainCanvas"></canvas>
     <div class="canvas-overlay">
-      <div class="hex-big" id="overlayHex">#FF6450</div>
-      <div class="sub-vals">
-        RGB: <span id="overlayRgb">255, 100, 80</span><br>
-        HSL: <span id="overlayHsl">7, 100%, 66%</span>
+      <div class="overlay-swatch" id="overlaySwatch"></div>
+      <div class="overlay-info">
+        <div class="hex-big" id="overlayHex">#FF6450</div>
+        <div class="color-name" id="overlayName">Orange-Red</div>
+        <div class="sub-vals">
+          RGB: <span id="overlayRgb">255, 100, 80</span><br>
+          HSL: <span id="overlayHsl">7, 100%, 66%</span>
+        </div>
       </div>
     </div>
   </div>
@@ -241,6 +248,7 @@ let primaries = {r:true, g:true, b:false};
 let animT = 0;
 let particles = [];
 let isDragging = false;
+let clickPos = null; // {x,y} in canvas CSS coords — for drawing the pick indicator
 
 // ===== DOM =====
 const canvas = document.getElementById('mainCanvas');
@@ -259,6 +267,8 @@ const hexCopy = document.getElementById('hexCopy');
 const overlayHex = document.getElementById('overlayHex');
 const overlayRgb = document.getElementById('overlayRgb');
 const overlayHsl = document.getElementById('overlayHsl');
+const overlaySwatch = document.getElementById('overlaySwatch');
+const overlayName = document.getElementById('overlayName');
 const recipeBox = document.getElementById('recipeBox');
 const basePicker = document.getElementById('basePicker');
 const swatchesEl = document.getElementById('swatches');
@@ -498,6 +508,27 @@ function drawStarburst(){
   ctx.fill();
 
   ctx.globalCompositeOperation='source-over';
+
+  // Draw pick indicator circle at last click position
+  if(clickPos){
+    const ix=clickPos.x, iy=clickPos.y;
+    const hex=toHex(R,G,B);
+    const [,,ll]=rgbToHsl(R,G,B);
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(ix,iy,24,0,Math.PI*2);
+    ctx.fillStyle=hex;
+    ctx.fill();
+    ctx.lineWidth=3;
+    ctx.strokeStyle=ll<30?'rgba(255,255,255,0.8)':'rgba(0,0,0,0.5)';
+    ctx.stroke();
+    // Inner bright border
+    ctx.beginPath();
+    ctx.arc(ix,iy,22,0,Math.PI*2);
+    ctx.lineWidth=1.5;
+    ctx.strokeStyle=ll<30?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.6)';
+    ctx.stroke();
+  }
 }
 
 // ===== HSL Wheel =====
@@ -552,9 +583,13 @@ function updateDisplay(){
   gVal.textContent=G;
   bVal.textContent=B;
 
-  // Canvas overlay — keep text bright/readable, use colored border instead
+  // Canvas overlay — big swatch + readable text
+  overlaySwatch.style.background=hex;
+  overlaySwatch.style.borderColor=l<30?'rgba(255,255,255,0.35)':'rgba(255,255,255,0.15)';
   overlayHex.textContent=hex;
   overlayHex.style.color=l<25?'#fff':hex;
+  const recipe=getRecipe(R,G,B);
+  overlayName.textContent=recipe.result||'Black';
   overlayRgb.textContent=`${R}, ${G}, ${B}`;
   overlayHsl.textContent=`${Math.round(h)}\u00B0, ${Math.round(s)}%, ${Math.round(l)}%`;
 
@@ -675,15 +710,26 @@ function canvasColorFromPos(e){
   const b=clamp(255*(1-sat)+255*bb*sat);
   return [r,g,b];
 }
-canvas.addEventListener('mousedown',e=>{isDragging=true;const[r,g,b]=canvasColorFromPos(e);R=r;G=g;B=b;rSlider.value=R;gSlider.value=G;bSlider.value=B;updateDisplay()});
-canvas.addEventListener('mousemove',e=>{if(!isDragging)return;const[r,g,b]=canvasColorFromPos(e);R=r;G=g;B=b;rSlider.value=R;gSlider.value=G;bSlider.value=B;updateDisplay()});
+function setClickPos(e){
+  const rect=canvas.getBoundingClientRect();
+  clickPos={x:e.clientX-rect.left, y:e.clientY-rect.top};
+}
+function pickColor(e){
+  setClickPos(e);
+  const[r,g,b]=canvasColorFromPos(e);
+  R=r;G=g;B=b;
+  rSlider.value=R;gSlider.value=G;bSlider.value=B;
+  updateDisplay();
+}
+canvas.addEventListener('mousedown',e=>{isDragging=true;pickColor(e)});
+canvas.addEventListener('mousemove',e=>{if(!isDragging)return;pickColor(e)});
 canvas.addEventListener('mouseup',()=>{if(isDragging){isDragging=false;setBaseColor(R,G,B)}});
-canvas.addEventListener('click',e=>{const[r,g,b]=canvasColorFromPos(e);R=r;G=g;B=b;rSlider.value=R;gSlider.value=G;bSlider.value=B;updateDisplay();setBaseColor(R,G,B)});
+canvas.addEventListener('click',e=>{pickColor(e);setBaseColor(R,G,B)});
 canvas.addEventListener('mouseleave',()=>{isDragging=false});
 
 // Touch
-canvas.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const[r,g,b]=canvasColorFromPos(t);R=r;G=g;B=b;rSlider.value=R;gSlider.value=G;bSlider.value=B;updateDisplay()},{passive:false});
-canvas.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];const[r,g,b]=canvasColorFromPos(t);R=r;G=g;B=b;rSlider.value=R;gSlider.value=G;bSlider.value=B;updateDisplay()},{passive:false});
+canvas.addEventListener('touchstart',e=>{e.preventDefault();pickColor(e.touches[0])},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();pickColor(e.touches[0])},{passive:false});
 canvas.addEventListener('touchend',()=>setBaseColor(R,G,B));
 
 // Copy hex
