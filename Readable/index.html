@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readable â Color Readability Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f0f;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 0;
+      gap: 24px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #e8a0a8;
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    /* ========== Card ========== */
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* ========== Text Display Area ========== */
+    .display-wrapper {
+      width: 100%;
+      max-width: 860px;
+      /* Animated gradient border via padding + background */
+      border-radius: 14px;
+      padding: 3px;
+      background: linear-gradient(90deg, #e8a0a8, #c47b85, #a078c8, #e8a0a8);
+      background-size: 300% 300%;
+      animation: gradientShift 4s linear infinite;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .display-area {
+      border-radius: 12px;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 40px;
+      gap: 14px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .lyric-text {
+      font-style: italic;
+      text-align: center;
+      line-height: 1.55;
+      /* font-size set dynamically */
+    }
+
+    .lyric-credit {
+      font-size: 0.82rem;
+      font-style: italic;
+      opacity: 0.7;
+      text-align: center;
+    }
+
+    /* ========== Controls Row ========== */
+    .controls-row {
+      width: 100%;
+      max-width: 860px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .color-card { display: flex; flex-direction: column; }
+
+    /* Channel row: label | slider | number */
+    .channel-row {
+      display: grid;
+      grid-template-columns: 18px 1fr 54px;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .channel-row:last-child { margin-bottom: 0; }
+
+    .channel-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    /* Number input */
+    .channel-num {
+      width: 54px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      padding: 4px 6px;
+      text-align: center;
+    }
+    .channel-num:focus { outline: none; border-color: #e8a0a8; }
+
+    /* ========== Sliders ========== */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Red slider */
+    .slider-r { background: linear-gradient(to right, #1a0a0a, #ff3a3a); }
+    /* Green slider */
+    .slider-g { background: linear-gradient(to right, #0a1a0a, #3aff3a); }
+    /* Blue slider */
+    .slider-b { background: linear-gradient(to right, #0a0a1a, #3a3aff); }
+    /* Size slider */
+    .slider-size { background: linear-gradient(to right, #1a1a2a, #c47b85); }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      transition: box-shadow 0.2s ease;
+    }
+    input[type=range]:hover::-webkit-slider-thumb,
+    input[type=range]:focus::-webkit-slider-thumb {
+      box-shadow: 0 0 0 4px rgba(232,160,168,0.35);
+    }
+
+    /* ========== Size Card ========== */
+    .size-card { display: flex; flex-direction: column; justify-content: center; }
+
+    .size-display {
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: #e8a0a8;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    /* ========== Stats Row ========== */
+    .stats-row {
+      width: 100%;
+      max-width: 860px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .stat-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: #e8a0a8;
+    }
+
+    /* ========== WCAG Compliance Card ========== */
+    .wcag-card {
+      width: 100%;
+      max-width: 860px;
+    }
+
+    .wcag-indicators {
+      display: flex;
+      gap: 32px;
+      margin-top: 8px;
+    }
+
+    .wcag-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .wcag-item-header {
+      font-size: 0.82rem;
+      color: #aaa;
+    }
+
+    .wcag-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      color: #fff;
+      transition: background-color 0.3s ease;
+      width: fit-content;
+    }
+    .badge-pass { background: #4caf73; }
+    .badge-fail { background: #e05a5a; }
+
+    .wcag-note {
+      font-size: 0.72rem;
+      color: #666;
+      font-style: italic;
+    }
+
+    /* ========== Footer ========== */
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 24px 0 28px;
+      color: #555;
+      font-size: 0.78rem;
+      font-style: italic;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Readable</h1>
+
+  <!-- Text Display Area -->
+  <div class="display-wrapper">
+    <div class="display-area" id="displayArea">
+      <span class="lyric-text" id="lyricText"></span>
+      <span class="lyric-credit" id="lyricCredit"></span>
+    </div>
+  </div>
+
+  <!-- Controls Row -->
+  <div class="controls-row">
+
+    <!-- Background Color -->
+    <div class="card color-card">
+      <div class="section-label">Background Color</div>
+
+      <div class="channel-row">
+        <span class="channel-label">R</span>
+        <input type="range" class="slider-r" id="bgR" min="0" max="255" step="1" value="30" />
+        <input type="number" class="channel-num" id="bgRNum" min="0" max="255" value="30" />
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">G</span>
+        <input type="range" class="slider-g" id="bgG" min="0" max="255" step="1" value="30" />
+        <input type="number" class="channel-num" id="bgGNum" min="0" max="255" value="30" />
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">B</span>
+        <input type="range" class="slider-b" id="bgB" min="0" max="255" step="1" value="30" />
+        <input type="number" class="channel-num" id="bgBNum" min="0" max="255" value="30" />
+      </div>
+    </div>
+
+    <!-- Text Size -->
+    <div class="card size-card">
+      <div class="section-label">Text Size</div>
+      <div class="size-display"><span id="sizeValue">18</span>px</div>
+      <input type="range" class="slider-size" id="sizeSlider" min="10" max="72" step="1" value="18" />
+    </div>
+
+    <!-- Text Color -->
+    <div class="card color-card">
+      <div class="section-label">Text Color</div>
+
+      <div class="channel-row">
+        <span class="channel-label">R</span>
+        <input type="range" class="slider-r" id="txR" min="0" max="255" step="1" value="232" />
+        <input type="number" class="channel-num" id="txRNum" min="0" max="255" value="232" />
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">G</span>
+        <input type="range" class="slider-g" id="txG" min="0" max="255" step="1" value="160" />
+        <input type="number" class="channel-num" id="txGNum" min="0" max="255" value="160" />
+      </div>
+      <div class="channel-row">
+        <span class="channel-label">B</span>
+        <input type="range" class="slider-b" id="txB" min="0" max="255" step="1" value="168" />
+        <input type="number" class="channel-num" id="txBNum" min="0" max="255" value="168" />
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="card stat-tile">
+      <div class="section-label">Luminosity (Background)</div>
+      <div class="stat-value" id="statBgLum">0.000</div>
+    </div>
+    <div class="card stat-tile">
+      <div class="section-label">Contrast Ratio</div>
+      <div class="stat-value" id="statContrast">0.00:1</div>
+    </div>
+    <div class="card stat-tile">
+      <div class="section-label">Luminosity (Text)</div>
+      <div class="stat-value" id="statTxLum">0.000</div>
+    </div>
+  </div>
+
+  <!-- WCAG Compliance -->
+  <div class="card wcag-card">
+    <div class="section-label">WCAG Compliance</div>
+    <div class="wcag-indicators">
+
+      <div class="wcag-item">
+        <div class="wcag-item-header">Normal Text &mdash; threshold 4.5:1</div>
+        <span class="wcag-badge badge-fail" id="badgeNormal">FAIL</span>
+        <div class="wcag-note">Normal text requires 4.5:1 for AA compliance</div>
+      </div>
+
+      <div class="wcag-item">
+        <div class="wcag-item-header">Large Text &mdash; threshold 3.0:1</div>
+        <span class="wcag-badge badge-fail" id="badgeLarge">FAIL</span>
+        <div class="wcag-note">Large text requires 3.0:1 for AA compliance</div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    &ldquo;Inspired by the greatest artist of all time.&rdquo;
+  </footer>
+
+  <script>
+    // ========== Justin Bieber Lyrics ==========
+    const lyrics = [
+      {
+        text: "\u201cIs it too late now to say sorry? \u2018Cause I\u2019m missing more than just your body.\u201d",
+        credit: "<strong>Sorry</strong> &mdash; <em>Purpose</em> (2015)"
+      },
+      {
+        text: "\u201cYou give me a feeling that I never felt before. And I deserve it, I think I deserve it.\u201d",
+        credit: "<strong>Deserve You</strong> &mdash; <em>Justice</em> (2021)"
+      },
+      {
+        text: "\u201cI\u2019ll show you, show you, show you how to feel a real love.\u201d",
+        credit: "<strong>What Do You Mean?</strong> &mdash; <em>Purpose</em> (2015)"
+      },
+      {
+        text: "\u201cThought I\u2019d end up with you, I was wrong, I was wrong.\u201d",
+        credit: "<strong>Ghost</strong> &mdash; <em>Justice</em> (2021)"
+      },
+      {
+        text: "\u201cYou know you love me, I know you care. Just shout whenever, and I\u2019ll be there.\u201d",
+        credit: "<strong>Baby</strong> &mdash; <em>My World 2.0</em> (2010)"
+      },
+      {
+        text: "\u201cStuck in the middle, I was looking for a way out. Thinking \u2018bout you, no, I can\u2019t forget.\u201d",
+        credit: "<strong>Peaches</strong> &mdash; <em>Justice</em> (2021)"
+      }
+    ];
+
+    // Pick a random lyric on load
+    const picked = lyrics[Math.floor(Math.random() * lyrics.length)];
+    document.getElementById('lyricText').textContent = picked.text;
+    document.getElementById('lyricCredit').innerHTML = picked.credit;
+
+    // ========== WCAG Luminance & Contrast Math ==========
+
+    /**
+     * Convert a single 8-bit channel (0-255) to its linearized value.
+     * Follows WCAG 2.1 sRGB linearization.
+     */
+    function toLinear(c) {
+      const sRGB = c / 255;
+      return sRGB <= 0.04045
+        ? sRGB / 12.92
+        : Math.pow((sRGB + 0.055) / 1.055, 2.4);
+    }
+
+    /**
+     * Calculate relative luminance from RGB (0-255 each).
+     * L = 0.2126R + 0.7152G + 0.0722B  (on linearized channels)
+     */
+    function luminance(r, g, b) {
+      return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+
+    /**
+     * Calculate WCAG contrast ratio between two luminance values.
+     * ratio = (L_lighter + 0.05) / (L_darker + 0.05)
+     */
+    function contrastRatio(l1, l2) {
+      const lighter = Math.max(l1, l2);
+      const darker  = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    // ========== DOM References ==========
+    const displayArea = document.getElementById('displayArea');
+    const lyricText   = document.getElementById('lyricText');
+
+    // Background sliders & inputs
+    const bgR = document.getElementById('bgR');
+    const bgG = document.getElementById('bgG');
+    const bgB = document.getElementById('bgB');
+    const bgRNum = document.getElementById('bgRNum');
+    const bgGNum = document.getElementById('bgGNum');
+    const bgBNum = document.getElementById('bgBNum');
+
+    // Text sliders & inputs
+    const txR = document.getElementById('txR');
+    const txG = document.getElementById('txG');
+    const txB = document.getElementById('txB');
+    const txRNum = document.getElementById('txRNum');
+    const txGNum = document.getElementById('txGNum');
+    const txBNum = document.getElementById('txBNum');
+
+    // Size
+    const sizeSlider = document.getElementById('sizeSlider');
+    const sizeValue  = document.getElementById('sizeValue');
+
+    // Stats
+    const statBgLum   = document.getElementById('statBgLum');
+    const statTxLum   = document.getElementById('statTxLum');
+    const statContrast = document.getElementById('statContrast');
+
+    // WCAG badges
+    const badgeNormal = document.getElementById('badgeNormal');
+    const badgeLarge  = document.getElementById('badgeLarge');
+
+    // ========== Clamp helper ==========
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, Math.round(val)));
+    }
+
+    // ========== Update Display ==========
+    function updateDisplay() {
+      const r_bg = clamp(+bgR.value, 0, 255);
+      const g_bg = clamp(+bgG.value, 0, 255);
+      const b_bg = clamp(+bgB.value, 0, 255);
+
+      const r_tx = clamp(+txR.value, 0, 255);
+      const g_tx = clamp(+txG.value, 0, 255);
+      const b_tx = clamp(+txB.value, 0, 255);
+
+      const size = clamp(+sizeSlider.value, 10, 72);
+
+      // Apply display area styles
+      displayArea.style.backgroundColor = `rgb(${r_bg},${g_bg},${b_bg})`;
+      displayArea.style.color           = `rgb(${r_tx},${g_tx},${b_tx})`;
+      lyricText.style.fontSize          = `${size}px`;
+
+      // Calculate luminance
+      const lBg = luminance(r_bg, g_bg, b_bg);
+      const lTx = luminance(r_tx, g_tx, b_tx);
+      const ratio = contrastRatio(lBg, lTx);
+
+      // Update stat tiles
+      statBgLum.textContent   = lBg.toFixed(3);
+      statTxLum.textContent   = lTx.toFixed(3);
+      statContrast.textContent = ratio.toFixed(2) + ':1';
+
+      // Update WCAG badges
+      setBadge(badgeNormal, ratio >= 4.5);
+      setBadge(badgeLarge,  ratio >= 3.0);
+    }
+
+    function setBadge(el, pass) {
+      el.textContent = pass ? 'PASS' : 'FAIL';
+      el.classList.toggle('badge-pass', pass);
+      el.classList.toggle('badge-fail', !pass);
+    }
+
+    // ========== Sync Helpers ==========
+
+    // Link a slider and its number input together, then call updateDisplay
+    function linkSliderNum(slider, numInput) {
+      slider.addEventListener('input', () => {
+        numInput.value = slider.value;
+        updateDisplay();
+      });
+      numInput.addEventListener('input', () => {
+        const clamped = clamp(+numInput.value, +numInput.min, +numInput.max);
+        numInput.value = clamped;
+        slider.value   = clamped;
+        updateDisplay();
+      });
+    }
+
+    linkSliderNum(bgR, bgRNum);
+    linkSliderNum(bgG, bgGNum);
+    linkSliderNum(bgB, bgBNum);
+    linkSliderNum(txR, txRNum);
+    linkSliderNum(txG, txGNum);
+    linkSliderNum(txB, txBNum);
+
+    // Size slider (no separate number input, just a display span)
+    sizeSlider.addEventListener('input', () => {
+      sizeValue.textContent = sizeSlider.value;
+      updateDisplay();
+    });
+
+    // ========== Initial Render ==========
+    updateDisplay();
+  </script>
+</body>
+</html>
