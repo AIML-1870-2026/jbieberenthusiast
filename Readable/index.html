@@ -22,7 +22,39 @@
       align-items: center;
       padding: 32px 16px 0;
       gap: 24px;
+      position: relative;
+      overflow-x: hidden;
     }
+
+    /* ========== JB Background Decorations ========== */
+    .jb-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .jb-float {
+      position: absolute;
+      color: #e8a0a8;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      opacity: 0;
+      animation: floatUp linear infinite;
+      user-select: none;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(0) rotate(var(--rot)); opacity: 0; }
+      10%  { opacity: var(--max-opacity); }
+      90%  { opacity: var(--max-opacity); }
+      100% { transform: translateY(-110vh) rotate(calc(var(--rot) + 20deg)); opacity: 0; }
+    }
+
+    /* All page content sits above the background layer */
+    body > *:not(.jb-bg) { position: relative; z-index: 1; }
 
     h1 {
       font-size: 1.6rem;
@@ -258,6 +290,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Floating JB background decorations -->
+  <div class="jb-bg" id="jbBg"></div>
 
   <h1>Readable</h1>
 
@@ -535,6 +570,34 @@
 
     // ========== Initial Render ==========
     updateDisplay();
+
+    // ========== JB Floating Background ==========
+    const symbols = ['JB', '♪', '♫', '✦', '❤', 'JB', '♪', 'JB'];
+    const bg = document.getElementById('jbBg');
+
+    for (let i = 0; i < 22; i++) {
+      const el = document.createElement('span');
+      el.className = 'jb-float';
+      el.textContent = symbols[i % symbols.length];
+
+      const left      = Math.random() * 100;           // % across screen
+      const size      = 0.65 + Math.random() * 0.9;   // rem
+      const duration  = 12 + Math.random() * 18;      // seconds per cycle
+      const delay     = -(Math.random() * duration);  // stagger start
+      const rot       = (Math.random() - 0.5) * 40;  // deg tilt
+      const opacity   = 0.04 + Math.random() * 0.07; // very subtle
+
+      el.style.cssText = `
+        left: ${left}%;
+        bottom: -6vh;
+        font-size: ${size}rem;
+        --rot: ${rot}deg;
+        --max-opacity: ${opacity};
+        animation-duration: ${duration}s;
+        animation-delay: ${delay}s;
+      `;
+      bg.appendChild(el);
+    }
   </script>
 </body>
 </html>
