@@ -57,11 +57,11 @@ body::after {
 }
 .hdr-l,.hdr-r{display:flex;align-items:center;gap:10px}
 .hdr-c {
-  font-family:'Playfair Display',serif;font-size:1.4rem;
+  font-family:'Playfair Display',serif;font-size:1.55rem;
   color:var(--accent);font-weight:900;letter-spacing:3px;text-align:center;
-  text-shadow:0 0 20px rgba(212,175,55,.4);transition:color .4s;
+  text-shadow:0 0 24px rgba(212,175,55,.5);transition:color .4s;
 }
-.hdr-c small{display:block;font-size:.65rem;letter-spacing:4px;font-weight:400;color:var(--text-dim)}
+.hdr-c small{display:block;font-size:.62rem;letter-spacing:3px;font-weight:400;color:var(--text-dim)}
 
 .stat-pill {
   background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:8px;
@@ -362,15 +362,16 @@ body::after {
   </div>
 
   <div class="hdr-c">
-    JB BLACKJACK
-    <small>Believe in 21</small>
+    💜 JB BLACKJACK 💜
+    <small>Justin Bieber's Casino · Believe in 21</small>
   </div>
 
   <div class="hdr-r">
     <div class="theme-dots" title="Cycle themes (T)">
-      <button class="tdot on" data-theme="" style="background:#6a0dad" title="Baby Era"></button>
-      <button class="tdot" data-theme="theme-purpose" style="background:#1e3a5f" title="Purpose Era"></button>
-      <button class="tdot" data-theme="theme-justice" style="background:#5a1a1a" title="Justice Era"></button>
+      <button class="tdot on" data-theme="" style="background:#6a0dad" title="Baby Era (2010)"></button>
+      <button class="tdot" data-theme="theme-purpose" style="background:#1e3a5f" title="Purpose Era (2015)"></button>
+      <button class="tdot" data-theme="theme-justice" style="background:#5a1a1a" title="Justice Era (2021)"></button>
+      <span id="era-label" style="font-size:.65rem;color:var(--text-dim);margin-left:3px;white-space:nowrap">Baby Era</span>
     </div>
     <button class="ibtn" id="cnt-btn" title="Card Counter">Count</button>
     <button class="ibtn" id="strat-btn" title="Strategy Hints">Hint</button>
@@ -386,9 +387,12 @@ body::after {
   <div class="game-area">
     <div class="felt" id="felt">
 
+      <!-- JB lyric ticker -->
+      <div id="lyric-ticker" style="text-align:center;font-style:italic;font-size:.7rem;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;min-height:14px;transition:opacity .5s"></div>
+
       <!-- Dealer -->
       <div class="dealer-zone">
-        <div class="zone-lbl">✦ The Biebster ✦</div>
+        <div class="zone-lbl">🎤 Justin Bieber · Dealer 🎤</div>
         <div class="dealer-tell" id="tell">
           <em>Justin shuffles the deck with swagger...</em>
           <button class="tell-q" onclick="showTellModal()">?</button>
@@ -426,11 +430,6 @@ body::after {
           <button class="abtn" id="dbl-btn" onclick="dbl()" title="Double (D)">Double</button>
         </div>
 
-        <!-- Result button -->
-        <div class="acts h" id="res-btns">
-          <button class="abtn pri" onclick="nextRound()" title="Next Round (Enter/Space)">Next Round ▶</button>
-        </div>
-
         <div class="strat-hint" id="strat-hint"></div>
       </div>
 
@@ -438,13 +437,14 @@ body::after {
       <div class="player-zone">
         <div class="hand-tot" id="p-tot"></div>
         <div class="cards-row" id="p-cards"></div>
-        <div class="zone-lbl" style="margin-top:5px">✦ You ✦</div>
+        <div class="zone-lbl" style="margin-top:5px">💜 You — Belieber 💜</div>
       </div>
 
-      <!-- Result overlay -->
+      <!-- Result overlay — button lives HERE so it's not blocked -->
       <div class="res-overlay" id="res-overlay">
         <div class="res-banner" id="res-banner"></div>
         <div class="res-sub"    id="res-sub"></div>
+        <button class="abtn pri" onclick="nextRound()" style="margin-top:10px;font-size:1rem;padding:11px 28px" title="Next Round (Enter/Space)">Next Round ▶</button>
       </div>
     </div><!-- /felt -->
   </div><!-- /game-area -->
@@ -936,7 +936,7 @@ function renderCard(id, c, faceDown) {
   const inner=document.createElement('div');
   inner.className='card';
   if(faceDown){
-    inner.innerHTML=`<div class="card-back"><div class="card-back-inner">🎵</div></div>`;
+    inner.innerHTML=`<div class="card-back"><div class="card-back-inner"><span style="font-family:'Playfair Display',serif;font-weight:900;font-size:.9rem;letter-spacing:1px;color:var(--accent)">JB<br>♠</span></div></div>`;
   } else {
     const red=['♥','♦'].includes(c.s);
     inner.innerHTML=`<div class="card-f ${red?'r':'b'}">
@@ -1011,29 +1011,55 @@ function renderHistory() {
 // ═══════════════════════════════════════════════
 function setState(s) {
   state=s;
-  const chips =document.getElementById('chips');
-  const betB  =document.getElementById('bet-btns');
-  const playB =document.getElementById('play-btns');
-  const resB  =document.getElementById('res-btns');
-  [chips,betB,playB,resB].forEach(el=>el.classList.add('h'));
+  const chips=document.getElementById('chips');
+  const betB =document.getElementById('bet-btns');
+  const playB=document.getElementById('play-btns');
+  [chips,betB,playB].forEach(el=>el.classList.add('h'));
   if(s==='betting'){chips.classList.remove('h');betB.classList.remove('h');}
   else if(s==='playing'){playB.classList.remove('h');updateStratHint();}
-  else if(s==='result'){resB.classList.remove('h');}
 }
 
 // ═══════════════════════════════════════════════
 // THEMES
 // ═══════════════════════════════════════════════
 const themes=['','theme-purpose','theme-justice'];
+const eraNames=['Baby Era (2010)','Purpose Era (2015)','Justice Era (2021)'];
 let themeIdx=0;
 function setTheme(cls) {
   document.body.className=cls;
   themeIdx=themes.indexOf(cls);
   document.querySelectorAll('.tdot').forEach(b=>b.classList.toggle('on',b.dataset.theme===cls));
+  document.getElementById('era-label').textContent=eraNames[themeIdx];
   snd('click');
 }
 function cycleTheme(){setTheme(themes[(themeIdx+1)%themes.length]);}
 document.querySelectorAll('.tdot').forEach(b=>b.addEventListener('click',()=>setTheme(b.dataset.theme)));
+
+// Lyric ticker
+const lyrics=[
+  '"Baby, baby, baby oh..." — Baby',
+  '"Is it too late now to say sorry?" — Sorry',
+  '"You should go and love yourself." — Love Yourself',
+  '"Never say never." — Never Say Never',
+  '"What do you mean?" — What Do You Mean?',
+  '"One less lonely girl." — One Less Lonely Girl',
+  '"I\'m telling you, one time..." — One Time',
+  '"Yummy, yummy, yummy." — Yummy',
+  '"I\'ll be your peaches..." — Peaches',
+  '"You\'re the ghost of my past..." — Ghost',
+];
+let lyricIdx=0;
+function rotateLyric(){
+  const el=document.getElementById('lyric-ticker');
+  el.style.opacity=0;
+  setTimeout(()=>{
+    el.textContent=lyrics[lyricIdx%lyrics.length];
+    lyricIdx++;
+    el.style.opacity=1;
+  },500);
+}
+rotateLyric();
+setInterval(rotateLyric,5000);
 
 // ═══════════════════════════════════════════════
 // MODALS
