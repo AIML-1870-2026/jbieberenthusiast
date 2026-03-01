@@ -17,7 +17,7 @@ const W = 800, H = 450;
 const GROUND   = 372;
 const PW = 36, PH = 60;
 
-const BASE_SPEED = 300, MAX_SPEED = 750, SPEED_RAMP = 2;
+const BASE_SPEED = 440, MAX_SPEED = 860, SPEED_RAMP = 4;
 const BURST_V = 520, FUEL_DRAIN = 0.20, FUEL_REGEN = 0.15;
 const GRAVITY = 900, BIOME_DUR = 60, CLOSE_DIST = 30;
 
@@ -759,7 +759,7 @@ class GameScene extends Phaser.Scene {
     this.scY = 1;   this.ccTimer = 0;
 
     this.obs    = [];
-    this.spawnCD = 1.5;
+    this.spawnCD = 0.9;
     this.p1x = 0; this.p2x = 0;
     this.parts  = [];
 
@@ -826,10 +826,51 @@ class GameScene extends Phaser.Scene {
     this.bgGfx.clear();
     this.bgGfx.fillStyle(b.bg);
     this.bgGfx.fillRect(0, 0, W, H);
-    this.bgGfx.fillStyle(0xffffff, 0.35);
-    const rng = Phaser.Math.RND;
-    for (let i = 0; i < 60; i++) {
-      this.bgGfx.fillCircle(rng.between(0,W), rng.between(0, GROUND-90), rng.realInRange(0.5, 1.5));
+    switch (this.biome) {
+      case 0: {
+        this.bgGfx.fillStyle(0x330088, 0.25); this.bgGfx.fillRect(0, 0, W, 30);
+        this.bgGfx.fillStyle(0x110033, 0.6);  this.bgGfx.fillRect(0, 0, W, 12);
+        for (let i = 0; i < 50; i++) {
+          this.bgGfx.fillStyle(0xffffff, 0.2 + (i % 4) * 0.1);
+          this.bgGfx.fillCircle((i * 137) % W, (i * 89) % (GROUND - 110), 0.8 + (i % 3) * 0.4);
+        }
+        break;
+      }
+      case 1: {
+        this.bgGfx.fillStyle(0xff6b35, 0.07); this.bgGfx.fillRect(0, GROUND - 140, W, 140);
+        this.bgGfx.fillStyle(0xff8844, 0.04); this.bgGfx.fillRect(0, GROUND - 210, W, 80);
+        for (let i = 0; i < 25; i++) {
+          this.bgGfx.fillStyle(0xffffff, 0.14 + (i % 3) * 0.07);
+          this.bgGfx.fillCircle((i * 173) % W, (i * 67) % (GROUND - 155), 0.6 + (i % 2) * 0.5);
+        }
+        break;
+      }
+      case 2: {
+        this.bgGfx.fillStyle(0x040404, 1); this.bgGfx.fillRect(0, 0, W, H);
+        for (let i = 0; i < 9; i++) {
+          this.bgGfx.fillStyle(0x0a0a0a);
+          this.bgGfx.fillRect((i * 89) % (W - 60), GROUND - 45 - (i * 31) % 80, 55 + (i % 3) * 18, 45 + (i * 31) % 80);
+        }
+        break;
+      }
+      case 3: {
+        this.bgGfx.fillStyle(0x70b8d8, 0.35); this.bgGfx.fillRect(0, GROUND - 190, W, 190);
+        this.bgGfx.fillStyle(0x90d0ee, 0.2);  this.bgGfx.fillRect(0, GROUND - 110, W, 110);
+        for (let i = 0; i < 28; i++) {
+          this.bgGfx.fillStyle(0xeef6ff, 0.28 + (i % 3) * 0.12);
+          this.bgGfx.fillCircle((i * 157) % W, (i * 73) % (GROUND - 200), 0.7 + (i % 2) * 0.5);
+        }
+        break;
+      }
+      case 4: {
+        this.bgGfx.fillStyle(0x020208, 1); this.bgGfx.fillRect(0, 0, W, H);
+        for (let i = 0; i < 45; i++) {
+          const col = i % 3 === 0 ? 0x00fff5 : i % 3 === 1 ? 0xff0040 : 0x222233;
+          this.bgGfx.fillStyle(col, 0.04 + (i % 5) * 0.015);
+          this.bgGfx.fillRect((i * 53) % W, (i * 37) % H, 2 + (i % 4), 1);
+        }
+        break;
+      }
     }
   }
 
@@ -838,26 +879,230 @@ class GameScene extends Phaser.Scene {
     this.gndGfx.clear();
     this.gndGfx.fillStyle(b.ground);
     this.gndGfx.fillRect(0, GROUND, W, H - GROUND);
-    this.gndGfx.lineStyle(2, 0xffffff, 0.12);
-    this.gndGfx.beginPath(); this.gndGfx.moveTo(0, GROUND); this.gndGfx.lineTo(W, GROUND); this.gndGfx.strokePath();
+    switch (this.biome) {
+      case 0: {
+        this.gndGfx.lineStyle(1, 0xffffff, 0.07);
+        for (let y = GROUND + 8; y < H; y += 11) {
+          this.gndGfx.beginPath(); this.gndGfx.moveTo(0, y); this.gndGfx.lineTo(W, y); this.gndGfx.strokePath();
+        }
+        this.gndGfx.lineStyle(2, 0xf5c542, 0.35);
+        this.gndGfx.beginPath(); this.gndGfx.moveTo(0, GROUND); this.gndGfx.lineTo(W, GROUND); this.gndGfx.strokePath();
+        break;
+      }
+      case 1: {
+        this.gndGfx.fillStyle(0x0f161f); this.gndGfx.fillRect(0, GROUND, W, H - GROUND);
+        this.gndGfx.lineStyle(3, 0xffffff, 0.45);
+        this.gndGfx.beginPath(); this.gndGfx.moveTo(0, GROUND); this.gndGfx.lineTo(W, GROUND); this.gndGfx.strokePath();
+        this.gndGfx.lineStyle(2, 0xff8833, 0.3);
+        this.gndGfx.beginPath(); this.gndGfx.moveTo(0, GROUND + 22); this.gndGfx.lineTo(W, GROUND + 22); this.gndGfx.strokePath();
+        break;
+      }
+      case 2: {
+        this.gndGfx.fillStyle(0x161616); this.gndGfx.fillRect(0, GROUND, W, H - GROUND);
+        this.gndGfx.lineStyle(1, 0x242424);
+        for (let x = 0; x < W; x += 32) { this.gndGfx.beginPath(); this.gndGfx.moveTo(x, GROUND); this.gndGfx.lineTo(x, H); this.gndGfx.strokePath(); }
+        for (let y = GROUND + 16; y < H; y += 16) { this.gndGfx.beginPath(); this.gndGfx.moveTo(0, y); this.gndGfx.lineTo(W, y); this.gndGfx.strokePath(); }
+        this.gndGfx.lineStyle(2, 0xffffff, 0.25);
+        this.gndGfx.beginPath(); this.gndGfx.moveTo(0, GROUND); this.gndGfx.lineTo(W, GROUND); this.gndGfx.strokePath();
+        break;
+      }
+      case 3: {
+        this.gndGfx.fillStyle(0xddeeff); this.gndGfx.fillRect(0, GROUND, W, H - GROUND);
+        this.gndGfx.fillStyle(0x99bbcc, 0.45); this.gndGfx.fillRect(0, GROUND, W, 10);
+        this.gndGfx.fillStyle(0xffffff, 0.7);
+        for (let i = 0; i < 35; i++) this.gndGfx.fillCircle((i * 173) % W, GROUND + 3 + (i % 4) * 2, 1);
+        break;
+      }
+      case 4: {
+        this.gndGfx.fillStyle(0x040408); this.gndGfx.fillRect(0, GROUND, W, H - GROUND);
+        this.gndGfx.lineStyle(1, 0x00fff5, 0.18);
+        for (let x = 0; x < W; x += 26) { this.gndGfx.beginPath(); this.gndGfx.moveTo(x, GROUND); this.gndGfx.lineTo(x, H); this.gndGfx.strokePath(); }
+        this.gndGfx.beginPath(); this.gndGfx.moveTo(0, GROUND); this.gndGfx.lineTo(W, GROUND); this.gndGfx.strokePath();
+        for (let x = 0; x < W; x += 26) {
+          if (Math.sin(x * 0.31) > 0.4) { this.gndGfx.fillStyle(0x00fff5, 0.06); this.gndGfx.fillRect(x, GROUND, 26, 10); }
+        }
+        break;
+      }
+    }
   }
 
   drawParallax() {
-    const b = BIOMES[this.biome], dark = darken(b.bg, 20);
     this.p1Gfx.clear();
-    this.p1Gfx.fillStyle(dark, 0.75);
-    const o1 = this.p1x % 130;
-    for (let x = -130+o1; x < W+130; x += 130) {
-      const bh = 18 + Math.sin(x*0.06)*11;
-      this.p1Gfx.fillRect(x, GROUND-80-bh, 95, bh+2);
-    }
     this.p2Gfx.clear();
-    this.p2Gfx.fillStyle(darken(b.bg, 8), 0.8);
-    const o2 = this.p2x % 190;
-    for (let x = -190+o2; x < W+190; x += 190) {
-      const ch = 38 + Math.sin(x*0.09)*22;
-      this.p2Gfx.fillRect(x+18, GROUND-55-ch, 105, ch+42);
+    switch (this.biome) {
+      case 0: this._pxVenue();      break;
+      case 1: this._pxHighway();    break;
+      case 2: this._pxPaparazzi();  break;
+      case 3: this._pxWilderness(); break;
+      case 4: this._pxGlitch();     break;
     }
+  }
+
+  // ── Biome parallax helpers ────────────────────────────────────────────────
+
+  _pxVenue() {
+    // p1 (far, slow): crowd silhouettes
+    const segW = 16, o1 = this.p1x % (segW * 2);
+    this.p1Gfx.fillStyle(darken(0x1a0533, 4));
+    for (let x = -(segW * 2) + o1; x < W + segW * 2; x += segW) {
+      const rowH = 26 + Math.sin(x * 0.28) * 9;
+      const armUp = Math.sin(x * 0.43 + this.t * 1.6) > 0.55;
+      this.p1Gfx.fillRect(x - 5, GROUND - 14 - rowH, 10, rowH);
+      this.p1Gfx.fillCircle(x, GROUND - 17 - rowH, 7);
+      if (armUp) this.p1Gfx.fillRect(x + 5, GROUND - 18 - rowH - 12, 4, 14);
+    }
+    // p2 (mid): lighting rig + sweeping spotlights
+    this.p2Gfx.fillStyle(0x2a2a2a); this.p2Gfx.fillRect(0, 0, W, 8);
+    const rigO = this.p2x % 55;
+    for (let lx = -55 + rigO; lx < W + 55; lx += 55) {
+      this.p2Gfx.fillStyle(0xffee44, 0.9); this.p2Gfx.fillCircle(lx, 5, 5);
+      this.p2Gfx.fillStyle(0x555555); this.p2Gfx.fillRect(lx - 6, 12, 12, 8);
+    }
+    const beamSpacing = 160, o2 = this.p2x % beamSpacing;
+    for (let bx = -beamSpacing + o2; bx < W + beamSpacing; bx += beamSpacing) {
+      const sweep = Math.sin(this.t * 0.65 + bx * 0.008) * 50;
+      this.p2Gfx.fillStyle(0xf5c542, 0.055);
+      this.p2Gfx.fillTriangle(bx - 10, 8, bx + 10, 8, bx + sweep + 50, GROUND - 50);
+      this.p2Gfx.fillStyle(0xaa44ff, 0.035);
+      this.p2Gfx.fillTriangle(bx - 7, 8, bx + 7, 8, bx + sweep - 50, GROUND - 50);
+    }
+  }
+
+  _pxHighway() {
+    // p1 (far): city skyline with lit windows + antennas
+    const bldW = 52, bldGap = 10, o1 = this.p1x % (bldW + bldGap);
+    for (let x = -(bldW + bldGap) + o1; x < W + bldW; x += bldW + bldGap) {
+      const h = 60 + Math.abs(Math.sin(x * 0.077)) * 72;
+      this.p1Gfx.fillStyle(0x0d1b2a);
+      this.p1Gfx.fillRect(x, GROUND - h - 32, bldW, h + 32);
+      for (let wy = GROUND - h - 22; wy < GROUND - 48; wy += 13) {
+        for (let wx = x + 6; wx < x + bldW - 6; wx += 11) {
+          if (Math.sin(wx * 7.3 + wy * 3.1) > 0.05) {
+            this.p1Gfx.fillStyle(0xff8833, 0.5); this.p1Gfx.fillRect(wx, wy, 7, 9);
+          }
+        }
+      }
+      this.p1Gfx.fillStyle(0x223344); this.p1Gfx.fillRect(x + bldW / 2 - 2, GROUND - h - 50, 4, 20);
+      this.p1Gfx.fillStyle(0xff2222, 0.7); this.p1Gfx.fillCircle(x + bldW / 2, GROUND - h - 52, 3);
+    }
+    // p2 (mid): dashed lane lines + street lamps
+    const dashLen = 28, dashGap = 20, dashO = this.p2x % (dashLen + dashGap);
+    this.p2Gfx.fillStyle(0xffffff, 0.5);
+    for (let x = -(dashLen + dashGap) + dashO; x < W + dashLen; x += dashLen + dashGap) {
+      this.p2Gfx.fillRect(x, GROUND - 6, dashLen, 3);
+    }
+    const lampSpacing = 185, lampO = this.p2x % lampSpacing;
+    for (let lx = -lampSpacing + lampO; lx < W + lampSpacing; lx += lampSpacing) {
+      this.p2Gfx.fillStyle(0x445566); this.p2Gfx.fillRect(lx - 3, GROUND - 115, 6, 115); this.p2Gfx.fillRect(lx - 3, GROUND - 118, 32, 6);
+      this.p2Gfx.fillStyle(0xffdd88, 0.9); this.p2Gfx.fillCircle(lx + 29, GROUND - 115, 8);
+      this.p2Gfx.fillStyle(0xffdd88, 0.055);
+      this.p2Gfx.fillTriangle(lx + 22, GROUND - 110, lx + 37, GROUND - 110, lx + 29, GROUND - 2);
+    }
+  }
+
+  _pxPaparazzi() {
+    // p1 (far): building facades, window grid with random flash flicker
+    const facW = 92, o1 = this.p1x % facW;
+    for (let x = -facW + o1; x < W + facW; x += facW) {
+      this.p1Gfx.fillStyle(0x0c0c0c); this.p1Gfx.fillRect(x, 0, facW - 3, GROUND - 14);
+      for (let wy = 10; wy < GROUND - 28; wy += 18) {
+        for (let wx = x + 7; wx < x + facW - 10; wx += 15) {
+          const seed = Math.sin(wx * 5.1 + wy * 2.7);
+          const flash = Math.sin(wx * 9.3 + this.t * 5 + wy * 1.1) > 0.88;
+          if (flash) { this.p1Gfx.fillStyle(0xffffff, 0.95); }
+          else if (seed > 0.15) { this.p1Gfx.fillStyle(0x223344, 0.7); }
+          else { this.p1Gfx.fillStyle(0x0e0e0e); }
+          this.p1Gfx.fillRect(wx, wy, 10, 12);
+        }
+      }
+    }
+    // p2 (mid): paparazzi silhouettes + camera flash bursts
+    const papW = 32, o2 = this.p2x % (papW * 3);
+    for (let x = -(papW * 3) + o2; x < W + papW * 3; x += papW * 3) {
+      const py2 = GROUND - 48;
+      this.p2Gfx.fillStyle(0x0f0f0f);
+      this.p2Gfx.fillRect(x - 9, py2 - 38, 17, 40);
+      this.p2Gfx.fillCircle(x, py2 - 45, 9);
+      this.p2Gfx.fillStyle(0x1a1a1a);
+      this.p2Gfx.fillRect(x + 7, py2 - 56, 24, 14);
+      this.p2Gfx.fillCircle(x + 24, py2 - 50, 7);
+      const fp = Math.sin(x * 0.28 + this.t * 2.8);
+      if (fp > 0.78) {
+        const fi = (fp - 0.78) / 0.22;
+        this.p2Gfx.fillStyle(0xffffff, fi * 0.45);
+        this.p2Gfx.fillCircle(x + 24, py2 - 50, 28 + fi * 18);
+      }
+    }
+  }
+
+  _pxWilderness() {
+    // p1 (far): animated aurora waves + mountain silhouettes with snow caps
+    const aurCols = [0x00cc66, 0x0099cc, 0x6644cc];
+    for (let ai = 0; ai < 3; ai++) {
+      this.p1Gfx.lineStyle(22, aurCols[ai], 0.10 + Math.sin(this.t * 0.6 + ai * 1.3) * 0.04);
+      this.p1Gfx.beginPath();
+      this.p1Gfx.moveTo(0, 42 + ai * 38);
+      for (let x = 0; x <= W; x += 14) {
+        this.p1Gfx.lineTo(x, 42 + ai * 38 + Math.sin(x * 0.013 + this.t * 0.42 + ai * 0.9) * 28);
+      }
+      this.p1Gfx.strokePath();
+    }
+    const mSegW = 230, mo = this.p1x % mSegW;
+    for (let x = -mSegW + mo; x < W + mSegW; x += mSegW) {
+      const peakH = 95 + Math.sin(x * 0.021) * 48, px = x + mSegW / 2;
+      this.p1Gfx.fillStyle(0x1a3550, 0.9);
+      this.p1Gfx.fillTriangle(x - 30, GROUND + 4, x + mSegW + 30, GROUND + 4, px, GROUND - peakH);
+      const cap = peakH * 0.23;
+      this.p1Gfx.fillStyle(0xddeeff, 0.88);
+      this.p1Gfx.fillTriangle(px - cap, GROUND - peakH + cap, px + cap, GROUND - peakH + cap, px, GROUND - peakH);
+    }
+    // p2 (mid): pine tree forest (stacked triangles)
+    const treeSpacing = 48, to = this.p2x % treeSpacing;
+    for (let x = -treeSpacing + to; x < W + treeSpacing; x += treeSpacing) {
+      const tH = 52 + Math.sin(x * 0.34) * 20, tx = x + Math.sin(x * 0.8) * 8;
+      this.p2Gfx.fillStyle(0x3a2010); this.p2Gfx.fillRect(tx - 4, GROUND - 26, 8, 28);
+      const greens = [0x0c2a0c, 0x143d14, 0x1b501b];
+      for (let ti = 0; ti < 3; ti++) {
+        const tw = 27 - ti * 7, ty = GROUND - 22 - tH * (0.33 + ti * 0.30);
+        this.p2Gfx.fillStyle(greens[ti]);
+        this.p2Gfx.fillTriangle(tx - tw, GROUND - 22 - tH * 0.28 * ti, tx + tw, GROUND - 22 - tH * 0.28 * ti, tx, ty);
+      }
+      this.p2Gfx.fillStyle(0xeef6ff, 0.65);
+      this.p2Gfx.fillTriangle(tx - 5, GROUND - 22 - tH * 0.93, tx + 5, GROUND - 22 - tH * 0.93, tx, GROUND - 22 - tH);
+    }
+  }
+
+  _pxGlitch() {
+    // p1 (far): corrupted concert footage fragments (flicker deterministically)
+    const fragW = 36, fo = fragW - (this.p1x % fragW);
+    for (let x = -fo; x < W + fragW; x += fragW) {
+      const s1 = Math.sin(x * 0.19 + Math.floor(this.t * 7) * 2.3);
+      const s2 = Math.sin(x * 0.31 + Math.floor(this.t * 4) * 3.7);
+      if (s1 > 0.18) {
+        const fy = Math.abs(Math.sin(x * 0.22 + 1.1)) * (GROUND - 85) + 10;
+        this.p1Gfx.fillStyle(s1 > 0.72 ? 0x00fff5 : s1 > 0.45 ? 0xff0040 : 0x2a2a3a, 0.45 + Math.abs(s2) * 0.45);
+        this.p1Gfx.fillRect(x, fy, fragW - 3, 8 + Math.abs(s2) * 32);
+      }
+    }
+    // p2 (mid): scanlines + glitch error boxes + grid overlay
+    for (let y = 0; y < GROUND; y += 15) {
+      this.p2Gfx.fillStyle(0x00fff5, 0.03); this.p2Gfx.fillRect(0, y, W, 3);
+    }
+    for (let i = 0; i < 3; i++) {
+      const es = Math.sin(i * 3.7 + Math.floor(this.t * 1.5) * 2.1);
+      if (es > 0.25) {
+        const ex = Math.abs(Math.sin(i * 5.1)) * (W - 130) + 20;
+        const ey = Math.abs(Math.sin(i * 2.9)) * (GROUND - 90) + 10;
+        const ew = 85 + Math.abs(es) * 55, eh = 22 + Math.abs(Math.sin(i * 4.3)) * 28;
+        this.p2Gfx.lineStyle(2, 0xff0040, 0.7); this.p2Gfx.strokeRect(ex, ey, ew, eh);
+        this.p2Gfx.fillStyle(0xff0040, 0.04); this.p2Gfx.fillRect(ex, ey, ew, eh);
+        this.p2Gfx.fillStyle(0xff0040, 0.45); this.p2Gfx.fillRect(ex + 4, ey + 4, ew - 8, 5);
+      }
+    }
+    const gs = 42, go = this.p2x % gs;
+    this.p2Gfx.lineStyle(1, 0x00fff5, 0.07);
+    for (let x = -gs + go; x < W + gs; x += gs) { this.p2Gfx.beginPath(); this.p2Gfx.moveTo(x, 0); this.p2Gfx.lineTo(x, GROUND); this.p2Gfx.strokePath(); }
+    for (let y = 0; y < GROUND; y += gs)         { this.p2Gfx.beginPath(); this.p2Gfx.moveTo(0, y); this.p2Gfx.lineTo(W, y); this.p2Gfx.strokePath(); }
   }
 
   drawObstacles() {
@@ -1068,7 +1313,7 @@ class GameScene extends Phaser.Scene {
 
     // Obstacles
     this.spawnCD -= dt;
-    if (this.spawnCD <= 0) { this.spawnCD=Math.max(0.65,2.4-this.t/45); this.spawnObstacle(); }
+    if (this.spawnCD <= 0) { this.spawnCD=Math.max(0.38,2.0-this.t/28); this.spawnObstacle(); }
     this.updateObstacles(dt);
     this.checkCollisions();
 
