@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bieber Run</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script>
+// ── CONSTANTS ────────────────────────────────────────────────────────────────
+const W = 800, H = 450;
+const GROUND   = 372;
+const PW = 36, PH = 60;
+
+const BASE_SPEED = 300, MAX_SPEED = 750, SPEED_RAMP = 2;
+const BURST_V = 520, FUEL_DRAIN = 0.20, FUEL_REGEN = 0.15;
+const GRAVITY = 900, BIOME_DUR = 60, CLOSE_DIST = 30;
+
+// ── BIOMES ───────────────────────────────────────────────────────────────────
+const BIOMES = [
+  { name:'THE VENUE',           bg:0x1a0533, ground:0x2d0a52, accent:0xf5c542 },
+  { name:'TOUR BUS HIGHWAY',    bg:0x0d1b2a, ground:0x1a3040, accent:0xff6b35 },
+  { name:'PAPARAZZI GAUNTLET',  bg:0x0a0a0a, ground:0x1a1a1a, accent:0xffffff },
+  { name:'CANADIAN WILDERNESS', bg:0x3a6f90, ground:0x7ab0c8, accent:0xc8102e },
+  { name:'GLITCH STAGE',        bg:0x050505, ground:0x0a0a0a, accent:0x00fff5 },
+];
+
+// ── BOSSES ───────────────────────────────────────────────────────────────────
+// hitsNeeded: successful hits to deplete a phase's HP bar
+const BOSSES = [
+  {
+    name: "SCOOTER'S CONTRACT CLAUSE",
+    bpm: 95, accent: 0xf5c542, color: 0x1a2a4a,
+    intro: "Scooter Braun slides contracts across the floor in rhythm.\nPress SPACE on the beat to jetpack over them!",
+    defeatLine: "Scooter trips on his own paper stack. JB does a thumbs-up sprint.",
+    phases: [
+      { label:'The Fine Print',  pattern:'single', hitsNeeded:8 },
+      { label:'Paired Clauses',  pattern:'pair',   hitsNeeded:8 },
+      { label:'Master Contract', pattern:'triple', hitsNeeded:6 },
+    ],
+  },
+  {
+    name: 'THE PAPARAZZI KING',
+    bpm: 110, accent: 0xffffff, color: 0x111111,
+    intro: "Flash zones flood the arena on the beat.\nPress SPACE to dodge to the safe lane!",
+    defeatLine: "The Paparazzi King's camera explodes. JB walks out of the smoke.",
+    phases: [
+      { label:'Open Season',    pattern:'single', hitsNeeded:8 },
+      { label:'Blinding Light', pattern:'pair',   hitsNeeded:8 },
+      { label:'Strobe Finale',  pattern:'triple', hitsNeeded:6 },
+    ],
+  },
+  {
+    name: 'THE BELIEBER MOB',
+    bpm: 128, accent: 0xff66aa, color: 0x3a0020,
+    intro: "Waves of fans rush toward you.\nJump over them on the beat — the crowd IS the music!",
+    defeatLine: "The mob pivots into a choreographed dance troupe. JB joins in briefly.",
+    phases: [
+      { label:'Fan Wave',   pattern:'single', hitsNeeded:8 },
+      { label:'Mixed Rush', pattern:'pair',   hitsNeeded:8 },
+      { label:'Mega Fan',   pattern:'triple', hitsNeeded:6 },
+    ],
+  },
+  {
+    name: 'THE HOCKEY RINK BREAKDOWN',
+    bpm: 140, accent: 0xc8102e, color: 0x071220,
+    intro: "Pucks fly in rhythmic volleys from Stratford, Ontario!\nDodge on the beat — ice physics apply!",
+    defeatLine: "JB scores a goal. Maple leafs fill the screen.",
+    phases: [
+      { label:'Alternating',       pattern:'single', hitsNeeded:8 },
+      { label:'Rapid Fire',        pattern:'pair',   hitsNeeded:8 },
+      { label:"Goalie's Sequence", pattern:'triple', hitsNeeded:6 },
+    ],
+  },
+  {
+    name: "HAILEY'S REMINDER",
+    bpm: 160, accent: 0x00fff5, color: 0x020210,
+    intro: "Two simultaneous lanes. Maximum intensity.\nHit every cue perfectly — the stakes are highest here!",
+    defeatLine: "Full concert sequence. Confetti. JB winks. Lap 2 begins.",
+    phases: [
+      { label:'False Security', pattern:'single', hitsNeeded:8 },
+      { label:'Both Lanes',     pattern:'pair',   hitsNeeded:8 },
+      { label:'Synchronized',   pattern:'triple', hitsNeeded:6 },
+    ],
+  },
+];
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function darken(hex, amt = 25) {
+  const r = Math.max(0, (hex >> 16 & 0xff) - amt);
+  const g = Math.max(0, (hex >> 8  & 0xff) - amt);
+  const b = Math.max(0, (hex       & 0xff) - amt);
+  return (r << 16) | (g << 8) | b;
+}
+function hexStr(n) { return '#' + n.toString(16).padStart(6, '0'); }
+
+// ── MENU SCENE ───────────────────────────────────────────────────────────────
+class MenuScene extends Phaser.Scene {
+  constructor() { super('Menu'); }
+  create() {
+    const g = this.add.graphics();
+    g.fillStyle(0x1a0533); g.fillRect(0, 0, W, H);
+    g.fillStyle(0xffffff, 0.55);
+    for (let i = 0; i < 80; i++) g.fillCircle(Math.random()*W, Math.random()*(GROUND-80), 1+Math.random());
+
+    this.add.text(W/2, H/2-100, 'BIEBER RUN', {
+      fontSize:'66px', fontFamily:'Impact,sans-serif',
+      color:'#f5c542', stroke:'#000', strokeThickness:7,
+    }).setOrigin(0.5);
+    this.add.text(W/2, H/2-22, 'Sprint through superstardom', {
+      fontSize:'19px', fontFamily:'Arial,sans-serif', color:'#ddd',
+    }).setOrigin(0.5);
+    this.add.text(W/2, H/2+18, 'SPACE / hold SPACE = Jetpack   |   DOWN = Slam\nSurvive each biome to face a BOSS ENCOUNTER', {
+      fontSize:'14px', fontFamily:'Arial', color:'#aaa', align:'center',
+    }).setOrigin(0.5);
+
+    const prompt = this.add.text(W/2, H/2+90, 'PRESS SPACE TO START', {
+      fontSize:'26px', fontFamily:'Impact', color:'#f5c542',
+    }).setOrigin(0.5);
+    this.tweens.add({ targets:prompt, alpha:0, duration:550, yoyo:true, repeat:-1 });
+    this.input.keyboard.once('keydown-SPACE', () => this.scene.start('Game'));
+  }
+}
+
+// ── BOSS SCENE ───────────────────────────────────────────────────────────────
+class BossScene extends Phaser.Scene {
+  constructor() { super('Boss'); }
+  init(d) { this.bossIdx = d.bossIdx || 0; }
+
+  create() {
+    this.scene.bringToTop();
+    this.cameras.main.fadeIn(300);
+
+    const boss  = BOSSES[this.bossIdx];
+    this.boss   = boss;
+    this.t      = 0;
+
+    // ── Rhythm state ───────────────────────────────────────────────────────
+    this.beatSec  = 60 / boss.bpm;                       // seconds per beat
+    this.TRAVEL   = W + 80 - 175;                        // 705px, spawn→hitZone
+    this.cueSpd   = this.TRAVEL / (3 * this.beatSec);    // arrives exactly 3 beats after spawn
+    this.HIT_X    = 175;
+    this.pxPerf   = Math.round(0.040 * this.cueSpd);     // 40 ms window in pixels
+    this.pxGood   = Math.round(0.100 * this.cueSpd);     // 100 ms window in pixels
+
+    // ── Phase / scoring state ──────────────────────────────────────────────
+    this.phase       = 0;
+    this.phaseHits   = 0;
+    this.bossHP      = 1.0;         // 0–1 per phase
+    this.consec      = 0;           // consecutive misses
+    this.combo       = 0;
+    this.totalScore  = 0;
+    this.beliebDelta = 0;
+
+    // ── Beat & cue scheduling ─────────────────────────────────────────────
+    this.beatTimer   = 0;
+    this.beatNum     = 0;
+    this.nextCueBeat = 4;           // first cue spawns on beat 4 (3 beats to arrive)
+    this.cues        = [];          // { x, hit, missed }
+
+    // ── Visual state ──────────────────────────────────────────────────────
+    this.beatFlash   = 0;           // 0–1 decays per frame
+    this.state       = 'intro';     // intro|rhythm|punish|phase_clear|defeat|done
+
+    // ── Graphics ──────────────────────────────────────────────────────────
+    this.bgGfx   = this.add.graphics().setDepth(0);
+    this.bosGfx  = this.add.graphics().setDepth(1);
+    this.lanGfx  = this.add.graphics().setDepth(2);
+    this.cuGfx   = this.add.graphics().setDepth(3);
+    this.fxGfx   = this.add.graphics().setDepth(4);
+    this.hudGfx  = this.add.graphics().setDepth(5);
+
+    // ── Text ──────────────────────────────────────────────────────────────
+    this.nameTxt = this.add.text(W/2, 16, boss.name, {
+      fontSize:'22px', fontFamily:'Impact',
+      color: hexStr(boss.accent), stroke:'#000', strokeThickness:4,
+    }).setOrigin(0.5).setDepth(6);
+
+    this.phaseLbl = this.add.text(W/2, 46, '', {
+      fontSize:'13px', fontFamily:'Arial', color:'#aaa',
+    }).setOrigin(0.5).setDepth(6);
+
+    this.resultTxt = this.add.text(this.HIT_X, 270, '', {
+      fontSize:'22px', fontFamily:'Impact', color:'#fff',
+      stroke:'#000', strokeThickness:3,
+    }).setOrigin(0.5).setDepth(7);
+
+    this.bigTxt = this.add.text(W/2, H/2, '', {
+      fontSize:'42px', fontFamily:'Impact', color:'#fff',
+      stroke:'#000', strokeThickness:6,
+    }).setOrigin(0.5).setDepth(8);
+
+    this.introTxt = this.add.text(W/2, H/2+32, boss.intro, {
+      fontSize:'15px', fontFamily:'Arial', color:'#ccc',
+      align:'center', wordWrap:{ width:500 },
+    }).setOrigin(0.5).setDepth(6);
+
+    this.introHeadTxt = this.add.text(W/2, H/2-28, 'BOSS ENCOUNTER', {
+      fontSize:'22px', fontFamily:'Impact', color:'#ff4444',
+      stroke:'#000', strokeThickness:4,
+    }).setOrigin(0.5).setDepth(6);
+
+    this.comboTxt = this.add.text(W-14, H-40, '', {
+      fontSize:'18px', fontFamily:'Impact', color:'#f5c542',
+    }).setOrigin(1, 0).setDepth(6);
+
+    this.defeatTxt = this.add.text(W/2, H/2+55, '', {
+      fontSize:'14px', fontFamily:'Arial', color:'#ccc',
+      fontStyle:'italic', wordWrap:{ width:550 }, align:'center',
+    }).setOrigin(0.5).setDepth(6);
+
+    // ── Input ─────────────────────────────────────────────────────────────
+    this.spcKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+    // After intro, start rhythm
+    this.time.delayedCall(2600, () => {
+      if (this.state === 'intro') {
+        this.introTxt.setVisible(false);
+        this.introHeadTxt.setVisible(false);
+        this.startPhase(0);
+      }
+    });
+  }
+
+  // ── Phase management ─────────────────────────────────────────────────────
+
+  startPhase(p) {
+    this.phase      = p;
+    this.phaseHits  = 0;
+    this.bossHP     = 1.0;
+    this.consec     = 0;
+    this.combo      = 0;
+    this.beatNum    = 0;
+    this.beatTimer  = 0;
+    this.cues       = [];
+    this.nextCueBeat = 4;
+    this.state      = 'rhythm';
+
+    const pd = this.boss.phases[p];
+    this.currentPattern  = pd.pattern;
+    this.hitsNeeded      = pd.hitsNeeded;
+    this.phaseLbl.setText(`Phase ${p+1} / ${this.boss.phases.length}  —  ${pd.label}`);
+    this.bigTxt.setText(`PHASE ${p+1}`).setColor('#f5c542').setAlpha(1);
+    this.tweens.add({ targets:this.bigTxt, alpha:0, duration:700, delay:700 });
+  }
+
+  onPhaseCleared() {
+    this.state       = 'phase_clear';
+    this.totalScore  += 2000;
+    this.beliebDelta += 20;
+    this.bossHP      = 0;
+    this.cues        = [];
+    this.bigTxt.setText('PHASE CLEAR!').setColor('#00ffcc').setAlpha(1);
+    this.tweens.add({ targets:this.bigTxt, alpha:0, duration:600, delay:900 });
+    this.cameras.main.flash(200, 100, 255, 200);
+    this.time.delayedCall(1600, () => {
+      const next = this.phase + 1;
+      if (next >= this.boss.phases.length) this.onBossDefeated();
+      else this.startPhase(next);
+    });
+  }
+
+  startPunishment() {
+    this.state  = 'punish';
+    this.consec = 0;
+    this.cues   = [];
+    this.bigTxt.setText('PUNISHMENT!').setColor('#ff2222').setAlpha(1);
+    this.cameras.main.shake(300, 0.016);
+    this.cameras.main.flash(200, 255, 0, 0);
+    this.time.delayedCall(3000, () => {
+      if (this.state === 'punish') {
+        this.state      = 'rhythm';
+        this.beatNum    = 0;
+        this.beatTimer  = 0;
+        this.nextCueBeat = 4;
+        this.bigTxt.setAlpha(0);
+      }
+    });
+  }
+
+  onBossDefeated() {
+    this.state       = 'defeat';
+    this.totalScore  += 5000;
+    this.beliebDelta += 20;
+    this.cues        = [];
+    this.bigTxt.setText('BOSS DEFEATED!').setColor('#f5c542').setAlpha(1);
+    this.defeatTxt.setText(this.boss.defeatLine);
+    this.cameras.main.flash(600, 255, 215, 0);
+    this.time.delayedCall(3000, () => this.finishBoss());
+  }
+
+  finishBoss() {
+    if (this.state === 'done') return;
+    this.state = 'done';
+    this.cameras.main.fadeOut(400);
+    this.time.delayedCall(420, () => {
+      const gs = this.scene.get('Game');
+      if (gs && gs.onBossComplete) {
+        gs.onBossComplete({
+          score:       this.totalScore,
+          beliebDelta: Phaser.Math.Clamp(this.beliebDelta, -50, 30),
+          defeated:    true,
+        });
+      }
+      this.scene.resume('Game');
+      this.scene.stop();
+    });
+  }
+
+  // ── Rhythm engine ─────────────────────────────────────────────────────────
+
+  spawnCue() {
+    this.cues.push({ x: W + 82, hit: false, missed: false });
+  }
+
+  onBeat(n) {
+    this.beatFlash = 1.0;
+    if (this.state !== 'rhythm') return;
+    if (n < this.nextCueBeat) return;
+
+    const pat = this.currentPattern;
+    if (pat === 'single') {
+      this.spawnCue();
+      this.nextCueBeat = n + 2;
+    } else if (pat === 'pair') {
+      this.spawnCue();
+      this.time.delayedCall(this.beatSec * 600, () => {
+        if (this.state === 'rhythm') this.spawnCue();
+      });
+      this.nextCueBeat = n + 3;
+    } else if (pat === 'triple') {
+      this.spawnCue();
+      this.time.delayedCall(this.beatSec * 400, () => {
+        if (this.state === 'rhythm') this.spawnCue();
+      });
+      this.time.delayedCall(this.beatSec * 800, () => {
+        if (this.state === 'rhythm') this.spawnCue();
+      });
+      this.nextCueBeat = n + 4;
+    }
+  }
+
+  handlePress() {
+    if (this.state !== 'rhythm') return;
+
+    // Find nearest unhit cue to hit zone
+    let best = null, bestDist = Infinity;
+    for (const c of this.cues) {
+      if (c.hit || c.missed) continue;
+      const d = Math.abs(c.x - this.HIT_X);
+      if (d < bestDist) { bestDist = d; best = c; }
+    }
+
+    if (!best || bestDist > this.pxGood + 20) {
+      // pressed with nothing nearby
+      this.onMiss(true);
+      this.showResult('MISS', '#ff4444');
+      return;
+    }
+
+    if (bestDist <= this.pxPerf) {
+      best.hit = true;
+      this.registerHit('perfect');
+      this.showResult('PERFECT!', '#00ffcc');
+    } else if (bestDist <= this.pxGood) {
+      best.hit = true;
+      this.registerHit('good');
+      this.showResult('GOOD', '#88ff88');
+    } else {
+      this.onMiss(true);
+      this.showResult('MISS', '#ff4444');
+    }
+  }
+
+  registerHit(quality) {
+    this.consec = 0;
+    this.combo++;
+    const dmg    = quality === 'perfect' ? 0.13 : 0.08;
+    this.bossHP  = Math.max(0, this.bossHP - dmg);
+    this.phaseHits++;
+    this.totalScore  += quality === 'perfect' ? 500 : 250;
+    this.beliebDelta += quality === 'perfect' ? 10 : 5;
+    if (this.phaseHits >= this.hitsNeeded || this.bossHP <= 0) {
+      this.onPhaseCleared();
+    }
+  }
+
+  onMiss(manual = false) {
+    this.consec++;
+    this.combo = 0;
+    this.bossHP = Math.min(1, this.bossHP + 0.04);
+    this.beliebDelta -= 8;
+    if (this.consec >= 4) this.startPunishment();
+  }
+
+  showResult(txt, col) {
+    this.resultTxt.setText(txt).setColor(col).setAlpha(1);
+    this.tweens.add({ targets:this.resultTxt, alpha:0, duration:600 });
+  }
+
+  // ── Drawing ───────────────────────────────────────────────────────────────
+
+  drawBackground() {
+    this.bgGfx.clear();
+    this.bgGfx.fillStyle(0x06060e);
+    this.bgGfx.fillRect(0, 0, W, H);
+    // horizontal scan lines for atmosphere
+    this.bgGfx.lineStyle(1, this.boss.accent, 0.05);
+    for (let y = 0; y < H; y += 18) {
+      this.bgGfx.beginPath(); this.bgGfx.moveTo(0, y); this.bgGfx.lineTo(W, y); this.bgGfx.strokePath();
+    }
+    // colored side bars
+    this.bgGfx.fillStyle(this.boss.color);
+    this.bgGfx.fillRect(0, 0, 6, H);
+    this.bgGfx.fillRect(W - 6, 0, 6, H);
+  }
+
+  drawBossVisual(t) {
+    this.bosGfx.clear();
+    const bx = 570, by = 170;
+    const col = this.boss.color;
+    const ac  = this.boss.accent;
+
+    switch (this.bossIdx) {
+      case 0: { // Scooter — desk, paper stacks, sliding contract
+        this.bosGfx.fillStyle(col);
+        this.bosGfx.fillRect(bx - 75, by - 20, 150, 55);       // desk
+        this.bosGfx.fillStyle(0x888888);
+        this.bosGfx.fillRect(bx - 65, by + 35, 18, 40);        // desk leg L
+        this.bosGfx.fillRect(bx + 47, by + 35, 18, 40);        // desk leg R
+        // paper stacks (animated bob)
+        for (let i = 0; i < 5; i++) {
+          const bob = Math.sin(t * 1.8 + i * 0.7) * 4;
+          this.bosGfx.fillStyle(0xf0f0f0);
+          this.bosGfx.fillRect(bx - 65 + i*26, by - 58 + bob, 20, 40);
+          this.bosGfx.lineStyle(1, 0x888888, 0.5);
+          this.bosGfx.strokeRect(bx - 65 + i*26, by - 58 + bob, 20, 40);
+        }
+        // head
+        this.bosGfx.fillStyle(0xf0c080);
+        this.bosGfx.fillCircle(bx, by - 78, 20);
+        this.bosGfx.fillStyle(0x443300);
+        this.bosGfx.fillRect(bx - 19, by - 100, 38, 18);       // hair
+        // sliding contract
+        const cSlide = (Math.sin(t * 2.5) * 0.5 + 0.5) * 60 - 10;
+        this.bosGfx.fillStyle(ac, 0.85);
+        this.bosGfx.fillRect(bx - 50 + cSlide, by + 32, 40, 6);
+        this.bosGfx.lineStyle(1, 0x444400);
+        this.bosGfx.strokeRect(bx - 50 + cSlide, by + 32, 40, 6);
+        break;
+      }
+      case 1: { // Paparazzi King — camera body + flashing lens
+        this.bosGfx.fillStyle(col);
+        this.bosGfx.fillRect(bx - 55, by - 55, 110, 80);       // camera body
+        this.bosGfx.fillStyle(0x333333);
+        this.bosGfx.fillRect(bx - 20, by - 72, 40, 20);        // viewfinder hump
+        // lens
+        const flashAmt = Math.pow(Math.max(0, Math.sin(t * 6)), 8);
+        this.bosGfx.fillStyle(0x112233);
+        this.bosGfx.fillCircle(bx, by - 16, 30);
+        this.bosGfx.fillStyle(0xaaddff, 0.5 + flashAmt * 0.5);
+        this.bosGfx.fillCircle(bx, by - 16, 22);
+        // flash burst
+        if (flashAmt > 0.6) {
+          this.bosGfx.fillStyle(0xffffff, flashAmt * 0.5);
+          this.bosGfx.fillCircle(bx, by - 16, 50 + flashAmt * 40);
+        }
+        // legs
+        this.bosGfx.fillStyle(0x555555);
+        this.bosGfx.fillRect(bx - 50, by + 25, 12, 50);
+        this.bosGfx.fillRect(bx + 38, by + 25, 12, 50);
+        break;
+      }
+      case 2: { // Belieber Mob — row of fans
+        for (let i = 0; i < 6; i++) {
+          const mx  = bx - 82 + i * 28;
+          const bob = Math.sin(t * 4 + i * 0.9) * 10;
+          this.bosGfx.fillStyle(0xd04080);
+          this.bosGfx.fillRect(mx - 9, by - 35 + bob, 18, 35);  // body
+          this.bosGfx.fillStyle(0xf0c080);
+          this.bosGfx.fillCircle(mx, by - 45 + bob, 10);         // head
+          // raised arm (every other fan)
+          if (i % 2 === 0) {
+            this.bosGfx.fillStyle(0xf0c080);
+            this.bosGfx.fillRect(mx + 9, by - 55 + bob, 7, 20);
+          }
+        }
+        break;
+      }
+      case 3: { // Hockey Rink — ice + puck + stick
+        this.bosGfx.fillStyle(0xbbddff, 0.5);
+        this.bosGfx.fillRect(bx - 90, by + 20, 180, 18);         // ice surface
+        this.bosGfx.lineStyle(2, 0xffffff, 0.4);
+        this.bosGfx.strokeRect(bx - 90, by + 20, 180, 18);
+        // goalie body
+        this.bosGfx.fillStyle(0xc8102e);
+        this.bosGfx.fillRect(bx - 20, by - 60, 40, 80);
+        this.bosGfx.fillStyle(0xffffff);
+        this.bosGfx.fillCircle(bx, by - 70, 18);                 // head (helmet)
+        // puck — flying across
+        const puckX = bx - 90 + ((t * 140) % 180);
+        const puckY = by + (Math.sin((t * 140 % 180) / 180 * Math.PI) * -40);
+        this.bosGfx.fillStyle(0x111111);
+        this.bosGfx.fillEllipse(puckX, puckY, 26, 10);
+        break;
+      }
+      case 4: { // Hailey — two interleaved glitch figures
+        for (let side = 0; side < 2; side++) {
+          const sx = bx - 30 + side * 60;
+          const jit = Math.floor(t * 15) % 2 === 0 ? (Math.random() - 0.5) * 6 : 0;
+          this.bosGfx.fillStyle(side === 0 ? 0x00fff5 : 0xff0040, 0.7);
+          this.bosGfx.fillRect(sx - 14 + jit, by - 60, 28, 80);
+          this.bosGfx.fillStyle(0xffffff, 0.6);
+          this.bosGfx.fillCircle(sx + jit, by - 70, 14);
+          // scanline glitch bars
+          for (let g = 0; g < 3; g++) {
+            const gy = by - 55 + g * 22 + Math.sin(t * 9 + g) * 5;
+            this.bosGfx.fillStyle(0xffffff, 0.15);
+            this.bosGfx.fillRect(sx - 14, gy, 28, 5);
+          }
+        }
+        break;
+      }
+    }
+
+    // Boss HP bar above visual
+    const hpW = 160, hpH = 10, hpX = bx - hpW/2, hpY = by - 125;
+    this.bosGfx.lineStyle(2, 0x444444);
+    this.bosGfx.strokeRect(hpX, hpY, hpW, hpH);
+    this.bosGfx.fillStyle(0xff3333);
+    this.bosGfx.fillRect(hpX, hpY, Math.max(0, hpW * this.bossHP), hpH);
+    // phase pips
+    const phases = this.boss.phases.length;
+    for (let i = 1; i < phases; i++) {
+      const pipX = hpX + (hpW / phases) * i;
+      this.bosGfx.lineStyle(2, 0xffffff, 0.4);
+      this.bosGfx.beginPath(); this.bosGfx.moveTo(pipX, hpY); this.bosGfx.lineTo(pipX, hpY + hpH); this.bosGfx.strokePath();
+    }
+    // HP label
+    this.bosGfx.fillStyle(0xaaaaaa, 0.8);
+  }
+
+  drawLane(t) {
+    this.lanGfx.clear();
+    const ly = 345, lh = 52;
+
+    // Lane background
+    this.lanGfx.fillStyle(0x0a0a18);
+    this.lanGfx.fillRect(0, ly - lh/2, W, lh);
+    this.lanGfx.lineStyle(1, 0x222244);
+    this.lanGfx.strokeRect(0, ly - lh/2, W, lh);
+
+    // Beat markers (faint tick lines)
+    const beatW = this.cueSpd * this.beatSec;
+    const beatOff = (this.beatTimer / this.beatSec) * beatW;
+    this.lanGfx.lineStyle(1, 0x223355, 0.5);
+    for (let bx = this.HIT_X - beatOff % beatW; bx < W; bx += beatW) {
+      this.lanGfx.beginPath();
+      this.lanGfx.moveTo(bx, ly - lh/2 + 5);
+      this.lanGfx.lineTo(bx, ly + lh/2 - 5);
+      this.lanGfx.strokePath();
+    }
+
+    // Hit zone brackets
+    const hzColor = this.beatFlash > 0.3 ? this.boss.accent : 0x556688;
+    const hzAlpha = 0.7 + this.beatFlash * 0.3;
+    this.lanGfx.lineStyle(3, hzColor, hzAlpha);
+    // top-left bracket
+    this.lanGfx.beginPath();
+    this.lanGfx.moveTo(this.HIT_X - 18, ly - 12);
+    this.lanGfx.lineTo(this.HIT_X - 18, ly - lh/2 + 5);
+    this.lanGfx.lineTo(this.HIT_X + 18, ly - lh/2 + 5);
+    this.lanGfx.strokePath();
+    // bottom-left bracket
+    this.lanGfx.beginPath();
+    this.lanGfx.moveTo(this.HIT_X - 18, ly + 12);
+    this.lanGfx.lineTo(this.HIT_X - 18, ly + lh/2 - 5);
+    this.lanGfx.lineTo(this.HIT_X + 18, ly + lh/2 - 5);
+    this.lanGfx.strokePath();
+    // center dot
+    this.lanGfx.fillStyle(hzColor, hzAlpha * 0.6);
+    this.lanGfx.fillCircle(this.HIT_X, ly, 5);
+
+    // Instruction label
+    this.lanGfx.fillStyle(0xffffff, 0.18);
+
+    // Cues
+    this.cuGfx.clear();
+    for (const c of this.cues) {
+      if (c.hit) continue;
+      const dist   = Math.abs(c.x - this.HIT_X);
+      const inPerf = dist <= this.pxPerf;
+      const inGood = dist <= this.pxGood;
+      const col    = c.missed ? 0x442222 : inPerf ? 0x00ffcc : inGood ? 0x88ff88 : this.boss.accent;
+      const alpha  = c.missed ? 0.3 : 1;
+
+      this.cuGfx.fillStyle(col, alpha);
+      this.cuGfx.fillRect(c.x - 19, ly - 17, 38, 34);
+      this.cuGfx.lineStyle(2, 0xffffff, alpha * 0.3);
+      this.cuGfx.strokeRect(c.x - 19, ly - 17, 38, 34);
+      // arrow icon
+      this.cuGfx.fillStyle(0x000000, alpha * 0.5);
+      this.cuGfx.fillTriangle(c.x - 7, ly + 4, c.x + 7, ly + 4, c.x, ly - 6);
+    }
+  }
+
+  drawHUD() {
+    this.hudGfx.clear();
+
+    // Miss indicators (bottom center)
+    const mBase = H - 22;
+    for (let i = 0; i < 4; i++) {
+      const filled = i < this.consec;
+      this.hudGfx.fillStyle(filled ? 0xff2222 : 0x222233);
+      this.hudGfx.fillCircle(W/2 - 48 + i * 32, mBase, 10);
+      this.hudGfx.lineStyle(1, 0x444466);
+      this.hudGfx.strokeCircle(W/2 - 48 + i * 32, mBase, 10);
+    }
+    // miss label
+    this.hudGfx.fillStyle(0x666666, 0.7);
+
+    // Combo display
+    this.comboTxt.setText(this.combo > 1 ? `COMBO ×${this.combo}` : '').setAlpha(1);
+
+    // Score so far
+    this.hudGfx.fillStyle(0xaaaaaa, 0.5);
+
+    // Punishment overlay
+    if (this.state === 'punish') {
+      this.fxGfx.clear();
+      const a = 0.12 + Math.sin(this.t * 10) * 0.08;
+      this.fxGfx.fillStyle(0xff0000, a);
+      this.fxGfx.fillRect(0, 0, W, H);
+    } else {
+      this.fxGfx.clear();
+    }
+
+    // Beat flash overlay on rhythm hits
+    if (this.beatFlash > 0.5) {
+      this.fxGfx.fillStyle(this.boss.accent, (this.beatFlash - 0.5) * 0.06);
+      this.fxGfx.fillRect(0, 0, W, H);
+    }
+  }
+
+  // ── Update ────────────────────────────────────────────────────────────────
+
+  update(time, delta) {
+    if (this.state === 'done') return;
+    const dt = delta / 1000;
+    this.t += dt;
+
+    // Beat flash decay
+    this.beatFlash = Math.max(0, this.beatFlash - dt * 6);
+
+    // Input
+    if (Phaser.Input.Keyboard.JustDown(this.spcKey)) this.handlePress();
+
+    // Beat advance & cue spawning
+    if (this.state === 'rhythm') {
+      this.beatTimer += dt;
+      if (this.beatTimer >= this.beatSec) {
+        this.beatTimer -= this.beatSec;
+        this.onBeat(this.beatNum++);
+      }
+
+      // Move cues
+      for (const c of this.cues) {
+        c.x -= this.cueSpd * dt;
+        // Auto-miss: cue has fully passed the good window without being hit
+        if (!c.hit && !c.missed && c.x < this.HIT_X - this.pxGood - 8) {
+          c.missed = true;
+          this.onMiss(false);
+          this.showResult('MISS', '#ff4444');
+        }
+      }
+      // Cull off-screen cues
+      this.cues = this.cues.filter(c => c.x > -120);
+    }
+
+    // Draw
+    this.drawBackground();
+    this.drawBossVisual(this.t);
+    this.drawLane(this.t);
+    this.drawHUD();
+  }
+}
+
+// ── GAME OVER SCENE ──────────────────────────────────────────────────────────
+class GameOverScene extends Phaser.Scene {
+  constructor() { super('GameOver'); }
+  init(d) { this.d = d || {}; }
+  create() {
+    const { score=0, best=0, biome=1, bosses=0, belieber=0 } = this.d;
+    const g = this.add.graphics();
+    g.fillStyle(0x0a0a0a); g.fillRect(0, 0, W, H);
+    g.lineStyle(3, 0xff4444, 0.4); g.strokeRect(10, 10, W-20, H-20);
+
+    this.add.text(W/2, 56, 'GAME OVER', {
+      fontSize:'54px', fontFamily:'Impact', color:'#ff4444',
+      stroke:'#000', strokeThickness:5,
+    }).setOrigin(0.5);
+
+    const msg = belieber >= 75 ? 'THE CROWD IS DEVASTATED.' :
+                belieber >= 50 ? 'So close to greatness...'  :
+                belieber >= 25 ? 'The crowd murmurs in disappointment.' : 'Better luck next time.';
+    this.add.text(W/2, 123, msg, {
+      fontSize:'19px', fontFamily:'Arial', color:'#f5c542', fontStyle:'italic',
+    }).setOrigin(0.5);
+
+    [
+      `SCORE: ${Math.floor(score).toLocaleString()}`,
+      `BEST:  ${Math.floor(best).toLocaleString()}`,
+      `BIOME REACHED: ${biome}`,
+      `BOSSES DEFEATED: ${bosses}`,
+      `BELIEBER METER: ${Math.floor(belieber)}%`,
+    ].forEach((l, i) => this.add.text(W/2, 182 + i*38, l, {
+      fontSize:'22px', fontFamily:'Impact', color:'#fff',
+    }).setOrigin(0.5));
+
+    const r = this.add.text(W/2, H-62, 'PRESS SPACE TO RETRY', {
+      fontSize:'24px', fontFamily:'Impact', color:'#f5c542',
+    }).setOrigin(0.5);
+    this.tweens.add({ targets:r, alpha:0, duration:550, yoyo:true, repeat:-1 });
+    this.add.text(W/2, H-30, 'M = Main Menu', { fontSize:'13px', fontFamily:'Arial', color:'#666' }).setOrigin(0.5);
+
+    this.input.keyboard.once('keydown-SPACE', () => this.scene.start('Game', { best }));
+    this.input.keyboard.once('keydown-M',     () => this.scene.start('Menu'));
+  }
+}
+
+// ── GAME SCENE ───────────────────────────────────────────────────────────────
+class GameScene extends Phaser.Scene {
+  constructor() { super('Game'); }
+  init(d) { this.carryBest = (d && d.best) || 0; }
+
+  create() {
+    this.speed        = BASE_SPEED;
+    this.score        = 0;
+    this.best         = this.carryBest;
+    this.believ       = 0;
+    this.fuel         = 1;
+    this.t            = 0;
+    this.dead         = false;
+    this.grnd         = true;
+    this.burning      = false;
+    this.slamOn       = false;
+    this.biome        = 0;
+    this.bioT         = 0;
+    this.bosses       = 0;
+    this.lap          = 1;
+    this.bossTriggered = false;   // ← NEW: only trigger boss once per biome
+
+    this.px  = 130; this.py = GROUND; this.pvy = 0;
+    this.scY = 1;   this.ccTimer = 0;
+
+    this.obs    = [];
+    this.spawnCD = 1.5;
+    this.p1x = 0; this.p2x = 0;
+    this.parts  = [];
+
+    this.bgGfx  = this.add.graphics().setDepth(0);
+    this.p1Gfx  = this.add.graphics().setDepth(1);
+    this.p2Gfx  = this.add.graphics().setDepth(2);
+    this.gndGfx = this.add.graphics().setDepth(3);
+    this.oGfx   = this.add.graphics().setDepth(4);
+    this.pGfx   = this.add.graphics().setDepth(5);
+    this.ptGfx  = this.add.graphics().setDepth(6);
+    this.hudGfx = this.add.graphics().setDepth(20);
+
+    this.scoreTxt = this.add.text(W-14, 13, '0', { fontSize:'27px', fontFamily:'Impact', color:'#fff' }).setOrigin(1,0).setDepth(21);
+    this.multTxt  = this.add.text(W-14, 46, '×1', { fontSize:'17px', fontFamily:'Impact', color:'#f5c542' }).setOrigin(1,0).setDepth(21);
+    this.tierTxt  = this.add.text(W/2, 42, 'COLD', { fontSize:'12px', fontFamily:'Impact', color:'#aaa' }).setOrigin(0.5,0).setDepth(21);
+    this.biomeTxt = this.add.text(14, 13, 'THE VENUE', { fontSize:'13px', fontFamily:'Impact', color:'#f5c542' }).setDepth(21);
+    this.speedTxt = this.add.text(14, 32, '', { fontSize:'11px', fontFamily:'Arial', color:'#666' }).setDepth(21);
+    this.lapTxt   = this.add.text(14, H-20, '', { fontSize:'12px', fontFamily:'Impact', color:'#888' }).setDepth(21);
+
+    // Boss timer bar (shows how close a boss encounter is)
+    this.bossBarTxt = this.add.text(W/2, H-22, '', { fontSize:'11px', fontFamily:'Arial', color:'#ff4444' }).setOrigin(0.5).setDepth(21);
+
+    this.spcKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.dnKey  = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+
+    this.drawBg();
+    this.drawGround();
+  }
+
+  // ── Boss integration ──────────────────────────────────────────────────────
+
+  triggerBoss() {
+    this.obs    = [];          // clear field before boss
+    this.spawnCD = 99;         // stop spawning while boss is active
+    this.scene.launch('Boss', { bossIdx: this.biome });
+    this.scene.pause();
+  }
+
+  onBossComplete(data) {
+    // Called by BossScene before it stops + resumes Game
+    this.score  += (data.score || 0);
+    this.believ  = Phaser.Math.Clamp(this.believ + (data.beliebDelta || 0), 0, 100);
+    if (data.defeated) this.bosses++;
+
+    // Advance to next biome
+    this.biome = (this.biome + 1) % BIOMES.length;
+    if (this.biome === 0) this.lap++;
+    this.bioT          = 0;
+    this.bossTriggered = false;
+    this.spawnCD       = 2.0;
+    this.obs           = [];
+    this.drawBg();
+    this.drawGround();
+    // Show biome name after slight delay (so it appears after fade-in)
+    this.time.delayedCall(500, () => {
+      this.flashText(BIOMES[this.biome].name, W/2, 110, hexStr(BIOMES[this.biome].accent));
+    });
+  }
+
+  // ── Drawing ───────────────────────────────────────────────────────────────
+
+  drawBg() {
+    const b = BIOMES[this.biome];
+    this.bgGfx.clear();
+    this.bgGfx.fillStyle(b.bg);
+    this.bgGfx.fillRect(0, 0, W, H);
+    this.bgGfx.fillStyle(0xffffff, 0.35);
+    const rng = Phaser.Math.RND;
+    for (let i = 0; i < 60; i++) {
+      this.bgGfx.fillCircle(rng.between(0,W), rng.between(0, GROUND-90), rng.realInRange(0.5, 1.5));
+    }
+  }
+
+  drawGround() {
+    const b = BIOMES[this.biome];
+    this.gndGfx.clear();
+    this.gndGfx.fillStyle(b.ground);
+    this.gndGfx.fillRect(0, GROUND, W, H - GROUND);
+    this.gndGfx.lineStyle(2, 0xffffff, 0.12);
+    this.gndGfx.beginPath(); this.gndGfx.moveTo(0, GROUND); this.gndGfx.lineTo(W, GROUND); this.gndGfx.strokePath();
+  }
+
+  drawParallax() {
+    const b = BIOMES[this.biome], dark = darken(b.bg, 20);
+    this.p1Gfx.clear();
+    this.p1Gfx.fillStyle(dark, 0.75);
+    const o1 = this.p1x % 130;
+    for (let x = -130+o1; x < W+130; x += 130) {
+      const bh = 18 + Math.sin(x*0.06)*11;
+      this.p1Gfx.fillRect(x, GROUND-80-bh, 95, bh+2);
+    }
+    this.p2Gfx.clear();
+    this.p2Gfx.fillStyle(darken(b.bg, 8), 0.8);
+    const o2 = this.p2x % 190;
+    for (let x = -190+o2; x < W+190; x += 190) {
+      const ch = 38 + Math.sin(x*0.09)*22;
+      this.p2Gfx.fillRect(x+18, GROUND-55-ch, 105, ch+42);
+    }
+  }
+
+  drawObstacles() {
+    this.oGfx.clear();
+    const glow = this.tier() === 3;
+    for (const o of this.obs) {
+      const col = glow ? 0xff2222 : o.color;
+      this.oGfx.fillStyle(col);
+      this.oGfx.fillRect(o.x-o.w/2, o.y-o.h/2, o.w, o.h);
+      this.oGfx.lineStyle(2, 0xffffff, 0.22);
+      this.oGfx.strokeRect(o.x-o.w/2, o.y-o.h/2, o.w, o.h);
+      if (this.biome === 4 && Math.random() < 0.08) {
+        this.oGfx.fillStyle(0x00fff5, 0.35);
+        this.oGfx.fillRect(o.x-o.w/2 + (Math.random()-0.5)*5, o.y-o.h/2, o.w, o.h);
+      }
+    }
+  }
+
+  drawPlayer() {
+    this.pGfx.clear();
+    const x = this.px, y = this.py, sy = this.scY, hh = PH*sy;
+    this.pGfx.fillStyle(0x3322aa, 0.38);
+    this.pGfx.fillRect(x-PW/2-9, y-hh*0.7, PW*0.85, hh*0.55);
+    this.pGfx.fillStyle(0x2266cc);
+    this.pGfx.fillRect(x-PW/2, y-hh, PW, hh);
+    this.pGfx.fillStyle(0xf0c080);
+    this.pGfx.fillCircle(x, y-hh-13*sy, 13);
+    this.pGfx.fillStyle(0xd4a017);
+    this.pGfx.fillRect(x-14, y-hh-26*sy, 28, 13);
+    this.pGfx.fillStyle(0x888888);
+    this.pGfx.fillRect(x+PW/2-2, y-hh+8, 11, hh-18);
+    const airborne = !this.grnd && this.pvy < 0;
+    if (this.burning || airborne) {
+      const fc = this.fuel<0.2?0xff2200:this.fuel<0.5?0xff8800:0x33aaff;
+      this.pGfx.fillStyle(fc, 0.88);
+      const fl = 12 + Math.random()*10;
+      this.pGfx.fillTriangle(x+PW/2+2, y-hh+hh-10, x+PW/2+13, y-hh+hh-10, x+PW/2+7, y-hh+hh-10+fl);
+    }
+    if (this.ccTimer > 0) {
+      this.pGfx.lineStyle(3, 0xffd700, this.ccTimer/0.35);
+      this.pGfx.strokeRect(x-PW/2-3, y-hh-3, PW+6, hh+6);
+    }
+  }
+
+  drawParticles(dt) {
+    this.ptGfx.clear();
+    for (let i = this.parts.length-1; i >= 0; i--) {
+      const p = this.parts[i];
+      if (p.jet) { p.x -= p.vx*dt; } else { p.x += p.vx*dt; p.vy += 130*dt; }
+      p.y += p.vy*dt;
+      p.life -= dt*(p.jet?2.8:2.0);
+      if (p.life <= 0) { this.parts.splice(i,1); continue; }
+      this.ptGfx.fillStyle(p.color, Math.min(1, p.life*0.95));
+      this.ptGfx.fillCircle(p.x, p.y, p.r*p.life);
+    }
+  }
+
+  drawHUD() {
+    this.hudGfx.clear();
+    const t = this.tier();
+
+    // Fuel bar
+    const fx=14, fy=H-36, fw=115, fh=14;
+    const fuelPulse = this.fuel<=0.2?(0.65+0.35*Math.sin(this.t*10)):1;
+    const fuelCol   = this.fuel<=0.2?0xff2222:this.fuel<=0.5?0xff8800:0x44aaff;
+    this.hudGfx.lineStyle(2, 0x444444); this.hudGfx.strokeRoundedRect(fx, fy, fw, fh, 6);
+    this.hudGfx.fillStyle(fuelCol, fuelPulse);
+    this.hudGfx.fillRoundedRect(fx+2, fy+2, Math.max(0,(fw-4)*this.fuel), fh-4, 4);
+
+    // Belieber meter
+    const bx=W/2-95, by=13, bw=190, bh=14;
+    const bCols=[0x4488aa,0xffaa22,0xff6600,0xff0066];
+    this.hudGfx.lineStyle(2, 0x444444); this.hudGfx.strokeRoundedRect(bx, by, bw, bh, 6);
+    this.hudGfx.fillStyle(bCols[t]);
+    this.hudGfx.fillRoundedRect(bx+2, by+2, Math.max(0,(bw-4)*(this.believ/100)), bh-4, 4);
+
+    // Boss timer bar (thin strip, fills as biome timer advances toward boss)
+    const btProgress = Math.min(1, this.bioT / BIOME_DUR);
+    const btColor = btProgress > 0.85 ? 0xff3333 : btProgress > 0.6 ? 0xff8800 : 0x445577;
+    this.hudGfx.fillStyle(btColor, 0.6);
+    this.hudGfx.fillRect(0, H-4, W * btProgress, 4);
+    if (btProgress > 0.85) {
+      this.bossBarTxt.setText('BOSS APPROACHING...').setAlpha(0.5 + 0.5*Math.sin(this.t*8));
+    } else {
+      this.bossBarTxt.setText('');
+    }
+
+    this.scoreTxt.setText(Math.floor(this.score).toLocaleString());
+    this.multTxt.setText('×'+this.mult());
+    const tN=['COLD','WARM','HOT','BELIEBER MAX ×3'], tC=['#aaaaaa','#ffaa22','#ff6600','#ff0066'];
+    this.tierTxt.setText(tN[t]).setColor(tC[t]);
+    const b = BIOMES[this.biome];
+    this.biomeTxt.setText(b.name).setColor(hexStr(b.accent));
+    this.speedTxt.setText(`SPD ${Math.floor(this.speed)}  T+${Math.floor(this.t)}s`);
+    this.lapTxt.setText(this.lap > 1 ? `LAP ${this.lap}` : '');
+  }
+
+  // ── Game logic ────────────────────────────────────────────────────────────
+
+  tier() { return this.believ>=75?3:this.believ>=50?2:this.believ>=25?1:0; }
+  mult() { return [1,1.5,2,3][this.tier()]; }
+  chgB(d) { this.believ = Phaser.Math.Clamp(this.believ+d, 0, 100); }
+
+  addParticle(x, y, color, n=4) {
+    for (let i=0; i<n; i++) this.parts.push({ x, y, vx:(Math.random()-.5)*80, vy:-Math.random()*65-15, life:1, color, r:2+Math.random()*3, jet:false });
+  }
+  addJetParticle() {
+    this.parts.push({ x:this.px+PW/2+12, y:this.py-PH*0.25, vx:25+Math.random()*25, vy:(Math.random()-.5)*18, life:1, color:this.fuel<0.2?0xff2200:this.fuel<0.5?0xff8800:0x33aaff, r:3+Math.random()*3, jet:true });
+  }
+
+  flashText(txt, x, y, col='#fff') {
+    const t = this.add.text(x, y, txt, { fontSize:'17px', fontFamily:'Impact', color:col, stroke:'#000', strokeThickness:3 }).setOrigin(0.5).setDepth(25);
+    this.tweens.add({ targets:t, y:y-52, alpha:0, duration:850, ease:'Power2', onComplete:()=>t.destroy() });
+  }
+
+  spawnObstacle() {
+    const b = BIOMES[this.biome], col = b.accent;
+    const r = Math.random();
+    let y, ow, oh;
+    if (r < 0.45) { ow=20+Math.random()*24; oh=32+Math.random()*58; y=GROUND-oh/2; }
+    else if (r < 0.72 && this.t > 12) { ow=55+Math.random()*45; oh=22+Math.random()*18; y=GROUND-110-Math.random()*85; }
+    else { ow=16+Math.random()*14; oh=25+Math.random()*28; y=GROUND-oh/2; }
+    this.obs.push({ x:W+90, y, w:ow, h:oh, color:col, passed:false, cc:false });
+  }
+
+  handleInput(dt) {
+    const spJust = Phaser.Input.Keyboard.JustDown(this.spcKey);
+    const spDown = this.spcKey.isDown;
+    const dnJust = Phaser.Input.Keyboard.JustDown(this.dnKey);
+    if (dnJust && !this.grnd && !this.slamOn) { this.pvy=660; this.slamOn=true; }
+    if (spDown) {
+      if (this.grnd && spJust) { this.pvy=-BURST_V; this.grnd=false; this.scY=1.22; }
+      else if (!this.grnd && this.fuel>0) { this.burning=true; this.fuel=Math.max(0,this.fuel-FUEL_DRAIN*dt); this.pvy=Math.max(this.pvy-480*dt,-370); }
+      else { this.burning=false; }
+    } else { this.burning=false; }
+  }
+
+  updateObstacles(dt) {
+    const dx = this.speed*dt;
+    for (let i=this.obs.length-1; i>=0; i--) {
+      const o = this.obs[i];
+      o.x -= dx;
+      if (!o.passed && o.x+o.w/2 < this.px-PW/2) {
+        o.passed=true; const pts=Math.round(50*this.mult()); this.score+=pts; this.chgB(5);
+        this.flashText(`+${pts}`, this.px, this.py-PH-28, '#00ff88');
+      }
+      if (!o.cc && !o.passed) {
+        const hGap = Math.abs(o.x-this.px)-(o.w/2+PW/2);
+        if (hGap>=0 && hGap<CLOSE_DIST) {
+          o.cc=true; const pts=Math.round(150*this.mult()); this.score+=pts; this.chgB(12); this.ccTimer=0.38;
+          this.flashText(`SO CLOSE! +${pts}`, this.px, this.py-PH-52, '#ffd700');
+        }
+      }
+      if (o.x < -200) this.obs.splice(i,1);
+    }
+  }
+
+  checkCollisions() {
+    if (this.dead) return;
+    const px1=this.px-PW/2, px2=this.px+PW/2, py1=this.py-PH, py2=this.py;
+    for (const o of this.obs) {
+      if (o.passed) continue;
+      if (px2>o.x-o.w/2 && px1<o.x+o.w/2 && py2>o.y-o.h/2 && py1<o.y+o.h/2) { this.die(); return; }
+    }
+  }
+
+  die() {
+    if (this.dead) return;
+    this.dead=true;
+    this.cameras.main.flash(320,255,0,0); this.cameras.main.shake(240,0.013);
+    if (this.score>this.best) this.best=this.score;
+    this.time.delayedCall(900, ()=>this.scene.start('GameOver', { score:this.score, best:this.best, biome:this.biome+1, bosses:this.bosses, belieber:this.believ }));
+  }
+
+  // ── Update ────────────────────────────────────────────────────────────────
+
+  update(time, delta) {
+    if (this.dead) return;
+    const dt = delta/1000;
+    this.t += dt;
+
+    this.speed = Math.min(MAX_SPEED*(1+(this.lap-1)*0.2), BASE_SPEED+this.t*SPEED_RAMP+this.bosses*15);
+    this.score += dt*60*this.mult();
+
+    // Biome timer — triggers boss at end of each biome
+    this.bioT += dt;
+    if (this.bioT >= BIOME_DUR && !this.bossTriggered) {
+      this.bossTriggered = true;
+      this.triggerBoss();
+      return;   // paused on next frame; don't continue this update
+    }
+
+    this.handleInput(dt);
+
+    // Physics
+    this.pvy += GRAVITY*dt;
+    this.py  += this.pvy*dt;
+    if (this.py >= GROUND) {
+      const wasAir = !this.grnd;
+      this.py=GROUND; this.grnd=true; this.fuel=Math.min(1,this.fuel+FUEL_REGEN*dt);
+      if (wasAir) {
+        if (Math.abs(this.pvy)>450) { this.scY=0.62; this.addParticle(this.px,GROUND-4,0xffffff,5); }
+        else { this.scY=0.74; this.chgB(8); }
+        this.slamOn=false;
+      }
+      this.pvy=0;
+    } else { this.grnd=false; }
+
+    // Obstacles
+    this.spawnCD -= dt;
+    if (this.spawnCD <= 0) { this.spawnCD=Math.max(0.65,2.4-this.t/45); this.spawnObstacle(); }
+    this.updateObstacles(dt);
+    this.checkCollisions();
+
+    this.scY     = Phaser.Math.Linear(this.scY, 1, dt*9);
+    this.ccTimer = Math.max(0, this.ccTimer-dt);
+    this.p1x += this.speed*dt*0.18;
+    this.p2x += this.speed*dt*0.46;
+
+    if ((this.burning||(!this.grnd&&this.pvy<0)) && Math.random()<0.38) this.addJetParticle();
+    if (this.grnd && Math.random()<0.06) this.addParticle(this.px-5, GROUND-2, 0xddeeff, 1);
+
+    this.drawParallax();
+    this.drawObstacles();
+    this.drawPlayer();
+    this.drawParticles(dt);
+    this.drawHUD();
+  }
+}
+
+// ── PHASER INIT ──────────────────────────────────────────────────────────────
+new Phaser.Game({
+  type: Phaser.AUTO,
+  width: W, height: H,
+  backgroundColor: '#000000',
+  scene: [MenuScene, BossScene, GameScene, GameOverScene],
+  parent: document.body,
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+});
+</script>
+</body>
+</html>
