@@ -29,10 +29,45 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      background-image:
-        radial-gradient(ellipse at 20% 20%, rgba(106, 13, 173, 0.25) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 80%, rgba(15, 52, 96, 0.4) 0%, transparent 55%),
-        radial-gradient(ellipse at 50% 50%, rgba(22, 33, 62, 0.6) 0%, transparent 80%);
+      position: relative;
+      overflow-x: hidden;
+      transition: background 1.2s ease;
+    }
+
+    /* ── WEATHER CANVAS BACKGROUND ── */
+    #weather-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body > * { position: relative; z-index: 1; }
+
+    /* ── BASE BG (default stars) ── */
+    body.wx-default {
+      background: radial-gradient(ellipse at 20% 20%, rgba(106,13,173,0.25) 0%, transparent 55%),
+                  radial-gradient(ellipse at 80% 80%, rgba(15,52,96,0.4) 0%, transparent 55%),
+                  #1a1a2e;
+    }
+    body.wx-clear {
+      background: linear-gradient(160deg, #0d1b2a 0%, #1a1a4e 40%, #2d1b69 100%);
+    }
+    body.wx-clouds {
+      background: linear-gradient(160deg, #1a1a2e 0%, #2c2c4a 50%, #3a3a5c 100%);
+    }
+    body.wx-rain {
+      background: linear-gradient(160deg, #0a0e1a 0%, #0d1b35 50%, #0a2040 100%);
+    }
+    body.wx-storm {
+      background: linear-gradient(160deg, #0a0a0a 0%, #1a0a2e 50%, #0d0d1a 100%);
+    }
+    body.wx-snow {
+      background: linear-gradient(160deg, #1a2030 0%, #1e2840 50%, #2a3050 100%);
+    }
+    body.wx-fog {
+      background: linear-gradient(160deg, #1e1e28 0%, #2a2a3a 50%, #1e2030 100%);
     }
 
     /* ── HEADER ── */
@@ -61,7 +96,6 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      text-shadow: none;
       letter-spacing: -0.5px;
     }
 
@@ -72,6 +106,8 @@
       font-size: 1rem;
       margin-top: 0.4rem;
       opacity: 0.85;
+      min-height: 1.5em;
+      transition: opacity 0.4s;
     }
 
     /* ── MAIN CONTAINER ── */
@@ -90,11 +126,16 @@
       margin: 2rem 0;
     }
 
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+    }
+
     .search-row {
       display: flex;
       gap: 0.6rem;
       width: 100%;
-      max-width: 520px;
     }
 
     #city-input {
@@ -111,10 +152,58 @@
     }
 
     #city-input::placeholder { color: var(--text-dim); }
-
     #city-input:focus {
       border-color: var(--purple-mid);
       box-shadow: var(--glow);
+    }
+
+    /* ── AUTOCOMPLETE DROPDOWN ── */
+    #autocomplete-list {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: #1e1e38;
+      border: 1px solid rgba(155,89,182,0.45);
+      border-radius: 14px;
+      overflow: hidden;
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), var(--glow);
+    }
+
+    .autocomplete-item {
+      padding: 0.65rem 1.1rem;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.15s;
+      border-bottom: 1px solid rgba(155,89,182,0.1);
+    }
+
+    .autocomplete-item:last-child { border-bottom: none; }
+
+    .autocomplete-item:hover,
+    .autocomplete-item.active {
+      background: rgba(155,89,182,0.2);
+    }
+
+    .autocomplete-flag {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .autocomplete-name {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .autocomplete-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
     }
 
     #search-btn {
@@ -184,10 +273,19 @@
       border-radius: 20px;
       padding: 1.6rem;
       box-shadow: var(--glow);
-      transition: box-shadow 0.3s;
+      transition: box-shadow 0.3s, opacity 0.4s, transform 0.4s;
     }
 
     .card:hover { box-shadow: 0 0 28px rgba(155,89,182,0.55); }
+
+    .card.fade-in {
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     .section-heading {
       font-family: 'Playfair Display', serif;
@@ -278,6 +376,33 @@
       font-size: 1rem;
       font-weight: 600;
       color: var(--text);
+    }
+
+    /* ── UV INDEX BAR ── */
+    .uv-bar-wrap {
+      margin-top: 0.3rem;
+      width: 100%;
+      max-width: 200px;
+    }
+
+    .uv-bar-track {
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #2ecc71, #f1c40f, #e67e22, #e74c3c, #8e44ad);
+      position: relative;
+      margin-top: 0.25rem;
+    }
+
+    .uv-bar-thumb {
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+      transition: left 0.4s ease;
     }
 
     /* ── FORECAST ── */
@@ -410,19 +535,24 @@
     }
   </style>
 </head>
-<body>
+<body class="wx-default">
+
+  <canvas id="weather-canvas"></canvas>
 
   <header>
     <h1 class="site-title">Bieber Weather</h1>
-    <p class="site-tagline">Baby, baby, baby... what's the weather?</p>
+    <p class="site-tagline" id="tagline"></p>
   </header>
 
   <main>
 
     <section class="search-section">
-      <div class="search-row">
-        <input type="text" id="city-input" placeholder="Enter a city (e.g. Omaha, London...)" autocomplete="off" />
-        <button id="search-btn">Get Weather</button>
+      <div class="search-wrapper">
+        <div class="search-row">
+          <input type="text" id="city-input" placeholder="Enter a city (e.g. Omaha, London...)" autocomplete="off" />
+          <button id="search-btn">Get Weather</button>
+        </div>
+        <div id="autocomplete-list"></div>
       </div>
 
       <div class="unit-toggle">
@@ -462,6 +592,15 @@
           <div class="meta-item">
             <span class="meta-label">Wind</span>
             <span class="meta-value" id="w-wind"></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">UV Index</span>
+            <span class="meta-value" id="w-uv">--</span>
+            <div class="uv-bar-wrap">
+              <div class="uv-bar-track">
+                <div class="uv-bar-thumb" id="uv-thumb" style="left:0%"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -512,7 +651,27 @@
   <script>
     const API_KEY = '42e5cca0cb1c0b4d3ce08e549487bf3b';
     let currentWeatherData = null;
+    let selectedCoords = null; // from autocomplete selection {lat, lon, name, country, state}
+    let autocompleteIndex = -1;
+    let debounceTimer = null;
+    let canvasAnim = null;
 
+    // ── RANDOM BIEBER LYRIC TAGLINE ──
+    const LYRICS = [
+      '"Baby, baby, baby... what\'s the weather?"',
+      '"Is it too late now to check the forecast?"',
+      '"One less lonely cloud..."',
+      '"What do you mean... it\'s raining?"',
+      '"Love yourself... and bring an umbrella."',
+      '"Sorry, I didn\'t check the weather."',
+      '"Never say never — unless it\'s a blizzard."',
+      '"Somebody to love... and share a forecast with."',
+      '"Hold on, the storm will pass."',
+      '"Intentions: partly cloudy with a chance of gold."',
+    ];
+    document.getElementById('tagline').textContent = LYRICS[Math.floor(Math.random() * LYRICS.length)];
+
+    // ── AQI META ──
     const AQI_META = {
       1: { label: 'Good',      color: '#2ecc71', desc: 'Air quality is satisfactory.' },
       2: { label: 'Fair',      color: '#f1c40f', desc: 'Acceptable air quality.' },
@@ -521,14 +680,235 @@
       5: { label: 'Very Poor', color: '#8e44ad', desc: 'Health warnings of emergency conditions.' },
     };
 
+    // ── UV META ──
+    const UV_LABELS = [
+      { max: 3,  label: 'Low',       color: '#2ecc71' },
+      { max: 6,  label: 'Moderate',  color: '#f1c40f' },
+      { max: 8,  label: 'High',      color: '#e67e22' },
+      { max: 11, label: 'Very High', color: '#e74c3c' },
+      { max: 99, label: 'Extreme',   color: '#8e44ad' },
+    ];
+
+    function uvMeta(val) {
+      return UV_LABELS.find(u => val <= u.max) || UV_LABELS[UV_LABELS.length - 1];
+    }
+
+    // ── WEATHER CONDITION → CSS CLASS MAP ──
+    function wxClass(code) {
+      if (code >= 200 && code < 300) return 'wx-storm';
+      if (code >= 300 && code < 600) return 'wx-rain';
+      if (code >= 600 && code < 700) return 'wx-snow';
+      if (code >= 700 && code < 800) return 'wx-fog';
+      if (code === 800)              return 'wx-clear';
+      if (code > 800)                return 'wx-clouds';
+      return 'wx-default';
+    }
+
+    // ── CANVAS WEATHER ANIMATIONS ──
+    const canvas = document.getElementById('weather-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function stopCanvas() {
+      if (canvasAnim) { cancelAnimationFrame(canvasAnim); canvasAnim = null; }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Stars (default / clear)
+    function makeStars(n) {
+      return Array.from({ length: n }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        a: Math.random(),
+        speed: Math.random() * 0.005 + 0.002,
+        phase: Math.random() * Math.PI * 2,
+      }));
+    }
+
+    function animateStars(stars) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = performance.now() / 1000;
+      stars.forEach(s => {
+        const alpha = 0.4 + 0.6 * Math.abs(Math.sin(t * s.speed * 10 + s.phase));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${alpha * 0.8})`;
+        ctx.fill();
+      });
+      canvasAnim = requestAnimationFrame(() => animateStars(stars));
+    }
+
+    // Rain
+    function makeDrops(n) {
+      return Array.from({ length: n }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        len: Math.random() * 18 + 8,
+        speed: Math.random() * 6 + 8,
+        alpha: Math.random() * 0.3 + 0.1,
+      }));
+    }
+
+    function animateRain(drops) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'rgba(130,180,255,0.35)';
+      ctx.lineWidth = 1;
+      drops.forEach(d => {
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - 1, d.y + d.len);
+        ctx.stroke();
+        d.y += d.speed;
+        if (d.y > canvas.height) {
+          d.y = -d.len;
+          d.x = Math.random() * canvas.width;
+        }
+      });
+      canvasAnim = requestAnimationFrame(() => animateRain(drops));
+    }
+
+    // Snow
+    function makeFlakes(n) {
+      return Array.from({ length: n }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 3 + 1,
+        speed: Math.random() * 1.2 + 0.4,
+        drift: (Math.random() - 0.5) * 0.5,
+        alpha: Math.random() * 0.5 + 0.3,
+      }));
+    }
+
+    function animateSnow(flakes) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      flakes.forEach(f => {
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(220,235,255,${f.alpha})`;
+        ctx.fill();
+        f.y += f.speed;
+        f.x += f.drift;
+        if (f.y > canvas.height) { f.y = -f.r; f.x = Math.random() * canvas.width; }
+      });
+      canvasAnim = requestAnimationFrame(() => animateSnow(flakes));
+    }
+
+    // Storm (lightning flashes)
+    let stormFlashTimer = 0;
+    function animateStorm(stars) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = performance.now();
+      // background stars dimly
+      stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200,200,255,0.2)`;
+        ctx.fill();
+      });
+      // random lightning flash
+      if (t - stormFlashTimer > 2500 + Math.random() * 3000) {
+        stormFlashTimer = t;
+        const x = Math.random() * canvas.width;
+        const grad = ctx.createRadialGradient(x, 0, 0, x, 0, canvas.height * 0.7);
+        grad.addColorStop(0, 'rgba(200,180,255,0.18)');
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      canvasAnim = requestAnimationFrame(() => animateStorm(stars));
+    }
+
+    // Fog (drifting semi-transparent blobs)
+    function makeFogBlobs(n) {
+      return Array.from({ length: n }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 160 + 80,
+        speed: (Math.random() - 0.5) * 0.3,
+        alpha: Math.random() * 0.06 + 0.02,
+      }));
+    }
+
+    function animateFog(blobs) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      blobs.forEach(b => {
+        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        grad.addColorStop(0, `rgba(180,180,210,${b.alpha})`);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+        b.x += b.speed;
+        if (b.x > canvas.width + b.r) b.x = -b.r;
+        if (b.x < -b.r) b.x = canvas.width + b.r;
+      });
+      canvasAnim = requestAnimationFrame(() => animateFog(blobs));
+    }
+
+    // Cloud (drifting pale circles)
+    function makeCloudParticles(n) {
+      return Array.from({ length: n }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * 0.6,
+        r: Math.random() * 80 + 40,
+        speed: Math.random() * 0.2 + 0.05,
+        alpha: Math.random() * 0.05 + 0.02,
+      }));
+    }
+
+    function animateClouds(particles) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+        grad.addColorStop(0, `rgba(200,200,230,${p.alpha})`);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        p.x += p.speed;
+        if (p.x - p.r > canvas.width) p.x = -p.r;
+      });
+      canvasAnim = requestAnimationFrame(() => animateClouds(particles));
+    }
+
+    function startWeatherAnimation(cls) {
+      stopCanvas();
+      if (cls === 'wx-clear' || cls === 'wx-default') {
+        animateStars(makeStars(120));
+      } else if (cls === 'wx-rain') {
+        animateRain(makeDrops(140));
+      } else if (cls === 'wx-snow') {
+        animateSnow(makeFlakes(100));
+      } else if (cls === 'wx-storm') {
+        stormFlashTimer = 0;
+        animateStorm(makeStars(80));
+      } else if (cls === 'wx-fog') {
+        animateFog(makeFogBlobs(14));
+      } else if (cls === 'wx-clouds') {
+        animateClouds(makeCloudParticles(10));
+      }
+    }
+
+    // default animation on load
+    startWeatherAnimation('wx-default');
+
+    // ── HELPERS ──
     function convertTemp(celsius, unit) {
       if (unit === 'F') return (celsius * 9 / 5) + 32;
       return celsius;
     }
 
     function formatTemp(celsius, unit) {
-      const val = convertTemp(celsius, unit);
-      return `${Math.round(val)}°${unit}`;
+      return `${Math.round(convertTemp(celsius, unit))}°${unit}`;
     }
 
     function formatWind(mps, unit) {
@@ -561,6 +941,16 @@
       document.getElementById('search-btn').disabled = on;
     }
 
+    function fadeInCard(sectionId) {
+      const section = document.getElementById(sectionId);
+      const card = section.querySelector('.card');
+      section.style.display = 'block';
+      card.classList.remove('fade-in');
+      void card.offsetWidth; // reflow
+      card.classList.add('fade-in');
+    }
+
+    // ── DISPLAY FUNCTIONS ──
     function displayWeather(data) {
       const unit = getUnit();
       document.getElementById('w-city').textContent = `${data.name}, ${data.sys.country}`;
@@ -571,14 +961,29 @@
       document.getElementById('w-feels').textContent = formatTemp(data.main.feels_like, unit);
       document.getElementById('w-humidity').textContent = `${data.main.humidity}%`;
       document.getElementById('w-wind').textContent = formatWind(data.wind.speed, unit);
-      document.getElementById('weather-section').style.display = 'block';
+
+      // Apply reactive background
+      const cls = wxClass(data.weather[0].id);
+      document.body.className = cls;
+      startWeatherAnimation(cls);
+
+      fadeInCard('weather-section');
+    }
+
+    function displayUV(uvValue) {
+      const meta = uvMeta(uvValue);
+      const rounded = Math.round(uvValue * 10) / 10;
+      const el = document.getElementById('w-uv');
+      el.textContent = `${rounded} — ${meta.label}`;
+      el.style.color = meta.color;
+      // position thumb: clamp UVI 0–12 to 0–100%
+      const pct = Math.min(100, (uvValue / 12) * 100);
+      document.getElementById('uv-thumb').style.left = `${pct}%`;
     }
 
     function displayForecast(data) {
       const unit = getUnit();
       const list = data.list;
-
-      // Group by date, pick entry closest to noon
       const days = {};
       list.forEach(item => {
         const date = item.dt_txt.split(' ')[0];
@@ -587,16 +992,12 @@
         } else {
           const curHour = parseInt(days[date].dt_txt.split(' ')[1]);
           const newHour = parseInt(item.dt_txt.split(' ')[1]);
-          if (Math.abs(newHour - 12) < Math.abs(curHour - 12)) {
-            days[date] = item;
-          }
+          if (Math.abs(newHour - 12) < Math.abs(curHour - 12)) days[date] = item;
         }
       });
 
       const today = new Date().toISOString().split('T')[0];
-      const futureDays = Object.entries(days)
-        .filter(([date]) => date > today)
-        .slice(0, 5);
+      const futureDays = Object.entries(days).filter(([d]) => d > today).slice(0, 5);
 
       const row = document.getElementById('forecast-row');
       row.innerHTML = '';
@@ -605,6 +1006,7 @@
         const dayName = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
         const card = document.createElement('div');
         card.className = 'forecast-card';
+        card._celsius = item.main.temp;
         card.innerHTML = `
           <div class="forecast-day">${dayName}</div>
           <img src="https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png" alt="${item.weather[0].description}" />
@@ -614,7 +1016,7 @@
         row.appendChild(card);
       });
 
-      document.getElementById('forecast-section').style.display = 'block';
+      fadeInCard('forecast-section');
     }
 
     function displayAQI(data) {
@@ -631,7 +1033,7 @@
       document.getElementById('aqi-pm10').textContent = `${comp.pm10.toFixed(1)} µg/m³`;
       document.getElementById('aqi-co').textContent = `${comp.co.toFixed(1)} µg/m³`;
 
-      document.getElementById('aqi-section').style.display = 'block';
+      fadeInCard('aqi-section');
     }
 
     function rerenderUnits() {
@@ -641,21 +1043,89 @@
       document.getElementById('w-temp').textContent = formatTemp(d.main.temp, unit);
       document.getElementById('w-feels').textContent = formatTemp(d.main.feels_like, unit);
       document.getElementById('w-wind').textContent = formatWind(d.wind.speed, unit);
-
-      // Re-render forecast temps
-      document.querySelectorAll('.forecast-card').forEach((card, i) => {
+      document.querySelectorAll('.forecast-card').forEach(card => {
         const tempEl = card.querySelector('.forecast-temp');
-        if (tempEl && card._celsius !== undefined) {
-          tempEl.textContent = formatTemp(card._celsius, unit);
-        }
+        if (tempEl && card._celsius !== undefined) tempEl.textContent = formatTemp(card._celsius, unit);
       });
     }
 
+    // ── AUTOCOMPLETE ──
+    function countryFlag(code) {
+      if (!code || code.length !== 2) return '🌍';
+      return String.fromCodePoint(
+        ...[...code.toUpperCase()].map(c => 127397 + c.charCodeAt(0))
+      );
+    }
+
+    function hideAutocomplete() {
+      const list = document.getElementById('autocomplete-list');
+      list.style.display = 'none';
+      list.innerHTML = '';
+      autocompleteIndex = -1;
+    }
+
+    async function fetchSuggestions(query) {
+      if (query.length < 2) { hideAutocomplete(); return; }
+      try {
+        const res = await fetch(
+          `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=6&appid=${API_KEY}`
+        );
+        if (!res.ok) return;
+        const results = await res.json();
+        showSuggestions(results);
+      } catch (e) { /* silently ignore */ }
+    }
+
+    function showSuggestions(results) {
+      const list = document.getElementById('autocomplete-list');
+      list.innerHTML = '';
+      autocompleteIndex = -1;
+
+      if (!results.length) { list.style.display = 'none'; return; }
+
+      results.forEach((r, i) => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        const sub = [r.state, r.country].filter(Boolean).join(', ');
+        item.innerHTML = `
+          <span class="autocomplete-flag">${countryFlag(r.country)}</span>
+          <span class="autocomplete-name">${r.name}</span>
+          <span class="autocomplete-sub">${sub}</span>
+        `;
+        item.addEventListener('mousedown', e => {
+          e.preventDefault();
+          selectSuggestion(r);
+        });
+        list.appendChild(item);
+      });
+
+      list.style.display = 'block';
+    }
+
+    function selectSuggestion(r) {
+      selectedCoords = { lat: r.lat, lon: r.lon, name: r.name, country: r.country, state: r.state };
+      const label = [r.name, r.state, r.country].filter(Boolean).join(', ');
+      document.getElementById('city-input').value = label;
+      hideAutocomplete();
+      getWeather();
+    }
+
+    function moveAutocompleteSelection(dir) {
+      const list = document.getElementById('autocomplete-list');
+      const items = list.querySelectorAll('.autocomplete-item');
+      if (!items.length) return;
+      items[autocompleteIndex]?.classList.remove('active');
+      autocompleteIndex = (autocompleteIndex + dir + items.length) % items.length;
+      items[autocompleteIndex].classList.add('active');
+    }
+
+    // ── MAIN WEATHER FETCH ──
     async function getWeather() {
-      const city = document.getElementById('city-input').value.trim();
-      if (!city) return;
+      const input = document.getElementById('city-input').value.trim();
+      if (!input) return;
 
       clearError();
+      hideAutocomplete();
       document.getElementById('weather-section').style.display = 'none';
       document.getElementById('forecast-section').style.display = 'none';
       document.getElementById('aqi-section').style.display = 'none';
@@ -663,9 +1133,20 @@
       setLoading(true);
 
       try {
-        const weatherRes = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`
-        );
+        let weatherRes;
+
+        if (selectedCoords) {
+          // Use lat/lon from autocomplete selection
+          const { lat, lon } = selectedCoords;
+          weatherRes = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+          );
+          selectedCoords = null;
+        } else {
+          weatherRes = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(input)}&appid=${API_KEY}&units=metric`
+          );
+        }
 
         if (weatherRes.status === 404) {
           showError("Hmm, couldn't find that city. Try again?");
@@ -680,28 +1161,17 @@
 
         const { lat, lon } = weatherData.coord;
 
-        const [forecastRes, aqiRes] = await Promise.all([
-          fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`),
-          fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`)
+        const [forecastRes, aqiRes, uvRes] = await Promise.all([
+          fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`),
+          fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`),
+          fetch(`https://api.openweathermap.org/data/2.5/uvi?lat=${lat}&lon=${lon}&appid=${API_KEY}`),
         ]);
 
-        if (forecastRes.ok) {
-          const forecastData = await forecastRes.json();
-          displayForecast(forecastData);
-
-          // Store celsius on each card for unit conversion
-          document.querySelectorAll('.forecast-card').forEach((card, i) => {
-            const tempEl = card.querySelector('.forecast-temp');
-            if (tempEl) {
-              const match = tempEl.textContent.match(/-?\d+(\.\d+)?/);
-              if (match) card._celsius = parseFloat(match[0]);
-            }
-          });
-        }
-
-        if (aqiRes.ok) {
-          const aqiData = await aqiRes.json();
-          displayAQI(aqiData);
+        if (forecastRes.ok) displayForecast(await forecastRes.json());
+        if (aqiRes.ok)      displayAQI(await aqiRes.json());
+        if (uvRes.ok) {
+          const uvData = await uvRes.json();
+          displayUV(uvData.value);
         }
 
       } catch (err) {
@@ -712,10 +1182,43 @@
       setLoading(false);
     }
 
-    document.getElementById('search-btn').addEventListener('click', getWeather);
-    document.getElementById('city-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') getWeather();
+    // ── EVENT LISTENERS ──
+    document.getElementById('search-btn').addEventListener('click', () => {
+      selectedCoords = null;
+      getWeather();
     });
+
+    document.getElementById('city-input').addEventListener('input', e => {
+      selectedCoords = null;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchSuggestions(e.target.value.trim()), 280);
+    });
+
+    document.getElementById('city-input').addEventListener('keydown', e => {
+      const list = document.getElementById('autocomplete-list');
+      const visible = list.style.display === 'block';
+      if (e.key === 'ArrowDown' && visible) { e.preventDefault(); moveAutocompleteSelection(1); }
+      else if (e.key === 'ArrowUp' && visible) { e.preventDefault(); moveAutocompleteSelection(-1); }
+      else if (e.key === 'Enter') {
+        if (visible && autocompleteIndex >= 0) {
+          e.preventDefault();
+          list.querySelectorAll('.autocomplete-item')[autocompleteIndex].dispatchEvent(new MouseEvent('mousedown'));
+        } else {
+          selectedCoords = null;
+          getWeather();
+        }
+      } else if (e.key === 'Escape') {
+        hideAutocomplete();
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (!document.getElementById('autocomplete-list').contains(e.target) &&
+          e.target !== document.getElementById('city-input')) {
+        hideAutocomplete();
+      }
+    });
+
     document.querySelectorAll('input[name="unit"]').forEach(radio => {
       radio.addEventListener('change', rerenderUnits);
     });
