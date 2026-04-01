@@ -6,7 +6,7 @@
     <title>NEO WATCH — A Justin Bieber Production</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/globe.gl"></script>
     <style>
         /* ===== CSS Custom Properties ===== */
@@ -77,43 +77,68 @@
             position: relative;
             z-index: 1;
             text-align: center;
-            padding: 30px 20px 20px;
+            padding: 36px 20px 24px;
             border-bottom: 2px solid var(--border-gold);
-            background: linear-gradient(180deg, rgba(106,13,173,0.15) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(106,13,173,0.2) 0%, transparent 100%);
         }
 
-        .header-content {
+        .header-top {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 24px;
             flex-wrap: wrap;
         }
 
         .bieber-img {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             border: 3px solid var(--accent-gold);
             object-fit: cover;
-            box-shadow: 0 0 20px rgba(245, 197, 24, 0.3);
+            box-shadow: 0 0 24px rgba(245, 197, 24, 0.35), 0 0 48px rgba(106, 13, 173, 0.3);
         }
 
-        .header h1 {
-            font-size: 2.8rem;
-            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dim), var(--accent-gold));
+        .header-titles h1 {
+            font-size: 3.2rem;
+            background: linear-gradient(135deg, var(--accent-gold), #fff7cc, var(--accent-gold));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: none;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
+            line-height: 1;
         }
 
-        .header-subtitle {
+        .header-titles .presented-by {
+            font-family: 'Playfair Display', serif;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 6px;
+            font-size: 0.85rem;
+            margin-top: 4px;
+            letter-spacing: 2px;
+        }
+
+        .header-titles .presented-by strong {
+            color: var(--accent-gold);
+            font-weight: 700;
+        }
+
+        .header-quote {
+            margin-top: 14px;
+            font-family: 'Playfair Display', serif;
             font-style: italic;
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .header-quote span { color: var(--accent-gold); font-style: normal; font-size: 0.8rem; }
+
+        /* Gold divider line */
+        .gold-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+            margin: 16px auto;
+            max-width: 400px;
         }
 
         /* ===== Tab Bar ===== */
@@ -177,13 +202,24 @@
 
         .tab-lyric {
             text-align: center;
-            color: var(--text-muted);
-            font-style: italic;
-            margin-bottom: 24px;
-            font-size: 0.95rem;
+            margin-bottom: 28px;
         }
 
-        .tab-lyric span { color: var(--accent-gold); font-style: normal; }
+        .tab-lyric .lyric-text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .tab-lyric .lyric-song {
+            font-family: 'Bebas Neue', sans-serif;
+            color: var(--accent-gold);
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+        }
 
         /* ===== Loading & Error ===== */
         .loading {
@@ -206,7 +242,7 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .loading-text { color: var(--text-muted); font-size: 0.9rem; }
+        .loading-text { color: var(--text-muted); font-size: 0.9rem; font-style: italic; }
 
         .error-msg {
             text-align: center;
@@ -302,7 +338,7 @@
         .section-label.hazard-label { color: var(--danger); }
         .section-label.safe-label { color: var(--safe); }
 
-        /* ===== Cards Grid (This Week) ===== */
+        /* ===== Cards Grid ===== */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -345,6 +381,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
 
         .badge.hazardous { background: var(--danger); color: #fff; }
@@ -362,7 +399,56 @@
         .card-detail .label { color: var(--text-muted); }
         .card-detail .value { font-family: 'Space Mono', monospace; color: var(--text-secondary); }
 
-        /* ===== Data Table (Close Approaches) ===== */
+        /* ===== Highlight Cards (Close Approaches & Impact Risk) ===== */
+        .highlight-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .highlight-card {
+            background: linear-gradient(135deg, var(--bg-card), rgba(106, 13, 173, 0.15));
+            border: 1px solid var(--border-gold);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .highlight-card .highlight-icon { font-size: 2rem; margin-bottom: 8px; }
+
+        .highlight-card .highlight-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .highlight-card .highlight-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
+        }
+
+        .highlight-card .highlight-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .highlight-card.danger-card {
+            border-color: rgba(255, 59, 59, 0.4);
+            background: linear-gradient(135deg, var(--bg-card), rgba(255, 59, 59, 0.08));
+        }
+
+        .highlight-card.safe-card {
+            border-color: rgba(57, 211, 83, 0.3);
+        }
+
+        /* ===== Simplified Table ===== */
         .table-controls {
             display: flex;
             gap: 16px;
@@ -427,7 +513,6 @@
             user-select: none;
             white-space: nowrap;
             border-bottom: 2px solid var(--border-gold);
-            position: relative;
         }
 
         .data-table th:hover { color: var(--text-primary); }
@@ -441,16 +526,95 @@
             color: var(--text-secondary);
         }
 
+        .data-table td.name-col {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
         .data-table tr:hover td { background: rgba(106, 13, 173, 0.1); }
-        .data-table tr.close-danger td { background: rgba(255, 59, 59, 0.08); color: var(--danger); }
-        .data-table tr.close-warning td { background: rgba(255, 170, 0, 0.06); color: var(--warning); }
+        .data-table tr.close-danger td { background: rgba(255, 59, 59, 0.08); }
+        .data-table tr.close-danger td.name-col { color: var(--danger); }
+        .data-table tr.close-warning td { background: rgba(255, 170, 0, 0.06); }
+        .data-table tr.close-warning td.name-col { color: var(--warning); }
+
+        /* Distance bar visual */
+        .dist-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dist-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--accent-gold);
+            min-width: 4px;
+            max-width: 100px;
+            transition: width 0.3s;
+        }
+
+        .dist-bar.close { background: var(--danger); }
+        .dist-bar.mid { background: var(--warning); }
+
+        /* Show more button */
+        .show-more-btn {
+            display: block;
+            margin: 16px auto;
+            padding: 10px 32px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            background: var(--bg-card);
+            color: var(--accent-gold);
+            border: 1px solid var(--border-gold);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .show-more-btn:hover { background: var(--accent-purple); border-color: var(--accent-gold); }
 
         /* ===== Impact Risk ===== */
-        .risk-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 12px;
+        .threat-banner {
+            text-align: center;
+            padding: 24px;
+            border-radius: 12px;
             margin-bottom: 24px;
+            border: 1px solid;
+        }
+
+        .threat-banner.safe {
+            background: linear-gradient(135deg, rgba(57, 211, 83, 0.08), rgba(57, 211, 83, 0.02));
+            border-color: rgba(57, 211, 83, 0.3);
+        }
+
+        .threat-banner.elevated {
+            background: linear-gradient(135deg, rgba(255, 170, 0, 0.08), rgba(255, 170, 0, 0.02));
+            border-color: rgba(255, 170, 0, 0.3);
+        }
+
+        .threat-banner .threat-level {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            letter-spacing: 4px;
+            margin-bottom: 6px;
+        }
+
+        .threat-banner.safe .threat-level { color: var(--safe); }
+        .threat-banner.elevated .threat-level { color: var(--warning); }
+
+        .threat-banner .threat-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .threat-banner .threat-lyric {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 10px;
         }
 
         .info-box {
@@ -520,11 +684,16 @@
             background: #000;
         }
 
+        /* Ensure globe.gl html elements are clickable */
+        #globe-container .scene-container div[style] {
+            pointer-events: all !important;
+        }
+
         .globe-legend {
             position: absolute;
             bottom: 16px;
             left: 16px;
-            background: rgba(13, 0, 22, 0.85);
+            background: rgba(13, 0, 22, 0.88);
             border: 1px solid var(--border-gold);
             border-radius: 8px;
             padding: 12px 16px;
@@ -559,57 +728,83 @@
             position: absolute;
             top: 16px;
             right: 16px;
-            background: rgba(13, 0, 22, 0.92);
+            background: rgba(13, 0, 22, 0.94);
             border: 1px solid var(--border-gold);
             border-radius: 10px;
-            padding: 18px;
-            min-width: 260px;
-            z-index: 10;
+            padding: 20px;
+            min-width: 270px;
+            z-index: 20;
             display: none;
             backdrop-filter: blur(8px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
 
         .globe-detail-panel.visible { display: block; }
 
         .globe-detail-panel h3 {
             color: var(--accent-gold);
-            margin-bottom: 10px;
-            font-size: 1.1rem;
+            margin-bottom: 12px;
+            font-size: 1.15rem;
+            padding-right: 24px;
         }
 
         .globe-detail-panel .card-detail { font-size: 0.8rem; }
 
         .globe-detail-close {
             position: absolute;
-            top: 8px;
-            right: 12px;
+            top: 10px;
+            right: 14px;
             background: none;
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
+            line-height: 1;
         }
 
         .globe-detail-close:hover { color: var(--text-primary); }
+
+        .globe-hint {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: rgba(13, 0, 22, 0.85);
+            border: 1px solid var(--border-purple);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            z-index: 10;
+        }
 
         /* ===== Footer ===== */
         .footer {
             position: relative;
             z-index: 1;
             text-align: center;
-            padding: 20px;
+            padding: 24px 20px;
             border-top: 1px solid var(--border-gold);
             color: var(--text-muted);
             font-size: 0.75rem;
             margin-top: 40px;
         }
 
+        .footer .footer-lyric {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            opacity: 0.6;
+        }
+
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
-            .header h1 { font-size: 1.8rem; }
+            .header-titles h1 { font-size: 2rem; }
             .tab-btn { font-size: 0.95rem; padding: 8px 14px; }
             .tab-content { padding: 16px; }
             .cards-grid { grid-template-columns: 1fr; }
+            .highlight-cards { grid-template-columns: 1fr; }
             #globe-container { height: 400px; }
         }
     </style>
@@ -618,13 +813,15 @@
 
     <!-- ===== HEADER ===== -->
     <header class="header">
-        <div class="header-content">
+        <div class="header-top">
             <img class="bieber-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Justin_Bieber_in_2015.jpg/440px-Justin_Bieber_in_2015.jpg" alt="Justin Bieber" onerror="this.style.display='none'">
-            <div>
+            <div class="header-titles">
                 <h1>NEO WATCH</h1>
-                <div class="header-subtitle">A Justin Bieber Production</div>
+                <div class="presented-by">Presented by <strong>Justin Bieber</strong></div>
             </div>
         </div>
+        <div class="gold-divider"></div>
+        <div class="header-quote">"I'll show you the stars" <span>— As Long As You Love Me</span></div>
     </header>
 
     <!-- ===== TAB BAR ===== -->
@@ -637,21 +834,22 @@
 
     <!-- ===== TAB 1: GLOBE ===== -->
     <section id="tab-globe" class="tab-content active">
-        <div class="tab-lyric">"Is it too late now to say sorry?" — <span>Sorry</span></div>
+        <div class="tab-lyric">
+            <span class="lyric-text">"Is it too late now to say sorry?"</span>
+            <span class="lyric-song">SORRY — PURPOSE (2015)</span>
+        </div>
         <div id="globe-container">
             <div class="loading" id="globe-loading">
                 <div class="spinner"></div>
-                <div class="loading-text">Scanning near-Earth space...</div>
+                <div class="loading-text">"One Time" ... scanning near-Earth space</div>
             </div>
             <div class="globe-legend" id="globe-legend" style="display:none;">
                 <h4>Legend</h4>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--danger);"></div> Potentially Hazardous</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--accent-gold);"></div> Non-Hazardous</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#aaa;"></div> Moon (1 LD reference)</div>
-                <div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted);">
-                    Distance scale: logarithmic<br>Click an asteroid for details
-                </div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--danger);box-shadow:0 0 6px var(--danger);"></div> Potentially Hazardous</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);"></div> Non-Hazardous</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#aaa;box-shadow:0 0 6px #aaa;"></div> Moon (1 LD)</div>
             </div>
+            <div class="globe-hint" id="globe-hint">Click any glowing dot for details</div>
             <div class="globe-detail-panel" id="globe-detail">
                 <button class="globe-detail-close" onclick="document.getElementById('globe-detail').classList.remove('visible')">&times;</button>
                 <h3 id="globe-detail-name"></h3>
@@ -662,40 +860,50 @@
 
     <!-- ===== TAB 2: THIS WEEK ===== -->
     <section id="tab-this-week" class="tab-content">
-        <div class="tab-lyric">"Baby, baby, baby oh" — <span>Baby</span></div>
+        <div class="tab-lyric">
+            <span class="lyric-text">"Baby, baby, baby oh"</span>
+            <span class="lyric-song">BABY — MY WORLD 2.0 (2010)</span>
+        </div>
         <div id="this-week-content">
             <div class="loading">
                 <div class="spinner"></div>
-                <div class="loading-text">Tracking this week's asteroids...</div>
+                <div class="loading-text">"Never Say Never" ... tracking this week's asteroids</div>
             </div>
         </div>
     </section>
 
     <!-- ===== TAB 3: CLOSE APPROACHES ===== -->
     <section id="tab-close-approaches" class="tab-content">
-        <div class="tab-lyric">"You should go and love yourself" — <span>Love Yourself</span></div>
+        <div class="tab-lyric">
+            <span class="lyric-text">"You should go and love yourself"</span>
+            <span class="lyric-song">LOVE YOURSELF — PURPOSE (2015)</span>
+        </div>
         <div id="close-approaches-content">
             <div class="loading">
                 <div class="spinner"></div>
-                <div class="loading-text">Querying JPL close approach database...</div>
+                <div class="loading-text">"What Do You Mean?" ... querying JPL database</div>
             </div>
         </div>
     </section>
 
     <!-- ===== TAB 4: IMPACT RISK ===== -->
     <section id="tab-impact-risk" class="tab-content">
-        <div class="tab-lyric">"I thought you'd always be mine" — <span>Baby</span></div>
+        <div class="tab-lyric">
+            <span class="lyric-text">"I thought you'd always be mine"</span>
+            <span class="lyric-song">BABY — MY WORLD 2.0 (2010)</span>
+        </div>
         <div id="impact-risk-content">
             <div class="loading">
                 <div class="spinner"></div>
-                <div class="loading-text">Checking Sentry impact monitoring...</div>
+                <div class="loading-text">"Hold On" ... checking Sentry impact monitoring</div>
             </div>
         </div>
     </section>
 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
-        Data provided by NASA NeoWs &amp; JPL SBDB/Sentry APIs &bull; NEO WATCH &copy; 2026
+        <div class="footer-lyric">"In a world full of chaos, I found peace in the stars."</div>
+        Data provided by NASA NeoWs &amp; JPL SBDB/Sentry APIs &bull; NEO WATCH &copy; 2026 &bull; A Justin Bieber Production
     </footer>
 
     <!-- ===== JAVASCRIPT ===== -->
@@ -709,13 +917,15 @@
         // ===== STATE =====
         const state = {
             loadedTabs: new Set(),
-            neowsData: null,        // shared between Globe + This Week
+            neowsData: null,
             cadData: null,
             sentryData: null,
-            cadSortCol: 2,          // default sort by date
+            cadSortCol: 2,
             cadSortAsc: true,
-            cadFilterDist: 0.05,    // AU
+            cadFilterDist: 0.05,
             cadFilterDays: 365,
+            cadShowAll: false,
+            sentryShowAll: false,
             globe: null
         };
 
@@ -740,14 +950,9 @@
             return d.toISOString().split('T')[0];
         }
 
-        function showLoading(containerId) {
-            const el = document.getElementById(containerId);
-            if (el) el.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">Loading data...</div></div>';
-        }
-
         function showError(containerId, msg) {
             const el = document.getElementById(containerId);
-            if (el) el.innerHTML = `<div class="error-msg"><h3>Something went wrong</h3><p>${msg}</p></div>`;
+            if (el) el.innerHTML = `<div class="error-msg"><h3>Something went wrong</h3><p>${msg}</p><p style="color:var(--text-muted);margin-top:8px;font-style:italic;">"I'll Be Gone" — but try refreshing the page</p></div>`;
         }
 
         // CORS-safe fetch: try direct first, fall back to proxy for JPL APIs
@@ -757,7 +962,6 @@
                 if (resp.ok) return resp;
                 throw new Error(`HTTP ${resp.status}`);
             } catch (e) {
-                // Try CORS proxy fallback
                 const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
                 const resp2 = await fetch(proxyUrl);
                 if (!resp2.ok) throw new Error(`API error: ${resp2.status} (via proxy)`);
@@ -802,7 +1006,6 @@
             if (!resp.ok) throw new Error(`NeoWs API error: ${resp.status}`);
             const json = await resp.json();
 
-            // Flatten date-keyed objects into a single array
             const asteroids = [];
             for (const date in json.near_earth_objects) {
                 for (const neo of json.near_earth_objects[date]) {
@@ -841,12 +1044,11 @@
             if (loading) loading.style.display = 'none';
             document.getElementById('globe-legend').style.display = 'block';
 
-            // Build data for floating HTML dot elements (not columns)
             const points = asteroids.map(a => ({
                 lat: (Math.random() - 0.5) * 160,
                 lng: (Math.random() - 0.5) * 360,
                 altitude: Math.log10(1 + a.missLD * 10) * 1.5,
-                size: a.hazardous ? 10 : 7,
+                size: a.hazardous ? 12 : 8,
                 color: a.hazardous ? '#ff3b3b' : '#f5c518',
                 neo: a
             }));
@@ -857,7 +1059,7 @@
                 lat: 5.14,
                 lng: 0,
                 altitude: moonAlt,
-                size: 14,
+                size: 16,
                 color: '#aaaaaa',
                 neo: { name: 'Moon (Reference)', missLD: 1, missKm: 384400, diamMinM: 3474000, diamMaxM: 3474000, velocityKms: 1.022, hazardous: false, date: '—' }
             });
@@ -876,13 +1078,26 @@
                     el.style.height = d.size + 'px';
                     el.style.borderRadius = '50%';
                     el.style.background = d.color;
-                    el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 16px ' + d.color + '55';
+                    el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 20px ' + d.color + '66';
                     el.style.cursor = 'pointer';
-                    el.style.transition = 'transform 0.2s';
+                    el.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                    el.style.pointerEvents = 'all';
                     el.title = d.neo.name;
-                    el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.6)'; });
-                    el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
-                    el.addEventListener('click', (e) => { e.stopPropagation(); showGlobeDetail(d.neo); });
+                    el.addEventListener('mouseenter', () => {
+                        el.style.transform = 'scale(1.8)';
+                        el.style.boxShadow = '0 0 12px ' + d.color + ', 0 0 30px ' + d.color + '88';
+                    });
+                    el.addEventListener('mouseleave', () => {
+                        el.style.transform = 'scale(1)';
+                        el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 20px ' + d.color + '66';
+                    });
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showGlobeDetail(d.neo);
+                        // Hide the hint after first click
+                        const hint = document.getElementById('globe-hint');
+                        if (hint) hint.style.display = 'none';
+                    });
                     return el;
                 })
                 .atmosphereColor('#6a0dad')
@@ -893,7 +1108,6 @@
 
             state.globe = globe;
 
-            // Resize handler
             window.addEventListener('resize', () => {
                 if (state.globe && document.getElementById('tab-globe').classList.contains('active')) {
                     state.globe.width(container.clientWidth).height(container.clientHeight);
@@ -904,13 +1118,16 @@
         function showGlobeDetail(neo) {
             const panel = document.getElementById('globe-detail');
             document.getElementById('globe-detail-name').textContent = neo.name;
+            const hazLabel = neo.hazardous
+                ? '<span style="color:var(--danger);font-weight:700;">HAZARDOUS</span>'
+                : '<span style="color:var(--safe);">Safe</span>';
             document.getElementById('globe-detail-body').innerHTML = `
+                <div class="card-detail"><span class="label">Status</span><span class="value">${hazLabel}</span></div>
                 <div class="card-detail"><span class="label">Date</span><span class="value">${neo.date}</span></div>
                 <div class="card-detail"><span class="label">Miss Distance</span><span class="value">${formatNum(neo.missLD)} LD</span></div>
                 <div class="card-detail"><span class="label">Miss (km)</span><span class="value">${formatNum(neo.missKm, 0)}</span></div>
                 <div class="card-detail"><span class="label">Diameter</span><span class="value">${formatNum(neo.diamMinM, 0)}–${formatNum(neo.diamMaxM, 0)} m</span></div>
                 <div class="card-detail"><span class="label">Velocity</span><span class="value">${formatNum(neo.velocityKms)} km/s</span></div>
-                <div class="card-detail"><span class="label">Hazardous</span><span class="value" style="color:${neo.hazardous ? 'var(--danger)' : 'var(--safe)'}">${neo.hazardous ? 'YES' : 'No'}</span></div>
             `;
             panel.classList.add('visible');
         }
@@ -962,7 +1179,6 @@
             </div>`;
 
             if (f === 'all') {
-                // Show hazardous first in their own section, then safe
                 if (hazList.length > 0) {
                     html += `<div class="section-label hazard-label">Potentially Hazardous (${hazList.length})</div>`;
                     html += '<div class="cards-grid">';
@@ -976,7 +1192,7 @@
             } else if (f === 'hazardous') {
                 html += '<div class="cards-grid">';
                 for (const a of hazList) html += cardHtml(a);
-                if (hazList.length === 0) html += '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:40px;">No potentially hazardous asteroids this week. We\'re safe... for now.</p>';
+                if (hazList.length === 0) html += '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:40px;font-style:italic;">"No Brainer" — no hazardous asteroids this week. We\'re safe... for now.</p>';
                 html += '</div>';
             } else {
                 html += '<div class="cards-grid">';
@@ -986,7 +1202,6 @@
 
             container.innerHTML = html;
 
-            // Filter button listeners
             container.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     state.thisWeekFilter = btn.dataset.filter;
@@ -1004,7 +1219,6 @@
                 const resp = await corsFetch(url);
                 const json = await resp.json();
 
-                // Fields: des, orbit_id, jd, cd, dist, dist_min, dist_max, v_rel, v_inf, t_sigma_f, h, diameter, diameter_sigma, fullname
                 const fields = json.fields;
                 const desIdx = fields.indexOf('des');
                 const cdIdx = fields.indexOf('cd');
@@ -1018,7 +1232,7 @@
                     name: (row[fullnameIdx] || row[desIdx] || '').trim(),
                     date: row[cdIdx],
                     distAU: +row[distIdx],
-                    distLD: +row[distIdx] * 389.17,  // 1 AU ~ 389.17 LD
+                    distLD: +row[distIdx] * 389.17,
                     velocity: +row[vRelIdx],
                     hMag: row[hIdx] ? +row[hIdx] : null,
                     diameter: row[diamIdx] ? +row[diamIdx] : null
@@ -1032,11 +1246,8 @@
 
         function renderCloseApproaches() {
             const container = document.getElementById('close-approaches-content');
-            let filtered = state.cadData.filter(r =>
-                r.distAU <= state.cadFilterDist
-            );
+            let filtered = state.cadData.filter(r => r.distAU <= state.cadFilterDist);
 
-            // Apply days filter
             const cutoff = addDays(todayStr(), state.cadFilterDays);
             filtered = filtered.filter(r => r.date <= cutoff + ' 99:99');
 
@@ -1047,21 +1258,54 @@
                 switch (col) {
                     case 0: va = a.name.toLowerCase(); vb = b.name.toLowerCase(); break;
                     case 1: va = a.date; vb = b.date; break;
-                    case 2: va = a.distAU; vb = b.distAU; break;
-                    case 3: va = a.distLD; vb = b.distLD; break;
-                    case 4: va = a.velocity; vb = b.velocity; break;
-                    case 5: va = a.diameter || 0; vb = b.diameter || 0; break;
-                    default: va = a.distAU; vb = b.distAU;
+                    case 2: va = a.distLD; vb = b.distLD; break;
+                    case 3: va = a.velocity; vb = b.velocity; break;
+                    default: va = a.distLD; vb = b.distLD;
                 }
                 if (va < vb) return state.cadSortAsc ? -1 : 1;
                 if (va > vb) return state.cadSortAsc ? 1 : -1;
                 return 0;
             });
 
+            // Stats for highlights
+            const closestCA = filtered.length > 0 ? filtered.reduce((m, r) => r.distLD < m.distLD ? r : m, filtered[0]) : null;
+            const fastestCA = filtered.length > 0 ? filtered.reduce((m, r) => r.velocity > m.velocity ? r : m, filtered[0]) : null;
+            const soonestCA = filtered.length > 0 ? filtered.reduce((m, r) => r.date < m.date ? r : m, filtered[0]) : null;
+
             const arrow = state.cadSortAsc ? '&#9650;' : '&#9660;';
             function thArrow(i) { return state.cadSortCol === i ? `<span class="sort-arrow">${arrow}</span>` : ''; }
 
+            // Max LD in filtered for bar scaling
+            const maxLD = filtered.length > 0 ? Math.max(...filtered.map(r => r.distLD)) : 1;
+            const showCount = state.cadShowAll ? filtered.length : Math.min(20, filtered.length);
+
             let html = `
+            <div class="highlight-cards">
+                <div class="highlight-card${closestCA && closestCA.distLD < 5 ? ' danger-card' : ''}">
+                    <div class="highlight-icon">&#127919;</div>
+                    <div class="highlight-title">Closest Flyby</div>
+                    <div class="highlight-value">${closestCA ? formatNum(closestCA.distLD) + ' LD' : '—'}</div>
+                    <div class="highlight-sub">${closestCA ? closestCA.name : ''}</div>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon">&#9889;</div>
+                    <div class="highlight-title">Fastest Object</div>
+                    <div class="highlight-value">${fastestCA ? formatNum(fastestCA.velocity) + ' km/s' : '—'}</div>
+                    <div class="highlight-sub">${fastestCA ? fastestCA.name : ''}</div>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon">&#128197;</div>
+                    <div class="highlight-title">Coming Up Next</div>
+                    <div class="highlight-value">${soonestCA ? formatDate(soonestCA.date) : '—'}</div>
+                    <div class="highlight-sub">${soonestCA ? soonestCA.name : ''}</div>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon">&#128640;</div>
+                    <div class="highlight-title">Total Approaches</div>
+                    <div class="highlight-value">${filtered.length}</div>
+                    <div class="highlight-sub">within ${state.cadFilterDays <= 30 ? '30 days' : state.cadFilterDays <= 180 ? '6 months' : '1 year'}</div>
+                </div>
+            </div>
             <div class="table-controls">
                 <div>
                     <label>Max Distance (AU)</label><br>
@@ -1077,52 +1321,66 @@
                     </select>
                 </div>
             </div>
-            <div class="result-count">${filtered.length} close approaches found</div>
+            <div class="result-count">Showing ${showCount} of ${filtered.length} approaches</div>
             <div class="data-table-wrapper"><table class="data-table">
                 <thead><tr>
-                    <th data-col="0">Object Name${thArrow(0)}</th>
+                    <th data-col="0">Object${thArrow(0)}</th>
                     <th data-col="1">Date${thArrow(1)}</th>
-                    <th data-col="2">Distance (AU)${thArrow(2)}</th>
-                    <th data-col="3">Distance (LD)${thArrow(3)}</th>
-                    <th data-col="4">Velocity (km/s)${thArrow(4)}</th>
-                    <th data-col="5">Diameter (km)${thArrow(5)}</th>
+                    <th data-col="2">Distance${thArrow(2)}</th>
+                    <th data-col="3">Speed${thArrow(3)}</th>
                 </tr></thead><tbody>`;
 
-            for (const r of filtered) {
+            for (let i = 0; i < showCount; i++) {
+                const r = filtered[i];
                 let rowClass = '';
-                if (r.distLD < 5) rowClass = 'close-danger';
-                else if (r.distLD < 20) rowClass = 'close-warning';
+                let barClass = '';
+                if (r.distLD < 5) { rowClass = 'close-danger'; barClass = 'close'; }
+                else if (r.distLD < 20) { rowClass = 'close-warning'; barClass = 'mid'; }
+                const barWidth = Math.max(4, (r.distLD / maxLD) * 100);
 
                 html += `<tr class="${rowClass}">
-                    <td>${r.name}</td>
-                    <td>${r.date}</td>
-                    <td>${formatNum(r.distAU, 6)}</td>
-                    <td>${formatNum(r.distLD, 2)}</td>
-                    <td>${formatNum(r.velocity, 2)}</td>
-                    <td>${r.diameter ? formatNum(r.diameter, 3) : '—'}</td>
+                    <td class="name-col">${r.name}</td>
+                    <td>${formatDate(r.date)}</td>
+                    <td><div class="dist-bar-wrap"><div class="dist-bar ${barClass}" style="width:${barWidth}px;"></div><span>${formatNum(r.distLD)} LD</span></div></td>
+                    <td>${formatNum(r.velocity)} km/s</td>
                 </tr>`;
             }
 
             html += '</tbody></table></div>';
+
+            if (filtered.length > 20) {
+                html += `<button class="show-more-btn" id="cad-show-more">${state.cadShowAll ? 'Show Less' : `Show All ${filtered.length} Approaches`}</button>`;
+            }
+
             container.innerHTML = html;
 
-            // Event listeners for controls
+            // Event listeners
             document.getElementById('cad-dist-slider').addEventListener('input', e => {
                 state.cadFilterDist = +e.target.value;
                 document.getElementById('cad-dist-label').textContent = state.cadFilterDist.toFixed(3) + ' AU';
+                state.cadShowAll = false;
                 renderCloseApproaches();
             });
 
             document.getElementById('cad-time-select').addEventListener('change', e => {
                 state.cadFilterDays = +e.target.value;
+                state.cadShowAll = false;
                 renderCloseApproaches();
             });
 
+            const showMoreBtn = document.getElementById('cad-show-more');
+            if (showMoreBtn) {
+                showMoreBtn.addEventListener('click', () => {
+                    state.cadShowAll = !state.cadShowAll;
+                    renderCloseApproaches();
+                });
+            }
+
             document.querySelectorAll('#close-approaches-content .data-table th').forEach(th => {
                 th.addEventListener('click', () => {
-                    const col = +th.dataset.col;
-                    if (state.cadSortCol === col) state.cadSortAsc = !state.cadSortAsc;
-                    else { state.cadSortCol = col; state.cadSortAsc = true; }
+                    const c = +th.dataset.col;
+                    if (state.cadSortCol === c) state.cadSortAsc = !state.cadSortAsc;
+                    else { state.cadSortCol = c; state.cadSortAsc = true; }
                     renderCloseApproaches();
                 });
             });
@@ -1137,17 +1395,16 @@
 
                 state.sentryData = (json.data || []).map(obj => ({
                     name: obj.des || obj.fullname || '?',
-                    ip: +obj.ip,                          // impact probability
-                    ps: obj.ps ? +obj.ps : null,          // palermo scale (cumulative)
-                    ts: obj.ts ? +obj.ts : 0,             // torino scale
+                    ip: +obj.ip,
+                    ps: obj.ps ? +obj.ps : null,
+                    ts: obj.ts ? +obj.ts : 0,
                     diameter: obj.diameter ? +obj.diameter : null,
                     vInf: obj.v_inf ? +obj.v_inf : null,
-                    nObs: obj.n_imp ? +obj.n_imp : null,  // number of potential impacts
+                    nObs: obj.n_imp ? +obj.n_imp : null,
                     yearRange: obj.range || '—',
                     lastObs: obj.last_obs || '—'
                 }));
 
-                // Sort by impact probability descending
                 state.sentryData.sort((a, b) => b.ip - a.ip);
                 renderImpactRisk();
             } catch (e) {
@@ -1168,10 +1425,51 @@
                 return 'torino-high';
             }
 
+            function ipReadable(ip) {
+                if (ip === 0) return 'Essentially zero';
+                if (ip < 1e-9) return '1 in ' + formatNum(1/ip, 0);
+                if (ip < 0.001) return '1 in ' + formatNum(1/ip, 0);
+                return (ip * 100).toFixed(4) + '%';
+            }
+
+            // Threat level banner
+            const bannerClass = highestTorino === 0 ? 'safe' : 'elevated';
+            const bannerText = highestTorino === 0 ? 'ALL CLEAR' : 'ELEVATED MONITORING';
+            const bannerDesc = highestTorino === 0
+                ? `All ${totalObj} monitored objects have a Torino rating of 0 — no cause for concern.`
+                : `${totalObj} objects monitored. Highest Torino rating: ${highestTorino}.`;
+            const bannerLyric = highestTorino === 0
+                ? '"We\'re gonna be alright" — Confident'
+                : '"What do you mean?" — What Do You Mean?';
+
+            const showCount = state.sentryShowAll ? data.length : Math.min(15, data.length);
+
             let html = `
-            <div class="risk-summary">
-                <div class="stat-card"><div class="stat-label">Objects Monitored</div><div class="stat-value">${totalObj}</div></div>
-                <div class="stat-card"><div class="stat-label">Highest Torino Rating</div><div class="stat-value">${highestTorino}</div></div>
+            <div class="threat-banner ${bannerClass}">
+                <div class="threat-level">${bannerText}</div>
+                <div class="threat-desc">${bannerDesc}</div>
+                <div class="threat-lyric">${bannerLyric}</div>
+            </div>
+
+            <div class="highlight-cards">
+                <div class="highlight-card safe-card">
+                    <div class="highlight-icon">&#128737;&#65039;</div>
+                    <div class="highlight-title">Objects Tracked</div>
+                    <div class="highlight-value">${totalObj}</div>
+                    <div class="highlight-sub">by JPL Sentry system</div>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon">&#127919;</div>
+                    <div class="highlight-title">Highest Risk Object</div>
+                    <div class="highlight-value">${data[0] ? data[0].name : '—'}</div>
+                    <div class="highlight-sub">${data[0] ? ipReadable(data[0].ip) + ' chance' : ''}</div>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-icon">&#128200;</div>
+                    <div class="highlight-title">Highest Torino</div>
+                    <div class="highlight-value"><span class="torino-badge ${torinoClass(highestTorino)}">${highestTorino}</span></div>
+                    <div class="highlight-sub">${highestTorino === 0 ? 'No hazard' : 'Meriting attention'}</div>
+                </div>
             </div>
 
             <div class="info-box">
@@ -1180,43 +1478,53 @@
                     <span>&#9660;</span>
                 </div>
                 <div class="info-box-content">
-                    <p><strong>Torino Scale (0–10):</strong> A communication tool for the public that categorizes the impact hazard of a near-Earth object. 0 means no hazard, 1–3 means meriting attention, 4–7 means threatening, and 8–10 means certain collision.</p>
+                    <p><strong>Torino Scale (0–10):</strong> Communicates impact hazard to the public. <span class="torino-badge torino-0">0</span> = no hazard, <span class="torino-badge torino-low">1–3</span> = meriting attention, <span class="torino-badge torino-mid">4–7</span> = threatening, <span class="torino-badge torino-high">8–10</span> = certain collision.</p>
                     <br>
-                    <p><strong>Palermo Scale:</strong> A logarithmic technical scale that compares the likelihood of an impact with the average background risk. Values below -2 reflect events with no likely consequences; values between -2 and 0 indicate situations meriting monitoring; values above 0 indicate situations meriting concern.</p>
+                    <p><strong>Palermo Scale:</strong> A logarithmic technical scale comparing impact likelihood to the average background risk. Below -2 = no concern. Between -2 and 0 = worth monitoring. Above 0 = meriting serious concern.</p>
                 </div>
             </div>
 
+            <div class="result-count">Showing ${showCount} of ${totalObj} objects (sorted by probability)</div>
             <div class="data-table-wrapper"><table class="data-table">
                 <thead><tr>
                     <th>Object</th>
-                    <th>Impact Probability</th>
+                    <th>Impact Chance</th>
                     <th>Torino</th>
                     <th>Palermo</th>
-                    <th>Diameter (km)</th>
-                    <th>Velocity (km/s)</th>
                     <th>Year Range</th>
                 </tr></thead><tbody>`;
 
-            for (const obj of data) {
-                const ipStr = obj.ip < 0.0001 ? obj.ip.toExponential(2) : (obj.ip * 100).toFixed(6) + '%';
+            for (let i = 0; i < showCount; i++) {
+                const obj = data[i];
                 html += `<tr>
-                    <td>${obj.name}</td>
-                    <td>${ipStr}</td>
+                    <td class="name-col">${obj.name}</td>
+                    <td>${ipReadable(obj.ip)}</td>
                     <td><span class="torino-badge ${torinoClass(obj.ts)}">${obj.ts}</span></td>
                     <td>${obj.ps !== null ? formatNum(obj.ps) : '—'}</td>
-                    <td>${obj.diameter ? formatNum(obj.diameter, 3) : '—'}</td>
-                    <td>${obj.vInf ? formatNum(obj.vInf) : '—'}</td>
                     <td>${obj.yearRange}</td>
                 </tr>`;
             }
 
-            html += `</tbody></table></div>
-            <div class="disclaimer">The vast majority of tracked objects have negligible risk — Sentry monitors ~${totalObj.toLocaleString()} objects for completeness.</div>`;
+            html += '</tbody></table></div>';
+
+            if (data.length > 15) {
+                html += `<button class="show-more-btn" id="sentry-show-more">${state.sentryShowAll ? 'Show Less' : `Show All ${totalObj} Objects`}</button>`;
+            }
+
+            html += `<div class="disclaimer">The vast majority of tracked objects have negligible risk — Sentry monitors them for completeness, not because they're dangerous.</div>`;
 
             container.innerHTML = html;
+
+            const showMoreBtn = document.getElementById('sentry-show-more');
+            if (showMoreBtn) {
+                showMoreBtn.addEventListener('click', () => {
+                    state.sentryShowAll = !state.sentryShowAll;
+                    renderImpactRisk();
+                });
+            }
         }
 
-        // ===== INIT: Load first tab =====
+        // ===== INIT =====
         loadTab('globe');
 
     })();
