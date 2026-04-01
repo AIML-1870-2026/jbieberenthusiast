@@ -253,6 +253,55 @@
 
         .stat-card .stat-value.danger { color: var(--danger); }
 
+        /* ===== Filter Toggle Buttons ===== */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 1.5px;
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-purple);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover { border-color: var(--accent-purple-light); color: var(--text-primary); }
+
+        .filter-btn.active {
+            background: var(--accent-purple);
+            color: var(--accent-gold);
+            border-color: var(--accent-gold);
+        }
+
+        .filter-btn.danger-btn.active {
+            background: rgba(255, 59, 59, 0.2);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .section-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            padding: 10px 0 8px;
+            margin-top: 20px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid var(--border-gold);
+        }
+
+        .section-label.hazard-label { color: var(--danger); }
+        .section-label.safe-label { color: var(--safe); }
+
         /* ===== Cards Grid (This Week) ===== */
         .cards-grid {
             display: grid;
@@ -701,6 +750,21 @@
             if (el) el.innerHTML = `<div class="error-msg"><h3>Something went wrong</h3><p>${msg}</p></div>`;
         }
 
+        // CORS-safe fetch: try direct first, fall back to proxy for JPL APIs
+        async function corsFetch(url) {
+            try {
+                const resp = await fetch(url);
+                if (resp.ok) return resp;
+                throw new Error(`HTTP ${resp.status}`);
+            } catch (e) {
+                // Try CORS proxy fallback
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+                const resp2 = await fetch(proxyUrl);
+                if (!resp2.ok) throw new Error(`API error: ${resp2.status} (via proxy)`);
+                return resp2;
+            }
+        }
+
         // ===== TAB SWITCHING =====
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabSections = document.querySelectorAll('.tab-content');
@@ -777,12 +841,12 @@
             if (loading) loading.style.display = 'none';
             document.getElementById('globe-legend').style.display = 'block';
 
-            // Build points data: asteroids + Moon reference
+            // Build data for floating HTML dot elements (not columns)
             const points = asteroids.map(a => ({
                 lat: (Math.random() - 0.5) * 160,
                 lng: (Math.random() - 0.5) * 360,
                 altitude: Math.log10(1 + a.missLD * 10) * 1.5,
-                radius: a.hazardous ? 0.6 : 0.4,
+                size: a.hazardous ? 10 : 7,
                 color: a.hazardous ? '#ff3b3b' : '#f5c518',
                 neo: a
             }));
@@ -793,7 +857,7 @@
                 lat: 5.14,
                 lng: 0,
                 altitude: moonAlt,
-                radius: 1.0,
+                size: 14,
                 color: '#aaaaaa',
                 neo: { name: 'Moon (Reference)', missLD: 1, missKm: 384400, diamMinM: 3474000, diamMaxM: 3474000, velocityKms: 1.022, hazardous: false, date: '—' }
             });
@@ -802,12 +866,25 @@
                 .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                 .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
                 .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
-                .pointsData(points)
-                .pointAltitude('altitude')
-                .pointRadius('radius')
-                .pointColor('color')
-                .pointLabel(d => d.neo.name)
-                .onPointClick(d => showGlobeDetail(d.neo))
+                .htmlElementsData(points)
+                .htmlLat('lat')
+                .htmlLng('lng')
+                .htmlAltitude('altitude')
+                .htmlElement(d => {
+                    const el = document.createElement('div');
+                    el.style.width = d.size + 'px';
+                    el.style.height = d.size + 'px';
+                    el.style.borderRadius = '50%';
+                    el.style.background = d.color;
+                    el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 16px ' + d.color + '55';
+                    el.style.cursor = 'pointer';
+                    el.style.transition = 'transform 0.2s';
+                    el.title = d.neo.name;
+                    el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.6)'; });
+                    el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
+                    el.addEventListener('click', (e) => { e.stopPropagation(); showGlobeDetail(d.neo); });
+                    return el;
+                })
                 .atmosphereColor('#6a0dad')
                 .atmosphereAltitude(0.15)
                 .width(container.clientWidth)
@@ -850,20 +927,16 @@
 
         function renderThisWeek(asteroids) {
             const container = document.getElementById('this-week-content');
+            state.thisWeekFilter = state.thisWeekFilter || 'all';
             const total = asteroids.length;
-            const hazardous = asteroids.filter(a => a.hazardous).length;
+            const hazList = asteroids.filter(a => a.hazardous);
+            const safeList = asteroids.filter(a => !a.hazardous);
+            const hazardous = hazList.length;
             const closest = asteroids.reduce((min, a) => a.missLD < min.missLD ? a : min, asteroids[0]);
             const fastest = asteroids.reduce((max, a) => a.velocityKms > max.velocityKms ? a : max, asteroids[0]);
 
-            let html = `<div class="stats-bar">
-                <div class="stat-card"><div class="stat-label">Total NEOs</div><div class="stat-value">${total}</div></div>
-                <div class="stat-card"><div class="stat-label">Potentially Hazardous</div><div class="stat-value danger">${hazardous}</div></div>
-                <div class="stat-card"><div class="stat-label">Closest Approach</div><div class="stat-value">${formatNum(closest.missLD)} LD</div></div>
-                <div class="stat-card"><div class="stat-label">Fastest Object</div><div class="stat-value">${formatNum(fastest.velocityKms)} km/s</div></div>
-            </div><div class="cards-grid">`;
-
-            for (const a of asteroids) {
-                html += `<div class="neo-card${a.hazardous ? ' hazardous' : ''}">
+            function cardHtml(a) {
+                return `<div class="neo-card${a.hazardous ? ' hazardous' : ''}">
                     <div class="card-header">
                         <div class="card-name">${a.name}</div>
                         ${a.hazardous ? '<span class="badge hazardous">Hazardous</span>' : '<span class="badge safe">Safe</span>'}
@@ -875,8 +948,51 @@
                 </div>`;
             }
 
-            html += '</div>';
+            const f = state.thisWeekFilter;
+            let html = `<div class="stats-bar">
+                <div class="stat-card"><div class="stat-label">Total NEOs</div><div class="stat-value">${total}</div></div>
+                <div class="stat-card"><div class="stat-label">Potentially Hazardous</div><div class="stat-value danger">${hazardous}</div></div>
+                <div class="stat-card"><div class="stat-label">Closest Approach</div><div class="stat-value">${formatNum(closest.missLD)} LD</div></div>
+                <div class="stat-card"><div class="stat-label">Fastest Object</div><div class="stat-value">${formatNum(fastest.velocityKms)} km/s</div></div>
+            </div>
+            <div class="filter-bar">
+                <button class="filter-btn${f === 'all' ? ' active' : ''}" data-filter="all">All (${total})</button>
+                <button class="filter-btn danger-btn${f === 'hazardous' ? ' active' : ''}" data-filter="hazardous">Hazardous Only (${hazardous})</button>
+                <button class="filter-btn${f === 'safe' ? ' active' : ''}" data-filter="safe">Safe Only (${safeList.length})</button>
+            </div>`;
+
+            if (f === 'all') {
+                // Show hazardous first in their own section, then safe
+                if (hazList.length > 0) {
+                    html += `<div class="section-label hazard-label">Potentially Hazardous (${hazList.length})</div>`;
+                    html += '<div class="cards-grid">';
+                    for (const a of hazList) html += cardHtml(a);
+                    html += '</div>';
+                }
+                html += `<div class="section-label safe-label">Non-Hazardous (${safeList.length})</div>`;
+                html += '<div class="cards-grid">';
+                for (const a of safeList) html += cardHtml(a);
+                html += '</div>';
+            } else if (f === 'hazardous') {
+                html += '<div class="cards-grid">';
+                for (const a of hazList) html += cardHtml(a);
+                if (hazList.length === 0) html += '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:40px;">No potentially hazardous asteroids this week. We\'re safe... for now.</p>';
+                html += '</div>';
+            } else {
+                html += '<div class="cards-grid">';
+                for (const a of safeList) html += cardHtml(a);
+                html += '</div>';
+            }
+
             container.innerHTML = html;
+
+            // Filter button listeners
+            container.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.thisWeekFilter = btn.dataset.filter;
+                    renderThisWeek(asteroids);
+                });
+            });
         }
 
         // ===== TAB 3: CLOSE APPROACHES =====
@@ -885,8 +1001,7 @@
                 const start = todayStr();
                 const end = addDays(start, 365);
                 const url = `https://ssd-api.jpl.nasa.gov/cad.api?date-min=${start}&date-max=${end}&dist-max=0.05&sort=dist`;
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error(`SBDB API error: ${resp.status}`);
+                const resp = await corsFetch(url);
                 const json = await resp.json();
 
                 // Fields: des, orbit_id, jd, cd, dist, dist_min, dist_max, v_rel, v_inf, t_sigma_f, h, diameter, diameter_sigma, fullname
@@ -1017,8 +1132,7 @@
         async function loadImpactRisk() {
             try {
                 const url = 'https://ssd-api.jpl.nasa.gov/sentry.api';
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error(`Sentry API error: ${resp.status}`);
+                const resp = await corsFetch(url);
                 const json = await resp.json();
 
                 state.sentryData = (json.data || []).map(obj => ({
