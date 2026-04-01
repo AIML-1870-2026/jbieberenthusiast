@@ -845,9 +845,10 @@
             </div>
             <div class="globe-legend" id="globe-legend" style="display:none;">
                 <h4>Legend</h4>
+                <div class="legend-item"><div class="legend-dot" style="background:radial-gradient(#fff,#888);box-shadow:0 0 6px #fff;"></div> <strong style="color:var(--accent-gold);">Moon — 1 LD baseline</strong></div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin:-2px 0 6px 18px;">1 Lunar Distance (LD) = 384,400 km<br>All asteroid distances measured relative to this</div>
                 <div class="legend-item"><div class="legend-dot" style="background:var(--danger);box-shadow:0 0 6px var(--danger);"></div> Potentially Hazardous</div>
                 <div class="legend-item"><div class="legend-dot" style="background:var(--accent-gold);box-shadow:0 0 6px var(--accent-gold);"></div> Non-Hazardous</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#aaa;box-shadow:0 0 6px #aaa;"></div> Moon (1 LD)</div>
             </div>
             <div class="globe-hint" id="globe-hint">Click any glowing dot for details</div>
             <div class="globe-detail-panel" id="globe-detail">
@@ -1074,40 +1075,45 @@
                 .htmlAltitude('altitude')
                 .htmlElement(d => {
                     const el = document.createElement('div');
-                    el.style.width = d.size + 'px';
-                    el.style.height = d.size + 'px';
-                    el.style.borderRadius = '50%';
-                    el.style.background = d.color;
-                    el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 20px ' + d.color + '66';
-                    el.style.cursor = 'pointer';
-                    el.style.transition = 'transform 0.2s, box-shadow 0.2s';
-                    el.style.pointerEvents = 'all';
-                    el.title = d.neo.name;
-                    el.addEventListener('mouseenter', () => {
-                        el.style.transform = 'scale(1.8)';
-                        el.style.boxShadow = '0 0 12px ' + d.color + ', 0 0 30px ' + d.color + '88';
-                    });
-                    el.addEventListener('mouseleave', () => {
-                        el.style.transform = 'scale(1)';
+                    const isMoon = d.neo.name === 'Moon (Reference)';
+                    if (isMoon) {
+                        // Moon gets a labeled marker
+                        el.style.width = '18px';
+                        el.style.height = '18px';
+                        el.style.borderRadius = '50%';
+                        el.style.background = 'radial-gradient(circle, #ffffff, #cccccc, #888888)';
+                        el.style.boxShadow = '0 0 12px #ffffff88, 0 0 24px #ffffff44';
+                        el.style.cursor = 'pointer';
+                        el.style.pointerEvents = 'all';
+                        el.style.position = 'relative';
+                        // Moon label
+                        const label = document.createElement('div');
+                        label.innerHTML = 'MOON<br><span style="font-size:9px;opacity:0.7;">1 LD = 384,400 km</span>';
+                        label.style.cssText = 'position:absolute;left:24px;top:50%;transform:translateY(-50%);font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:2px;color:#f5c518;white-space:nowrap;text-shadow:0 0 8px #000;pointer-events:none;';
+                        el.appendChild(label);
+                    } else {
+                        el.style.width = d.size + 'px';
+                        el.style.height = d.size + 'px';
+                        el.style.borderRadius = '50%';
+                        el.style.background = d.color;
                         el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 20px ' + d.color + '66';
-                    });
-                    // Track pointer to distinguish click from drag
-                    let startX, startY, startTime;
-                    el.addEventListener('pointerdown', (e) => {
-                        startX = e.clientX; startY = e.clientY; startTime = Date.now();
-                        e.stopPropagation();
-                    });
-                    el.addEventListener('pointerup', (e) => {
-                        const dx = Math.abs(e.clientX - startX);
-                        const dy = Math.abs(e.clientY - startY);
-                        const dt = Date.now() - startTime;
-                        // Only fire if it was a short tap, not a drag
-                        if (dx < 8 && dy < 8 && dt < 500) {
+                        el.style.cursor = 'pointer';
+                        el.style.pointerEvents = 'all';
+                    }
+                    el.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                    el.title = d.neo.name;
+                    el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.6)'; });
+                    el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
+                    // Detect click vs drag: record on mousedown, check on mouseup
+                    // Do NOT stopPropagation — let orbit controls work normally
+                    let sx, sy;
+                    el.addEventListener('mousedown', (e) => { sx = e.clientX; sy = e.clientY; });
+                    el.addEventListener('mouseup', (e) => {
+                        if (Math.abs(e.clientX - sx) < 6 && Math.abs(e.clientY - sy) < 6) {
                             showGlobeDetail(d.neo);
                             const hint = document.getElementById('globe-hint');
                             if (hint) hint.style.display = 'none';
                         }
-                        e.stopPropagation();
                     });
                     return el;
                 })
