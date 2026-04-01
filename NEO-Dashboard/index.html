@@ -1091,12 +1091,23 @@
                         el.style.transform = 'scale(1)';
                         el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 20px ' + d.color + '66';
                     });
-                    el.addEventListener('click', (e) => {
+                    // Track pointer to distinguish click from drag
+                    let startX, startY, startTime;
+                    el.addEventListener('pointerdown', (e) => {
+                        startX = e.clientX; startY = e.clientY; startTime = Date.now();
                         e.stopPropagation();
-                        showGlobeDetail(d.neo);
-                        // Hide the hint after first click
-                        const hint = document.getElementById('globe-hint');
-                        if (hint) hint.style.display = 'none';
+                    });
+                    el.addEventListener('pointerup', (e) => {
+                        const dx = Math.abs(e.clientX - startX);
+                        const dy = Math.abs(e.clientY - startY);
+                        const dt = Date.now() - startTime;
+                        // Only fire if it was a short tap, not a drag
+                        if (dx < 8 && dy < 8 && dt < 500) {
+                            showGlobeDetail(d.neo);
+                            const hint = document.getElementById('globe-hint');
+                            if (hint) hint.style.display = 'none';
+                        }
+                        e.stopPropagation();
                     });
                     return el;
                 })
@@ -1396,8 +1407,8 @@
                 state.sentryData = (json.data || []).map(obj => ({
                     name: obj.des || obj.fullname || '?',
                     ip: +obj.ip,
-                    ps: obj.ps ? +obj.ps : null,
-                    ts: obj.ts ? +obj.ts : 0,
+                    ps: obj.ps_cum ? +obj.ps_cum : null,
+                    ts: obj.ts_max ? +obj.ts_max : 0,
                     diameter: obj.diameter ? +obj.diameter : null,
                     vInf: obj.v_inf ? +obj.v_inf : null,
                     nObs: obj.n_imp ? +obj.n_imp : null,
