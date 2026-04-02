@@ -1040,22 +1040,25 @@
             if (loading) loading.style.display = 'none';
             document.getElementById('globe-legend').style.display = 'block';
 
+            // Store element refs for click detection
+            const dotEls = [];
+
             const points = asteroids.map(a => ({
                 lat: (Math.random() - 0.5) * 160,
                 lng: (Math.random() - 0.5) * 360,
-                altitude: Math.log10(1 + a.missLD * 10) * 1.5,
-                size: a.hazardous ? 14 : 10,
+                altitude: Math.log10(1 + a.missLD * 10) * 0.5,
+                size: a.hazardous ? 18 : 12,
                 color: a.hazardous ? '#ff3b3b' : '#f5c518',
                 neo: a
             }));
 
             // Moon reference
-            const moonAlt = Math.log10(1 + 1 * 10) * 1.5;
+            const moonAlt = Math.log10(1 + 1 * 10) * 0.5;
             points.push({
                 lat: 5.14,
                 lng: 0,
                 altitude: moonAlt,
-                size: 18,
+                size: 22,
                 color: '#ffffff',
                 neo: { name: 'Moon (Reference)', missLD: 1, missKm: 384400, diamMinM: 3474000, diamMaxM: 3474000, velocityKms: 1.022, hazardous: false, date: '—' }
             });
@@ -1081,6 +1084,7 @@
                         lbl.style.cssText = 'position:absolute;left:14px;top:-12px;white-space:nowrap;color:#fff;font-size:11px;font-weight:bold;text-shadow:0 0 6px #000,0 0 3px #000;font-family:Bebas Neue,sans-serif;letter-spacing:1px;';
                         wrap.appendChild(lbl);
                     }
+                    dotEls.push({ el: wrap, neo: d.neo });
                     return wrap;
                 })
                 .atmosphereColor('#6a0dad')
@@ -1090,41 +1094,21 @@
                 (container);
 
             state.globe = globe;
-            state.globePoints = points;
 
-            // Custom click detection — project 3D positions to screen coords
-            const Vec3 = globe.camera().position.constructor;
+            // Click detection — read actual screen positions of DOM elements
             let mdX = 0, mdY = 0;
-
             container.addEventListener('pointerdown', e => { mdX = e.clientX; mdY = e.clientY; });
             container.addEventListener('pointerup', e => {
-                // Ignore drags
                 if (Math.abs(e.clientX - mdX) > 5 || Math.abs(e.clientY - mdY) > 5) return;
 
-                const rect = container.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
-                const w = container.clientWidth;
-                const h = container.clientHeight;
-                const cam = globe.camera();
-
-                let best = null, bestDist = 35; // 35px click radius
-                for (const p of state.globePoints) {
-                    // Convert lat/lng/altitude to 3D world position (three-globe coords)
-                    const phi = (90 - p.lat) * Math.PI / 180;
-                    const theta = (90 - p.lng) * Math.PI / 180;
-                    const r = 100 * (1 + p.altitude);
-                    const v = new Vec3(
-                        r * Math.sin(phi) * Math.cos(theta),
-                        r * Math.cos(phi),
-                        r * Math.sin(phi) * Math.sin(theta)
-                    );
-                    v.project(cam);
-                    if (v.z > 1) continue; // behind camera
-                    const sx = (v.x + 1) / 2 * w;
-                    const sy = (-v.y + 1) / 2 * h;
-                    const d = Math.hypot(sx - clickX, sy - clickY);
-                    if (d < bestDist) { bestDist = d; best = p; }
+                let best = null, bestDist = 40;
+                for (const item of dotEls) {
+                    const rect = item.el.getBoundingClientRect();
+                    if (rect.width === 0 && rect.height === 0) continue;
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const d = Math.hypot(cx - e.clientX, cy - e.clientY);
+                    if (d < bestDist) { bestDist = d; best = item; }
                 }
 
                 if (best) {
