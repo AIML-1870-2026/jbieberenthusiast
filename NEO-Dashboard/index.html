@@ -1044,19 +1044,21 @@
                 lat: (Math.random() - 0.5) * 160,
                 lng: (Math.random() - 0.5) * 360,
                 altitude: Math.log10(1 + a.missLD * 10) * 1.5,
-                size: a.hazardous ? 12 : 8,
+                dotRadius: a.hazardous ? 0.4 : 0.25,
                 color: a.hazardous ? '#ff3b3b' : '#f5c518',
+                labelText: '',
                 neo: a
             }));
 
-            // Moon reference
+            // Moon reference — larger dot with visible label
             const moonAlt = Math.log10(1 + 1 * 10) * 1.5;
             points.push({
                 lat: 5.14,
                 lng: 0,
                 altitude: moonAlt,
-                size: 16,
-                color: '#aaaaaa',
+                dotRadius: 0.6,
+                color: '#ffffff',
+                labelText: 'MOON (1 LD = 384,400 km)',
                 neo: { name: 'Moon (Reference)', missLD: 1, missKm: 384400, diamMinM: 3474000, diamMaxM: 3474000, velocityKms: 1.022, hazardous: false, date: '—' }
             });
 
@@ -1064,53 +1066,24 @@
                 .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
                 .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
                 .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
-                .htmlElementsData(points)
-                .htmlLat('lat')
-                .htmlLng('lng')
-                .htmlAltitude('altitude')
-                .htmlElement(d => {
-                    const el = document.createElement('div');
-                    const isMoon = d.neo.name === 'Moon (Reference)';
-                    if (isMoon) {
-                        // Moon gets a labeled marker
-                        el.style.width = '18px';
-                        el.style.height = '18px';
-                        el.style.borderRadius = '50%';
-                        el.style.background = 'radial-gradient(circle, #ffffff, #cccccc, #888888)';
-                        el.style.boxShadow = '0 0 12px #ffffff88, 0 0 24px #ffffff44';
-                        el.style.cursor = 'pointer';
-                        el.style.pointerEvents = 'all';
-                        el.style.position = 'relative';
-                        // Moon label
-                        const label = document.createElement('div');
-                        label.innerHTML = 'MOON<br><span style="font-size:9px;opacity:0.7;">1 LD = 384,400 km</span>';
-                        label.style.cssText = 'position:absolute;left:24px;top:50%;transform:translateY(-50%);font-family:Bebas Neue,sans-serif;font-size:12px;letter-spacing:2px;color:#f5c518;white-space:nowrap;text-shadow:0 0 8px #000;pointer-events:none;';
-                        el.appendChild(label);
-                    } else {
-                        el.style.width = d.size + 'px';
-                        el.style.height = d.size + 'px';
-                        el.style.borderRadius = '50%';
-                        el.style.background = d.color;
-                        el.style.boxShadow = '0 0 8px ' + d.color + ', 0 0 20px ' + d.color + '66';
-                        el.style.cursor = 'pointer';
-                        el.style.pointerEvents = 'all';
-                    }
-                    el.style.transition = 'transform 0.2s, box-shadow 0.2s';
-                    el.title = d.neo.name;
-                    el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.6)'; });
-                    el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
-                    // Detect click vs drag: record on mousedown, check on mouseup
-                    // Do NOT stopPropagation — let orbit controls work normally
-                    let sx, sy;
-                    el.addEventListener('mousedown', (e) => { sx = e.clientX; sy = e.clientY; });
-                    el.addEventListener('mouseup', (e) => {
-                        if (Math.abs(e.clientX - sx) < 6 && Math.abs(e.clientY - sy) < 6) {
-                            showGlobeDetail(d.neo);
-                            const hint = document.getElementById('globe-hint');
-                            if (hint) hint.style.display = 'none';
-                        }
-                    });
-                    return el;
+                .labelsData(points)
+                .labelLat('lat')
+                .labelLng('lng')
+                .labelAltitude('altitude')
+                .labelDotRadius('dotRadius')
+                .labelColor('color')
+                .labelText('labelText')
+                .labelSize(1.2)
+                .labelDotOrientation(() => 'right')
+                .labelTypeFace(undefined)
+                .labelResolution(3)
+                .onLabelClick(d => {
+                    showGlobeDetail(d.neo);
+                    const hint = document.getElementById('globe-hint');
+                    if (hint) hint.style.display = 'none';
+                })
+                .onLabelHover(d => {
+                    container.style.cursor = d ? 'pointer' : 'grab';
                 })
                 .atmosphereColor('#6a0dad')
                 .atmosphereAltitude(0.15)
