@@ -922,6 +922,8 @@
             cadFilterDays: 365,
             cadShowAll: false,
             sentryShowAll: false,
+            sentrySortCol: 'ip',
+            sentrySortAsc: false,
             globe: null
         };
 
@@ -1409,7 +1411,14 @@
 
         function renderImpactRisk() {
             const container = document.getElementById('impact-risk-content');
-            const data = state.sentryData;
+            const col = state.sentrySortCol;
+            const asc = state.sentrySortAsc;
+            const data = [...state.sentryData].sort((a, b) => {
+                let va = a[col], vb = b[col];
+                if (va === null) va = asc ? Infinity : -Infinity;
+                if (vb === null) vb = asc ? Infinity : -Infinity;
+                return asc ? va - vb : vb - va;
+            });
             const totalObj = data.length;
             const highestTorino = Math.max(...data.map(d => d.ts));
 
@@ -1479,13 +1488,13 @@
                 </div>
             </div>
 
-            <div class="result-count">Showing ${showCount} of ${totalObj} objects (sorted by probability)</div>
+            <div class="result-count">Showing ${showCount} of ${totalObj} objects — click column headers to sort</div>
             <div class="data-table-wrapper"><table class="data-table">
                 <thead><tr>
                     <th>Object</th>
-                    <th>Impact Chance</th>
-                    <th>Torino</th>
-                    <th>Palermo</th>
+                    <th class="sortable-th" data-scol="ip" style="cursor:pointer;">Impact Chance ${col === 'ip' ? (asc ? '&#9650;' : '&#9660;') : ''}</th>
+                    <th class="sortable-th" data-scol="ts" style="cursor:pointer;">Torino ${col === 'ts' ? (asc ? '&#9650;' : '&#9660;') : ''}</th>
+                    <th class="sortable-th" data-scol="ps" style="cursor:pointer;">Palermo ${col === 'ps' ? (asc ? '&#9650;' : '&#9660;') : ''}</th>
                     <th>Year Range</th>
                 </tr></thead><tbody>`;
 
@@ -1517,6 +1526,19 @@
                     renderImpactRisk();
                 });
             }
+
+            container.querySelectorAll('.sortable-th').forEach(th => {
+                th.addEventListener('click', () => {
+                    const c = th.dataset.scol;
+                    if (state.sentrySortCol === c) {
+                        state.sentrySortAsc = !state.sentrySortAsc;
+                    } else {
+                        state.sentrySortCol = c;
+                        state.sentrySortAsc = false;
+                    }
+                    renderImpactRisk();
+                });
+            });
         }
 
         // ===== INIT =====
