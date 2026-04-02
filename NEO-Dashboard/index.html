@@ -1245,8 +1245,8 @@
             const container = document.getElementById('close-approaches-content');
             let filtered = state.cadData.filter(r => r.distAU <= state.cadFilterDist);
 
-            const cutoff = addDays(todayStr(), state.cadFilterDays);
-            filtered = filtered.filter(r => r.date <= cutoff + ' 99:99');
+            const cutoffMs = new Date(addDays(todayStr(), state.cadFilterDays)).getTime();
+            filtered = filtered.filter(r => new Date(r.date).getTime() <= cutoffMs);
 
             // Sort
             const col = state.cadSortCol;
