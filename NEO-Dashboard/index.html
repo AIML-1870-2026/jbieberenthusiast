@@ -999,7 +999,10 @@
             const end = addDays(start, 7);
             const url = `https://api.nasa.gov/neo/rest/v1/feed?start_date=${start}&end_date=${end}&api_key=${NASA_API_KEY}`;
             const resp = await fetch(url);
-            if (!resp.ok) throw new Error(`NeoWs API error: ${resp.status}`);
+            if (!resp.ok) {
+                if (resp.status === 429) throw new Error('NASA API rate limit reached. DEMO_KEY allows 30 requests/hour. Wait a bit and reload, or add a free API key from api.nasa.gov');
+                throw new Error(`NeoWs API error: ${resp.status}`);
+            }
             const json = await resp.json();
 
             const asteroids = [];
