@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drug Safety Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c14;
+      --surface: #0f172a;
+      --surface2: #1e293b;
+      --border: #1e2d45;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --accent3: #34d399;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --body: #94a3b8;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --font-head: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(180deg, #0a1020 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 0 0;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .app-title {
+      font-family: var(--font-head);
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .app-title span { color: var(--accent); }
+    .app-tagline {
+      color: var(--body);
+      font-size: 0.85rem;
+      margin-top: 4px;
+      margin-bottom: 16px;
+    }
+    .disclaimer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: var(--warn);
+      font-size: 0.72rem;
+      font-family: var(--font-body);
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .disclaimer-badge svg { flex-shrink: 0; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .tab-btn {
+      font-family: var(--font-head);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      text-transform: uppercase;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(56,189,248,0.3);
+      box-shadow: 0 0 20px rgba(56,189,248,0.06);
+    }
+
+    /* ── CLASS GRID ── */
+    .section-label {
+      font-family: var(--font-head);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .class-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .class-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .class-card:hover {
+      border-color: rgba(56,189,248,0.4);
+      box-shadow: 0 0 24px rgba(56,189,248,0.08);
+      transform: translateY(-2px);
+    }
+    .class-card:hover::before { opacity: 1; }
+    .class-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px rgba(56,189,248,0.15);
+    }
+    .class-card.selected::before { opacity: 1; }
+    .class-short {
+      font-family: var(--font-head);
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .class-full {
+      font-size: 0.75rem;
+      color: var(--body);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .class-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── DRUG TOGGLES ── */
+    .drug-selection { margin-bottom: 24px; }
+    .drug-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .drug-toggle {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--body);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: capitalize;
+    }
+    .drug-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .drug-toggle.selected {
+      background: rgba(56,189,248,0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .selection-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+    .compare-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 10px 24px;
+      background: var(--accent);
+      color: #080c14;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-head);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .compare-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .compare-btn:not(:disabled):hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* ── BACK BUTTON ── */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--body);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 24px;
+    }
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── COMPARISON PANEL ── */
+    .comparison-grid {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .comparison-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .comparison-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    @media (max-width: 700px) {
+      .comparison-grid.cols-2,
+      .comparison-grid.cols-3 { grid-template-columns: 1fr; }
+    }
+
+    .drug-col {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      min-width: 0;
+    }
+    .drug-col-name {
+      font-family: var(--font-head);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: capitalize;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── STAT BLOCKS ── */
+    .stat-block { margin-bottom: 16px; }
+    .stat-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-value.warn { color: var(--warn); }
+    .stat-value.ok { color: var(--accent3); }
+
+    /* ── BOX WARNING ── */
+    .box-warning {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .box-warning-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--warn);
+      margin-bottom: 6px;
+    }
+    .box-warning-text {
+      font-size: 0.78rem;
+      color: #d4a04a;
+      line-height: 1.5;
+    }
+    .no-warning {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── CHART ── */
+    .chart-section { margin-bottom: 16px; }
+    .chart-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    svg.bar-chart { width: 100%; overflow: visible; }
+    .bar-row text { font-family: var(--font-mono); font-size: 10px; }
+
+    /* ── INTERPRETATION NOTE ── */
+    .interpretation-note {
+      background: rgba(129,140,248,0.07);
+      border: 1px solid rgba(129,140,248,0.2);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 0.82rem;
+      color: #a5b4fc;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    .interpretation-note strong { color: var(--accent2); }
+
+    /* ── SPINNER ── */
+    .spinner-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── ERROR / EMPTY ── */
+    .error-state {
+      background: rgba(239,68,68,0.07);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      color: #fca5a5;
+    }
+    .empty-state {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    /* ── TAB 2: SEARCH ── */
+    .search-wrap {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      max-width: 540px;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      padding: 10px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input::placeholder { color: var(--muted); }
+    .search-input:focus { border-color: var(--accent); }
+    .search-btn {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: #080c14;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-head);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .search-btn:hover { opacity: 0.88; }
+    .search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .add-compare-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      padding: 9px 18px;
+      background: transparent;
+      border: 1px solid var(--accent2);
+      border-radius: 8px;
+      color: var(--accent2);
+      font-family: var(--font-head);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .add-compare-btn:hover {
+      background: rgba(129,140,248,0.1);
+    }
+
+    .clear-compare-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      padding: 9px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .clear-compare-btn:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* ── RECALL LIST ── */
+    .recall-list { margin-top: 8px; }
+    .recall-item {
+      background: rgba(245,158,11,0.06);
+      border-left: 2px solid var(--warn);
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      border-radius: 0 6px 6px 0;
+    }
+    .recall-reason {
+      font-size: 0.78rem;
+      color: #d4a04a;
+      line-height: 1.4;
+    }
+    .recall-date {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── DATA NOTE ── */
+    .data-note {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 12px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+    }
+    .footer-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .footer-disclaimer {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .footer-disclaimer strong { color: var(--body); }
+    .footer-attr {
+      font-size: 0.7rem;
+      color: var(--muted);
+      line-height: 1.6;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    /* ── UTILS ── */
+    .hidden { display: none !important; }
+    .mt8 { margin-top: 8px; }
+    .mt16 { margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-inner">
+    <h1 class="app-title">Drug <span>Safety</span> Explorer</h1>
+    <p class="app-tagline">Live adverse event data from the U.S. Food &amp; Drug Administration</p>
+    <div class="disclaimer-badge">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z" fill="currentColor"/>
+        <path d="M7.25 5.75a.75.75 0 011.5 0v4.5a.75.75 0 01-1.5 0v-4.5zm.75 7a.875.875 0 110-1.75.875.875 0 010 1.75z" fill="currentColor"/>
+      </svg>
+      Educational purposes only — not medical advice
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="explorer">Drug Class Explorer</button>
+      <button class="tab-btn" data-tab="search">Drug Search</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- TAB 1: DRUG CLASS EXPLORER -->
+  <section id="tab-explorer" class="tab-panel active">
+
+    <!-- Step 1: class selection -->
+    <div id="class-selection">
+      <p class="section-label">Step 1 — Choose a Drug Class</p>
+      <div class="class-grid">
+        <div class="class-card" data-class="ssri">
+          <div class="class-short">SSRIs</div>
+          <div class="class-full">Selective Serotonin Reuptake Inhibitors</div>
+          <div class="class-desc">Treats depression, anxiety disorders, OCD, and panic</div>
+        </div>
+        <div class="class-card" data-class="statins">
+          <div class="class-short">Statins</div>
+          <div class="class-full">HMG-CoA Reductase Inhibitors</div>
+          <div class="class-desc">Lowers cholesterol and reduces cardiovascular risk</div>
+        </div>
+        <div class="class-card" data-class="ace">
+          <div class="class-short">ACE Inhibitors</div>
+          <div class="class-full">Angiotensin-Converting Enzyme Inhibitors</div>
+          <div class="class-desc">Treats high blood pressure and heart failure</div>
+        </div>
+        <div class="class-card" data-class="beta">
+          <div class="class-short">Beta Blockers</div>
+          <div class="class-full">Beta-Adrenergic Blocking Agents</div>
+          <div class="class-desc">Manages heart rate, blood pressure, and chest pain</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: drug selection -->
+    <div id="drug-selection" class="hidden">
+      <p class="section-label">Step 2 — Select 2 or 3 Drugs to Compare</p>
+      <div class="drug-toggles" id="drug-toggles"></div>
+      <p class="selection-hint" id="selection-hint">Select 2 or 3 drugs to enable comparison.</p>
+      <br/>
+      <button class="compare-btn" id="compare-btn" disabled>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Compare
+      </button>
+    </div>
+
+    <!-- Step 3: comparison panel -->
+    <div id="comparison-panel" class="hidden">
+      <button class="back-btn" id="back-btn-explorer">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to class selection
+      </button>
+      <p class="section-label" id="comparison-class-label"></p>
+      <div id="comparison-cols" class="comparison-grid cols-2"></div>
+      <div class="interpretation-note">
+        <strong>What does this mean?</strong> Higher adverse event counts don't necessarily mean a drug is more dangerous —
+        they often reflect higher usage. Drugs prescribed to millions of people accumulate more reports over time.
+        Data quality and reporting patterns vary between drugs and time periods. Always consult a healthcare professional
+        for medical decisions.
+      </div>
+    </div>
+
+  </section>
+
+  <!-- TAB 2: DRUG SEARCH -->
+  <section id="tab-search" class="tab-panel">
+
+    <p class="section-label">Search a Drug</p>
+    <div class="search-wrap">
+      <input type="text" class="search-input" id="search-input-1" placeholder="Search a drug (e.g. ibuprofen, metformin...)" />
+      <button class="search-btn" id="search-btn-1">Search</button>
+    </div>
+
+    <div id="search-result-1"></div>
+
+    <div id="add-compare-wrap" class="hidden">
+      <button class="add-compare-btn" id="add-compare-btn">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Add Drug to Compare
+      </button>
+    </div>
+
+    <div id="compare-section-2" class="hidden">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+        <p class="section-label" style="margin:0;">Compare With</p>
+        <button class="clear-compare-btn" id="clear-compare-btn">✕ Clear Comparison</button>
+      </div>
+      <div class="search-wrap">
+        <input type="text" class="search-input" id="search-input-2" placeholder="Search second drug..." />
+        <button class="search-btn" id="search-btn-2">Search</button>
+      </div>
+      <div id="search-result-2"></div>
+    </div>
+
+    <div id="side-by-side" class="hidden">
+      <p class="section-label" style="margin-bottom:16px;">Side-by-Side Comparison</p>
+      <div id="side-by-side-cols" class="comparison-grid cols-2"></div>
+      <div class="interpretation-note">
+        <strong>What does this mean?</strong> Higher adverse event counts don't necessarily mean a drug is more dangerous —
+        they often reflect higher usage. Results depend on how the drug name appears in FDA records, and may vary.
+        Always consult a healthcare professional for medical decisions.
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <p class="footer-disclaimer">
+      <strong>Educational Disclaimer:</strong> This tool is for educational purposes only and is not intended as medical advice.
+      Do not use this information to diagnose or treat any medical condition. Consult a qualified healthcare professional
+      before making any health decisions.
+    </p>
+    <p class="footer-attr">
+      This product uses publicly available data from the U.S. Food and Drug Administration (FDA).
+      FDA is not responsible for the product and does not endorse or recommend this or any other product.
+    </p>
+  </div>
+</footer>
+
+<script>
+// ── STATE ──
+let activeTab = 'explorer';
+let selectedClass = null;
+let selectedDrugs = [];
+let comparisonData = {};
+let searchDrug1 = null, searchDrug2 = null;
+let searchData1 = null, searchData2 = null;
+let compareModeActive = false;
+
+const DRUG_CLASSES = {
+  ssri: {
+    label: 'SSRIs',
+    full: 'Selective Serotonin Reuptake Inhibitors',
+    drugs: ['fluoxetine', 'sertraline', 'paroxetine', 'escitalopram', 'citalopram']
+  },
+  statins: {
+    label: 'Statins',
+    full: 'HMG-CoA Reductase Inhibitors',
+    drugs: ['atorvastatin', 'simvastatin', 'rosuvastatin', 'pravastatin', 'lovastatin']
+  },
+  ace: {
+    label: 'ACE Inhibitors',
+    full: 'Angiotensin-Converting Enzyme Inhibitors',
+    drugs: ['lisinopril', 'enalapril', 'ramipril', 'captopril', 'benazepril']
+  },
+  beta: {
+    label: 'Beta Blockers',
+    full: 'Beta-Adrenergic Blocking Agents',
+    drugs: ['metoprolol', 'atenolol', 'carvedilol', 'propranolol', 'bisoprolol']
+  }
+};
+
+// Drug accent colors for comparison (per-column)
+const COL_COLORS = ['#38bdf8', '#818cf8', '#34d399'];
+
+// ── API ──
+const BASE = 'https://api.fda.gov';
+
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function fetchDrugData(name) {
+  const enc = encodeURIComponent(`"${name}"`);
+  const [ae, rxns, recalls, recallDetail, label] = await Promise.allSettled([
+    fetchJSON(`${BASE}/drug/event.json?search=patient.drug.openfda.generic_name:${enc}&limit=1`),
+    fetchJSON(`${BASE}/drug/event.json?search=patient.drug.openfda.generic_name:${enc}&count=patient.reaction.reactionmeddrapt.exact&limit=10`),
+    fetchJSON(`${BASE}/drug/enforcement.json?search=openfda.generic_name:${enc}&limit=1`),
+    fetchJSON(`${BASE}/drug/enforcement.json?search=openfda.generic_name:${enc}&limit=3`),
+    fetchJSON(`${BASE}/drug/label.json?search=openfda.generic_name:${enc}&limit=1`)
+  ]);
+
+  const get = (r) => r.status === 'fulfilled' ? r.value : null;
+
+  const aeData = get(ae);
+  const rxnData = get(rxns);
+  const recallData = get(recalls);
+  const recallDetailData = get(recallDetail);
+  const labelData = get(label);
+
+  return {
+    aeTotal: aeData?.meta?.results?.total ?? null,
+    reactions: rxnData?.results ?? null,
+    recallTotal: recallData?.meta?.results?.total ?? (recallData === null ? 0 : null),
+    recentRecalls: recallDetailData?.results ?? null,
+    boxWarning: labelData?.results?.[0]?.boxed_warning?.[0] ?? null
+  };
+}
+
+// ── SVG BAR CHART ──
+function buildBarChart(reactions, color, limit = 8) {
+  if (!reactions || reactions.length === 0) {
+    return '<p class="empty-state">No reaction data available.</p>';
+  }
+  const data = reactions.slice(0, limit);
+  const maxCount = Math.max(...data.map(r => r.count));
+  const rowH = 22;
+  const labelW = 150;
+  const countW = 50;
+  const barAreaW = 200;
+  const totalW = labelW + barAreaW + countW;
+  const h = data.length * rowH;
+
+  const rows = data.map((r, i) => {
+    const y = i * rowH + rowH / 2;
+    const barW = maxCount > 0 ? (r.count / maxCount) * barAreaW : 0;
+    const label = r.term.length > 28 ? r.term.slice(0, 27) + '…' : r.term;
+    const opacity = 0.55 + (0.45 * (1 - i / data.length));
+    return `
+      <g>
+        <text x="${labelW - 6}" y="${y + 4}" text-anchor="end" fill="#64748b" font-size="10">${label}</text>
+        <rect x="${labelW}" y="${y - 7}" width="${barW}" height="14" rx="3"
+          fill="${color}" opacity="${opacity}" />
+        <text x="${labelW + barW + 5}" y="${y + 4}" fill="${color}" font-size="10" font-weight="600"
+          font-family="'JetBrains Mono', monospace">${r.count.toLocaleString()}</text>
+      </g>`;
+  }).join('');
+
+  return `<svg class="bar-chart" viewBox="0 0 ${totalW} ${h}" style="height:${h}px; max-width:100%;">
+    ${rows}
+  </svg>`;
+}
+
+// ── DRUG COLUMN HTML ──
+function buildDrugColumn(name, data, color) {
+  if (!data) {
+    return `<div class="drug-col">
+      <div class="drug-col-name">${capitalize(name)}</div>
+      <div class="error-state">Unable to load data for this drug. Please try again.</div>
+    </div>`;
+  }
+
+  const aeHtml = data.aeTotal !== null
+    ? `<div class="stat-block">
+        <div class="stat-label">Total Adverse Event Reports</div>
+        <div class="stat-value" style="color:${color}">${data.aeTotal.toLocaleString()}</div>
+       </div>`
+    : `<div class="stat-block">
+        <div class="stat-label">Total Adverse Event Reports</div>
+        <div class="empty-state">No data found for "${capitalize(name)}". Try an alternate spelling or generic name.</div>
+       </div>`;
+
+  const recallClass = data.recallTotal > 0 ? 'warn' : 'ok';
+  const recallHtml = data.recallTotal !== null
+    ? `<div class="stat-block">
+        <div class="stat-label">Recall Count</div>
+        <div class="stat-value ${recallClass}">${data.recallTotal.toLocaleString()}</div>
+       </div>`
+    : `<div class="stat-block">
+        <div class="stat-label">Recall Count</div>
+        <div class="empty-state">Recall data unavailable.</div>
+       </div>`;
+
+  const chartHtml = `<div class="chart-section">
+    <div class="chart-label">Top Reported Reactions</div>
+    ${buildBarChart(data.reactions, color)}
+  </div>`;
+
+  let warningHtml;
+  if (data.boxWarning) {
+    const excerpt = data.boxWarning.length > 300
+      ? data.boxWarning.slice(0, 300).trimEnd() + '…'
+      : data.boxWarning;
+    warningHtml = `<div class="box-warning">
+      <div class="box-warning-header">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1L15 14H1L8 1z" stroke="#f59e0b" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M8 6v4M8 12v.5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Box Warning
+      </div>
+      <div class="box-warning-text">${excerpt}</div>
+    </div>`;
+  } else {
+    warningHtml = `<div class="stat-block"><div class="stat-label">Box Warning</div><p class="no-warning">No box warning found.</p></div>`;
+  }
+
+  return `<div class="drug-col">
+    <div class="drug-col-name" style="border-bottom-color: ${color}33;">${capitalize(name)}</div>
+    ${aeHtml}
+    ${recallHtml}
+    ${chartHtml}
+    ${warningHtml}
+  </div>`;
+}
+
+// ── DRUG PROFILE (Tab 2) ──
+function buildDrugProfile(name, data, color) {
+  if (!data) {
+    return `<div class="card error-state">Unable to load data for "${capitalize(name)}". Please try again.</div>`;
+  }
+  if (data.aeTotal === null && data.reactions === null) {
+    return `<div class="card"><p class="empty-state">No data found for "${capitalize(name)}". Try an alternate spelling or generic name.</p></div>`;
+  }
+
+  const aeHtml = data.aeTotal !== null
+    ? `<div class="stat-block">
+        <div class="stat-label">Total Adverse Event Reports</div>
+        <div class="stat-value" style="color:${color}">${data.aeTotal.toLocaleString()}</div>
+       </div>`
+    : `<div class="stat-block"><div class="stat-label">Total Adverse Event Reports</div><div class="empty-state">Data unavailable.</div></div>`;
+
+  const recallClass = (data.recallTotal ?? 0) > 0 ? 'warn' : 'ok';
+  let recallHtml = data.recallTotal !== null
+    ? `<div class="stat-block">
+        <div class="stat-label">Recall Count</div>
+        <div class="stat-value ${recallClass}">${data.recallTotal.toLocaleString()}</div>
+       </div>`
+    : `<div class="stat-block"><div class="stat-label">Recall Count</div><div class="empty-state">Recall data unavailable.</div></div>`;
+
+  if (data.recentRecalls && data.recentRecalls.length > 0) {
+    const items = data.recentRecalls.slice(0, 3).map(r => `
+      <div class="recall-item">
+        <div class="recall-reason">${r.reason_for_recall || 'Reason not listed'}</div>
+        <div class="recall-date">${r.recall_initiation_date ? formatDate(r.recall_initiation_date) : ''}</div>
+      </div>`).join('');
+    recallHtml += `<div class="recall-list">${items}</div>`;
+  }
+
+  const chartHtml = `<div class="chart-section">
+    <div class="chart-label">Top 10 Reported Reactions</div>
+    ${buildBarChart(data.reactions, color, 10)}
+  </div>`;
+
+  let warningHtml;
+  if (data.boxWarning) {
+    const excerpt = data.boxWarning.length > 300
+      ? data.boxWarning.slice(0, 300).trimEnd() + '…'
+      : data.boxWarning;
+    warningHtml = `<div class="box-warning">
+      <div class="box-warning-header">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1L15 14H1L8 1z" stroke="#f59e0b" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M8 6v4M8 12v.5" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Box Warning
+      </div>
+      <div class="box-warning-text">${excerpt}</div>
+    </div>`;
+  } else {
+    warningHtml = `<div class="stat-block"><div class="stat-label">Box Warning</div><p class="no-warning">No box warning found.</p></div>`;
+  }
+
+  return `<div class="card">
+    <div class="drug-col-name" style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); font-family:var(--font-head); font-size:1.1rem; font-weight:700; text-transform:capitalize;">${capitalize(name)}</div>
+    ${aeHtml}
+    ${recallHtml}
+    ${chartHtml}
+    ${warningHtml}
+    <p class="data-note">Results depend on how the drug name appears in FDA records, and may vary. Try alternate spellings or the generic name if results seem sparse.</p>
+  </div>`;
+}
+
+// ── HELPERS ──
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function formatDate(d) {
+  if (!d || d.length < 8) return d;
+  return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+}
+function spinner() {
+  return `<div class="spinner-wrap"><div class="spinner"></div></div>`;
+}
+function networkError() {
+  return `<div class="error-state">Unable to reach the FDA database. Please check your connection and try again.</div>`;
+}
+
+// ── TAB LOGIC ──
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`tab-${activeTab}`).classList.add('active');
+  });
+});
+
+// ── CLASS CARDS ──
+document.querySelectorAll('.class-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const cls = card.dataset.class;
+    selectedClass = cls;
+    selectedDrugs = [];
+    comparisonData = {};
+
+    document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+
+    // Show drug selection
+    document.getElementById('class-selection').classList.add('hidden');
+    document.getElementById('drug-selection').classList.remove('hidden');
+    document.getElementById('comparison-panel').classList.add('hidden');
+
+    renderDrugToggles();
+  });
+});
+
+function renderDrugToggles() {
+  const { drugs } = DRUG_CLASSES[selectedClass];
+  const wrap = document.getElementById('drug-toggles');
+  wrap.innerHTML = drugs.map(d => `
+    <button class="drug-toggle" data-drug="${d}">${capitalize(d)}</button>
+  `).join('');
+
+  wrap.querySelectorAll('.drug-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const drug = btn.dataset.drug;
+      if (selectedDrugs.includes(drug)) {
+        selectedDrugs = selectedDrugs.filter(x => x !== drug);
+        btn.classList.remove('selected');
+      } else if (selectedDrugs.length < 3) {
+        selectedDrugs.push(drug);
+        btn.classList.add('selected');
+      }
+      updateCompareBtn();
+    });
+  });
+}
+
+function updateCompareBtn() {
+  const btn = document.getElementById('compare-btn');
+  btn.disabled = selectedDrugs.length < 2;
+  const hint = document.getElementById('selection-hint');
+  if (selectedDrugs.length === 3) {
+    hint.textContent = 'Maximum 3 drugs selected. Click Compare to continue.';
+  } else if (selectedDrugs.length === 2) {
+    hint.textContent = '2 drugs selected. You can add one more or click Compare.';
+  } else if (selectedDrugs.length === 1) {
+    hint.textContent = 'Select 1 more drug to enable comparison.';
+  } else {
+    hint.textContent = 'Select 2 or 3 drugs to enable comparison.';
+  }
+}
+
+document.getElementById('compare-btn').addEventListener('click', async () => {
+  document.getElementById('drug-selection').classList.add('hidden');
+  document.getElementById('comparison-panel').classList.remove('hidden');
+
+  const cls = DRUG_CLASSES[selectedClass];
+  document.getElementById('comparison-class-label').textContent =
+    `Comparing ${selectedDrugs.length} ${cls.label} — ${cls.full}`;
+
+  const colsEl = document.getElementById('comparison-cols');
+  colsEl.className = `comparison-grid cols-${selectedDrugs.length}`;
+  colsEl.innerHTML = selectedDrugs.map((_, i) =>
+    `<div id="col-${i}" class="drug-col"><div class="spinner-wrap"><div class="spinner"></div></div></div>`
+  ).join('');
+
+  // Fetch all in parallel
+  const fetches = selectedDrugs.map(drug =>
+    fetchDrugData(drug).then(d => ({ drug, data: d })).catch(() => ({ drug, data: null }))
+  );
+
+  const results = await Promise.all(fetches);
+  results.forEach(({ drug, data }, i) => {
+    comparisonData[drug] = data;
+    document.getElementById(`col-${i}`).outerHTML = buildDrugColumn(drug, data, COL_COLORS[i]);
+  });
+
+  // Re-render with proper IDs (outerHTML replacement loses id)
+  colsEl.innerHTML = results.map(({ drug, data }, i) =>
+    buildDrugColumn(drug, data, COL_COLORS[i])
+  ).join('');
+});
+
+document.getElementById('back-btn-explorer').addEventListener('click', () => {
+  selectedDrugs = [];
+  selectedClass = null;
+  comparisonData = {};
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('comparison-panel').classList.add('hidden');
+  document.getElementById('drug-selection').classList.add('hidden');
+  document.getElementById('class-selection').classList.remove('hidden');
+});
+
+// ── TAB 2: SEARCH ──
+async function performSearch(inputId, resultId, slot) {
+  const input = document.getElementById(inputId);
+  const name = input.value.trim().toLowerCase();
+  if (!name) return;
+
+  const resultEl = document.getElementById(resultId);
+  resultEl.innerHTML = spinner();
+
+  if (slot === 1) {
+    searchDrug1 = name;
+    searchData1 = null;
+    document.getElementById('add-compare-wrap').classList.add('hidden');
+    document.getElementById('side-by-side').classList.add('hidden');
+  } else {
+    searchDrug2 = name;
+    searchData2 = null;
+    document.getElementById('side-by-side').classList.add('hidden');
+  }
+
+  try {
+    const data = await fetchDrugData(name);
+    if (slot === 1) {
+      searchData1 = data;
+      resultEl.innerHTML = buildDrugProfile(name, data, COL_COLORS[0]);
+      document.getElementById('add-compare-wrap').classList.remove('hidden');
+    } else {
+      searchData2 = data;
+      resultEl.innerHTML = buildDrugProfile(name, data, COL_COLORS[1]);
+      // Show side-by-side
+      renderSideBySide();
+    }
+  } catch (e) {
+    resultEl.innerHTML = networkError();
+  }
+}
+
+function renderSideBySide() {
+  if (!searchData1 || !searchData2) return;
+  const wrap = document.getElementById('side-by-side');
+  const cols = document.getElementById('side-by-side-cols');
+  cols.innerHTML =
+    buildDrugColumn(searchDrug1, searchData1, COL_COLORS[0]) +
+    buildDrugColumn(searchDrug2, searchData2, COL_COLORS[1]);
+  wrap.classList.remove('hidden');
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('search-btn-1').addEventListener('click', () =>
+  performSearch('search-input-1', 'search-result-1', 1));
+document.getElementById('search-input-1').addEventListener('keydown', e => {
+  if (e.key === 'Enter') performSearch('search-input-1', 'search-result-1', 1);
+});
+
+document.getElementById('search-btn-2').addEventListener('click', () =>
+  performSearch('search-input-2', 'search-result-2', 2));
+document.getElementById('search-input-2').addEventListener('keydown', e => {
+  if (e.key === 'Enter') performSearch('search-input-2', 'search-result-2', 2);
+});
+
+document.getElementById('add-compare-btn').addEventListener('click', () => {
+  document.getElementById('add-compare-wrap').classList.add('hidden');
+  document.getElementById('compare-section-2').classList.remove('hidden');
+  document.getElementById('search-input-2').focus();
+});
+
+document.getElementById('clear-compare-btn').addEventListener('click', () => {
+  searchDrug2 = null;
+  searchData2 = null;
+  document.getElementById('compare-section-2').classList.add('hidden');
+  document.getElementById('side-by-side').classList.add('hidden');
+  document.getElementById('search-result-2').innerHTML = '';
+  document.getElementById('search-input-2').value = '';
+  document.getElementById('add-compare-wrap').classList.remove('hidden');
+});
+</script>
+</body>
+</html>
