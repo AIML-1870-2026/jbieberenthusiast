@@ -555,6 +555,81 @@
       margin-top: 10px;
     }
 
+    /* ── QUICK PICKS ── */
+    .quick-picks { margin-bottom: 28px; }
+    .quick-picks-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .quick-category { margin-bottom: 10px; }
+    .quick-category-name {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .quick-chip {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 5px 13px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--body);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: capitalize;
+    }
+    .quick-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(56,189,248,0.06);
+    }
+
+    /* ── INSIGHT BANNER ── */
+    .insights-banner {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .insight-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .insight-icon { font-size: 1rem; margin-bottom: 4px; }
+    .insight-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .insight-body {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .insight-body strong { font-family: var(--font-mono); }
+
+    /* ── CLASS CONTEXT ── */
+    .class-context {
+      background: rgba(56,189,248,0.05);
+      border: 1px solid rgba(56,189,248,0.15);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      font-size: 0.82rem;
+      color: var(--body);
+      line-height: 1.6;
+    }
+    .class-context strong { color: var(--accent); }
+
     /* ── UTILS ── */
     .hidden { display: none !important; }
     .mt8 { margin-top: 8px; }
@@ -638,6 +713,7 @@
         Back to class selection
       </button>
       <p class="section-label" id="comparison-class-label"></p>
+      <div id="comparison-context"></div>
       <div id="comparison-cols" class="comparison-grid cols-2"></div>
       <div class="interpretation-note">
         <strong>What does this mean?</strong> Higher adverse event counts don't necessarily mean a drug is more dangerous —
@@ -654,8 +730,69 @@
 
     <p class="section-label">Search a Drug</p>
     <div class="search-wrap">
-      <input type="text" class="search-input" id="search-input-1" placeholder="Search a drug (e.g. ibuprofen, metformin...)" />
+      <input type="text" class="search-input" id="search-input-1" placeholder="Type a drug name, or pick one below..." />
       <button class="search-btn" id="search-btn-1">Search</button>
+    </div>
+
+    <div class="quick-picks">
+      <p class="quick-picks-label">Quick Picks — click any drug to look it up</p>
+      <div class="quick-category">
+        <div class="quick-category-name">Pain &amp; Fever</div>
+        <div class="quick-chips">
+          <button class="quick-chip" data-drug="ibuprofen">Ibuprofen</button>
+          <button class="quick-chip" data-drug="acetaminophen">Acetaminophen</button>
+          <button class="quick-chip" data-drug="aspirin">Aspirin</button>
+          <button class="quick-chip" data-drug="naproxen">Naproxen</button>
+          <button class="quick-chip" data-drug="hydrocodone">Hydrocodone</button>
+        </div>
+      </div>
+      <div class="quick-category">
+        <div class="quick-category-name">Antibiotics</div>
+        <div class="quick-chips">
+          <button class="quick-chip" data-drug="amoxicillin">Amoxicillin</button>
+          <button class="quick-chip" data-drug="azithromycin">Azithromycin</button>
+          <button class="quick-chip" data-drug="ciprofloxacin">Ciprofloxacin</button>
+          <button class="quick-chip" data-drug="doxycycline">Doxycycline</button>
+        </div>
+      </div>
+      <div class="quick-category">
+        <div class="quick-category-name">Heart &amp; Blood Pressure</div>
+        <div class="quick-chips">
+          <button class="quick-chip" data-drug="lisinopril">Lisinopril</button>
+          <button class="quick-chip" data-drug="amlodipine">Amlodipine</button>
+          <button class="quick-chip" data-drug="losartan">Losartan</button>
+          <button class="quick-chip" data-drug="metoprolol">Metoprolol</button>
+          <button class="quick-chip" data-drug="atorvastatin">Atorvastatin</button>
+        </div>
+      </div>
+      <div class="quick-category">
+        <div class="quick-category-name">Mental Health</div>
+        <div class="quick-chips">
+          <button class="quick-chip" data-drug="sertraline">Sertraline</button>
+          <button class="quick-chip" data-drug="fluoxetine">Fluoxetine</button>
+          <button class="quick-chip" data-drug="bupropion">Bupropion</button>
+          <button class="quick-chip" data-drug="alprazolam">Alprazolam</button>
+          <button class="quick-chip" data-drug="quetiapine">Quetiapine</button>
+        </div>
+      </div>
+      <div class="quick-category">
+        <div class="quick-category-name">Diabetes &amp; Metabolism</div>
+        <div class="quick-chips">
+          <button class="quick-chip" data-drug="metformin">Metformin</button>
+          <button class="quick-chip" data-drug="insulin">Insulin</button>
+          <button class="quick-chip" data-drug="glipizide">Glipizide</button>
+          <button class="quick-chip" data-drug="sitagliptin">Sitagliptin</button>
+        </div>
+      </div>
+      <div class="quick-category">
+        <div class="quick-category-name">Stomach &amp; Acid</div>
+        <div class="quick-chips">
+          <button class="quick-chip" data-drug="omeprazole">Omeprazole</button>
+          <button class="quick-chip" data-drug="pantoprazole">Pantoprazole</button>
+          <button class="quick-chip" data-drug="famotidine">Famotidine</button>
+          <button class="quick-chip" data-drug="ranitidine">Ranitidine</button>
+        </div>
+      </div>
     </div>
 
     <div id="search-result-1"></div>
@@ -723,22 +860,26 @@ const DRUG_CLASSES = {
   ssri: {
     label: 'SSRIs',
     full: 'Selective Serotonin Reuptake Inhibitors',
-    drugs: ['fluoxetine', 'sertraline', 'paroxetine', 'escitalopram', 'citalopram']
+    drugs: ['fluoxetine', 'sertraline', 'paroxetine', 'escitalopram', 'citalopram'],
+    context: 'SSRIs are the most prescribed antidepressants. They work by blocking serotonin reabsorption in the brain, which helps stabilize mood. While they all treat the same conditions, they differ in how long they stay in the body, which side effects are most common, and how they interact with other medications.'
   },
   statins: {
     label: 'Statins',
     full: 'HMG-CoA Reductase Inhibitors',
-    drugs: ['atorvastatin', 'simvastatin', 'rosuvastatin', 'pravastatin', 'lovastatin']
+    drugs: ['atorvastatin', 'simvastatin', 'rosuvastatin', 'pravastatin', 'lovastatin'],
+    context: 'Statins lower LDL ("bad") cholesterol by blocking an enzyme the liver uses to produce it. They\'re among the most widely prescribed drugs in the world. Comparing them is useful because they vary significantly in potency, dosing, and the types of side effects reported — muscle-related issues are a key concern.'
   },
   ace: {
     label: 'ACE Inhibitors',
     full: 'Angiotensin-Converting Enzyme Inhibitors',
-    drugs: ['lisinopril', 'enalapril', 'ramipril', 'captopril', 'benazepril']
+    drugs: ['lisinopril', 'enalapril', 'ramipril', 'captopril', 'benazepril'],
+    context: 'ACE inhibitors reduce blood pressure by relaxing blood vessels. They\'re also used to protect the kidneys in diabetes patients. A persistent dry cough is the most commonly reported side effect. Differences in adverse event profiles here can reflect both how widely used each drug is and patient population differences.'
   },
   beta: {
     label: 'Beta Blockers',
     full: 'Beta-Adrenergic Blocking Agents',
-    drugs: ['metoprolol', 'atenolol', 'carvedilol', 'propranolol', 'bisoprolol']
+    drugs: ['metoprolol', 'atenolol', 'carvedilol', 'propranolol', 'bisoprolol'],
+    context: 'Beta blockers slow the heart rate and reduce blood pressure by blocking adrenaline. They\'re used for heart failure, arrhythmia, and high blood pressure. Some (like carvedilol) also block alpha receptors, making them broader-acting. This can lead to different side effect patterns in the data.'
   }
 };
 
@@ -948,6 +1089,84 @@ function buildDrugProfile(name, data, color) {
   </div>`;
 }
 
+// ── INSIGHTS BANNER ──
+function buildInsights(drugs, dataMap) {
+  const entries = drugs.map(d => ({ name: d, data: dataMap[d] })).filter(e => e.data);
+  if (entries.length < 2) return '';
+
+  const insights = [];
+
+  // AE counts
+  const withAE = entries.filter(e => e.data.aeTotal !== null);
+  if (withAE.length >= 2) {
+    const sorted = [...withAE].sort((a, b) => b.data.aeTotal - a.data.aeTotal);
+    const top = sorted[0];
+    const bottom = sorted[sorted.length - 1];
+    insights.push({
+      icon: '📊',
+      title: 'Most Reported Events',
+      body: `<strong>${capitalize(top.name)}</strong> has the most adverse event reports (${top.data.aeTotal.toLocaleString()})`
+    });
+    if (top.name !== bottom.name) {
+      insights.push({
+        icon: '📉',
+        title: 'Fewest Reported Events',
+        body: `<strong>${capitalize(bottom.name)}</strong> has the fewest (${bottom.data.aeTotal.toLocaleString()}) — may reflect lower usage`
+      });
+    }
+  }
+
+  // Box warnings
+  const withWarning = entries.filter(e => e.data.boxWarning);
+  const noWarning = entries.filter(e => !e.data.boxWarning);
+  if (withWarning.length > 0 && noWarning.length > 0) {
+    const names = withWarning.map(e => `<strong>${capitalize(e.name)}</strong>`).join(', ');
+    insights.push({
+      icon: '⚠️',
+      title: 'Box Warning',
+      body: `${names} carr${withWarning.length > 1 ? 'y' : 'ies'} an FDA box warning — the most serious warning level`
+    });
+  } else if (withWarning.length === entries.length) {
+    insights.push({
+      icon: '⚠️',
+      title: 'Box Warnings',
+      body: 'All selected drugs carry an FDA box warning'
+    });
+  } else {
+    insights.push({
+      icon: '✅',
+      title: 'Box Warnings',
+      body: 'None of the selected drugs have an FDA box warning on record'
+    });
+  }
+
+  // Recalls
+  const withRecalls = entries.filter(e => (e.data.recallTotal ?? 0) > 0);
+  if (withRecalls.length === 0) {
+    insights.push({
+      icon: '✅',
+      title: 'Recalls',
+      body: 'None of the selected drugs have recalls on record'
+    });
+  } else {
+    const names = withRecalls.map(e => `<strong>${capitalize(e.name)}</strong> (${e.data.recallTotal})`).join(', ');
+    insights.push({
+      icon: '🔴',
+      title: 'Recalls on Record',
+      body: names
+    });
+  }
+
+  const cards = insights.map(ins => `
+    <div class="insight-card">
+      <div class="insight-icon">${ins.icon}</div>
+      <div class="insight-title">${ins.title}</div>
+      <div class="insight-body">${ins.body}</div>
+    </div>`).join('');
+
+  return `<div class="insights-banner">${cards}</div>`;
+}
+
 // ── HELPERS ──
 function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -1039,6 +1258,9 @@ document.getElementById('compare-btn').addEventListener('click', async () => {
   document.getElementById('comparison-class-label').textContent =
     `Comparing ${selectedDrugs.length} ${cls.label} — ${cls.full}`;
 
+  const contextEl = document.getElementById('comparison-context');
+  contextEl.innerHTML = `<div class="class-context"><strong>${cls.label}:</strong> ${cls.context}</div>`;
+
   const colsEl = document.getElementById('comparison-cols');
   colsEl.className = `comparison-grid cols-${selectedDrugs.length}`;
   colsEl.innerHTML = selectedDrugs.map((_, i) =>
@@ -1051,12 +1273,13 @@ document.getElementById('compare-btn').addEventListener('click', async () => {
   );
 
   const results = await Promise.all(fetches);
-  results.forEach(({ drug, data }, i) => {
-    comparisonData[drug] = data;
-    document.getElementById(`col-${i}`).outerHTML = buildDrugColumn(drug, data, COL_COLORS[i]);
-  });
+  results.forEach(({ drug, data }) => { comparisonData[drug] = data; });
 
-  // Re-render with proper IDs (outerHTML replacement loses id)
+  // Render insights banner then columns
+  contextEl.innerHTML =
+    `<div class="class-context"><strong>${cls.label}:</strong> ${cls.context}</div>` +
+    buildInsights(selectedDrugs, comparisonData);
+
   colsEl.innerHTML = results.map(({ drug, data }, i) =>
     buildDrugColumn(drug, data, COL_COLORS[i])
   ).join('');
@@ -1146,6 +1369,16 @@ document.getElementById('clear-compare-btn').addEventListener('click', () => {
   document.getElementById('search-result-2').innerHTML = '';
   document.getElementById('search-input-2').value = '';
   document.getElementById('add-compare-wrap').classList.remove('hidden');
+});
+
+// ── QUICK CHIPS ──
+document.querySelectorAll('.quick-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const drug = chip.dataset.drug;
+    document.getElementById('search-input-1').value = drug;
+    performSearch('search-input-1', 'search-result-1', 1);
+    document.getElementById('search-result-1').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 });
 </script>
 </body>
