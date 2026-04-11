@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belieber Reviews</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1a0533 0%, #2d0a5e 60%, #1a0533 100%);
+      min-height: 100vh;
+      color: #f3e8ff;
+      padding-bottom: 60px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(90deg, #3b0764 0%, #6B21A8 50%, #3b0764 100%);
+      border-bottom: 3px solid #F59E0B;
+      padding: 22px 20px 18px;
+      text-align: center;
+      box-shadow: 0 4px 32px rgba(107,33,168,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '★ ♪ ★ ♪ ★ ♪ ★ ♪ ★ ♪ ★ ♪ ★ ♪ ★ ♪ ★';
+      position: absolute;
+      top: 6px;
+      left: 0; right: 0;
+      font-size: 11px;
+      color: rgba(245,158,11,0.35);
+      letter-spacing: 6px;
+      text-align: center;
+    }
+    .header-title {
+      font-size: clamp(2rem, 7vw, 3.8rem);
+      font-weight: 900;
+      color: #F59E0B;
+      text-shadow: 0 0 30px rgba(245,158,11,0.6), 0 2px 4px rgba(0,0,0,0.5);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .header-sub {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: rgba(243,232,255,0.65);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: rgba(59,7,100,0.55);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 16px;
+      padding: 22px 24px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #F59E0B;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(245,158,11,0.2);
+    }
+
+    /* ── FORM ELEMENTS ── */
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(243,232,255,0.8);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select,
+    textarea {
+      background: rgba(26,5,51,0.7);
+      border: 1.5px solid rgba(107,33,168,0.5);
+      border-radius: 9px;
+      color: #f3e8ff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      padding: 10px 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #F59E0B;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    input::placeholder, textarea::placeholder { color: rgba(243,232,255,0.3); }
+    select option { background: #2d0a5e; color: #f3e8ff; }
+    textarea { resize: vertical; min-height: 90px; }
+
+    .key-row { display: flex; gap: 8px; }
+    .key-row input { flex: 1; }
+    .btn-ghost-sm {
+      background: transparent;
+      border: 1.5px solid rgba(107,33,168,0.5);
+      border-radius: 9px;
+      color: rgba(243,232,255,0.6);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .btn-ghost-sm:hover { border-color: #F59E0B; color: #F59E0B; }
+
+    /* ── SLIDERS ── */
+    .slider-group { margin-bottom: 20px; }
+    .slider-group:last-child { margin-bottom: 0; }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .slider-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(243,232,255,0.8);
+    }
+    .slider-value {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #F59E0B;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 20px;
+      padding: 2px 10px;
+    }
+
+    .slider-track-wrap { position: relative; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #F59E0B;
+      border: 3px solid #1a0533;
+      box-shadow: 0 0 8px rgba(245,158,11,0.6);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #F59E0B; border: 3px solid #1a0533;
+      box-shadow: 0 0 8px rgba(245,158,11,0.6); cursor: pointer;
+    }
+
+    /* Length slider — purple */
+    #lengthSlider { background: linear-gradient(to right, #7c3aed, #a855f7); }
+
+    /* Style slider — green → red */
+    #styleSlider { background: linear-gradient(to right, #22c55e, #eab308, #ef4444); }
+
+    /* Sentiment slider — red → green */
+    #sentimentSlider { background: linear-gradient(to right, #ef4444, #f97316, #eab308, #22c55e); }
+
+    .slider-endpoints {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
+    .slider-end {
+      font-size: 0.72rem;
+      color: rgba(243,232,255,0.45);
+    }
+
+    /* ── GENERATE BUTTON ── */
+    .btn-generate {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6B21A8, #9333ea);
+      border: 2px solid #F59E0B;
+      border-radius: 12px;
+      color: #F59E0B;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(107,33,168,0.4);
+    }
+    .btn-generate:hover:not(:disabled) {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      box-shadow: 0 6px 28px rgba(245,158,11,0.35);
+      transform: translateY(-1px);
+    }
+    .btn-generate:active:not(:disabled) { transform: translateY(0); }
+    .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── MODEL SELECT ROW ── */
+    .model-row { display: flex; gap: 12px; align-items: flex-end; }
+    .model-row .field { flex: 1; margin-bottom: 0; }
+
+    /* ── LOADING ── */
+    #loadingState {
+      display: none;
+      text-align: center;
+      padding: 30px 0;
+    }
+    .loading-text {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #F59E0B;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+    @keyframes dots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
+      100% { content: ''; }
+    }
+
+    /* ── ERROR ── */
+    .error-msg {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 10px;
+      color: #fca5a5;
+      font-size: 0.85rem;
+      padding: 12px 16px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* ── REVIEW CARD ── */
+    #reviewCard { display: none; }
+
+    .review-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .reviewer-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6B21A8, #F59E0B);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .reviewer-info { flex: 1; }
+    .reviewer-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #f3e8ff;
+    }
+    .reviewer-stars {
+      font-size: 1rem;
+      letter-spacing: 1px;
+      line-height: 1.4;
+    }
+
+    .verified-badge {
+      background: linear-gradient(135deg, #6B21A8, #9333ea);
+      border: 1px solid #F59E0B;
+      border-radius: 20px;
+      color: #F59E0B;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .review-product {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(245,158,11,0.7);
+      margin-bottom: 14px;
+    }
+
+    .review-divider {
+      height: 1px;
+      background: rgba(245,158,11,0.15);
+      margin-bottom: 16px;
+    }
+
+    .review-body {
+      font-size: 0.92rem;
+      line-height: 1.75;
+      color: rgba(243,232,255,0.9);
+    }
+    .review-body h1, .review-body h2, .review-body h3 {
+      color: #F59E0B;
+      font-weight: 700;
+      margin: 14px 0 6px;
+    }
+    .review-body h1 { font-size: 1.1rem; }
+    .review-body h2 { font-size: 1rem; }
+    .review-body h3 { font-size: 0.95rem; }
+    .review-body p { margin-bottom: 10px; }
+    .review-body ul, .review-body ol { padding-left: 20px; margin-bottom: 10px; }
+    .review-body li { margin-bottom: 4px; }
+    .review-body strong { color: #f3e8ff; font-weight: 700; }
+    .review-body em { color: rgba(245,158,11,0.85); }
+    .review-body hr { border: none; border-top: 1px solid rgba(245,158,11,0.15); margin: 14px 0; }
+
+    /* ── DOWNLOAD BUTTON ── */
+    .btn-download {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      padding: 11px;
+      background: transparent;
+      border: 2px solid rgba(245,158,11,0.4);
+      border-radius: 10px;
+      color: rgba(245,158,11,0.8);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn-download:hover {
+      border-color: #F59E0B;
+      color: #F59E0B;
+      background: rgba(245,158,11,0.08);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">Belieber Reviews</div>
+    <div class="header-sub">AI-Powered Product Reviews ✦ Belieber Certified</div>
+  </header>
+
+  <div class="container">
+
+    <!-- API KEY -->
+    <div class="card">
+      <div class="card-title">🔑 API Key</div>
+      <div class="field">
+        <label for="apiKeyInput">OpenAI API Key</label>
+        <div class="key-row">
+          <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
+          <button class="btn-ghost-sm" id="showKeyBtn" onclick="toggleKeyVis()">Show</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT INFO -->
+    <div class="card">
+      <div class="card-title">🛍️ Product Info</div>
+      <div class="field">
+        <label for="productName">Product Name</label>
+        <input type="text" id="productName" placeholder="e.g., Churro Ice Cream Sandwich">
+      </div>
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category">
+          <option value="Food &amp; Beverages">Food &amp; Beverages</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Clothing &amp; Apparel">Clothing &amp; Apparel</option>
+          <option value="Books &amp; Media">Books &amp; Media</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="comments">Additional Comments</label>
+        <textarea id="comments" placeholder="Include key features, strengths, weaknesses, specific experiences, or any advanced instructions for the review..."></textarea>
+      </div>
+    </div>
+
+    <!-- SLIDERS -->
+    <div class="card">
+      <div class="card-title">🎚️ Review Settings</div>
+
+      <!-- Length -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Length</span>
+          <span class="slider-value" id="lengthVal">Medium</span>
+        </div>
+        <input type="range" id="lengthSlider" min="1" max="3" value="2" oninput="updateSliders()">
+        <div class="slider-endpoints">
+          <span class="slider-end">Short</span>
+          <span class="slider-end">Long</span>
+        </div>
+      </div>
+
+      <!-- Style -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Style</span>
+          <span class="slider-value" id="styleVal">😊 Friendly</span>
+        </div>
+        <input type="range" id="styleSlider" min="0" max="100" value="30" oninput="updateSliders()">
+        <div class="slider-endpoints">
+          <span class="slider-end">😍 Glowing</span>
+          <span class="slider-end">😤 Harsh Critic</span>
+        </div>
+      </div>
+
+      <!-- Sentiment -->
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label">Sentiment</span>
+          <span class="slider-value" id="sentimentVal">😊 Positive</span>
+        </div>
+        <input type="range" id="sentimentSlider" min="0" max="100" value="70" oninput="updateSliders()">
+        <div class="slider-endpoints">
+          <span class="slider-end">💀 Brutal</span>
+          <span class="slider-end">⭐ Glowing</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLM SELECTION -->
+    <div class="card">
+      <div class="card-title">🤖 Model</div>
+      <div class="model-row">
+        <div class="field">
+          <label for="modelSelect">Select Model</label>
+          <select id="modelSelect">
+            <option value="">— enter API key to load models —</option>
+          </select>
+        </div>
+        <button class="btn-ghost-sm" style="margin-bottom:0;height:42px;padding:0 14px;" onclick="fetchModels()">Refresh</button>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+      <button class="btn-generate" id="generateBtn" onclick="generateReview()" style="margin-top:16px;">
+        ✦ Generate Belieber Review
+      </button>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loadingState">
+      <div class="loading-text">Generating your review<span class="loading-dots"></span></div>
+    </div>
+
+    <!-- REVIEW CARD -->
+    <div class="card" id="reviewCard">
+      <div class="card-title">⭐ Your Review</div>
+
+      <div class="review-meta">
+        <div class="reviewer-avatar" id="reviewerAvatar">🎤</div>
+        <div class="reviewer-info">
+          <div class="reviewer-name" id="reviewerName">BelieverForever</div>
+          <div class="reviewer-stars" id="reviewerStars">⭐⭐⭐⭐⭐</div>
+        </div>
+        <div class="verified-badge">✓ Verified Belieber</div>
+      </div>
+
+      <div class="review-product" id="reviewProduct"></div>
+      <div class="review-divider"></div>
+      <div class="review-body" id="reviewBody"></div>
+
+      <button class="btn-download" id="downloadBtn" onclick="downloadReview()">
+        ↓ Download Review as .txt
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ── STATE ──
+    const state = {
+      apiKey: '',
+      rawReview: '',
+      reviewerName: '',
+    };
+
+    // ── REVIEWER NAMES ──
+    const JB_NAMES = [
+      'BelieverForever',
+      'PurpleHeartJB',
+      'BabyBabyFan',
+      'OneTimeLuv',
+      'JustinsBelieberXO',
+      'NeverSayNeverFan',
+      'SorreyNotSorry',
+      'LoveYourselfVibes',
+      'YummyYummyBelieber',
+      'DrakeWho_JBonly',
+      'Purposeful_Belieber',
+      'JB4LifeXO',
+    ];
+
+    const AVATAR_EMOJIS = ['🎤','🎶','💜','⭐','🎵','👑','💫','🎸','✨','🌟'];
+
+    // ── API KEY ──
+    document.getElementById('apiKeyInput').addEventListener('input', function() {
+      state.apiKey = this.value.trim();
+    });
+
+    function toggleKeyVis() {
+      const inp = document.getElementById('apiKeyInput');
+      const btn = document.getElementById('showKeyBtn');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        inp.type = 'password';
+        btn.textContent = 'Show';
+      }
+    }
+
+    // ── SLIDERS ──
+    const LENGTH_LABELS = { 1: 'Short', 2: 'Medium', 3: 'Long' };
+
+    function getStyleLabel(v) {
+      if (v <= 25)  return '😍 Glowing';
+      if (v <= 50)  return '😊 Friendly';
+      if (v <= 75)  return '😐 Neutral';
+      return '😤 Harsh Critic';
+    }
+
+    function getSentimentLabel(v) {
+      if (v <= 20)  return '💀 Brutal';
+      if (v <= 40)  return '😠 Negative';
+      if (v <= 60)  return '😐 Mixed';
+      if (v <= 80)  return '😊 Positive';
+      return '⭐ Glowing';
+    }
+
+    function updateSliders() {
+      const len = parseInt(document.getElementById('lengthSlider').value);
+      const sty = parseInt(document.getElementById('styleSlider').value);
+      const sen = parseInt(document.getElementById('sentimentSlider').value);
+
+      document.getElementById('lengthVal').textContent    = LENGTH_LABELS[len];
+      document.getElementById('styleVal').textContent     = getStyleLabel(sty);
+      document.getElementById('sentimentVal').textContent = getSentimentLabel(sen);
+    }
+    updateSliders();
+
+    // ── STAR RATING from sentiment ──
+    function starsFromSentiment(v) {
+      if (v <= 20) return 1;
+      if (v <= 40) return 2;
+      if (v <= 60) return 3;
+      if (v <= 80) return 4;
+      return 5;
+    }
+
+    function starsDisplay(n) {
+      return '⭐'.repeat(n) + '☆'.repeat(5 - n);
+    }
+
+    // ── FETCH MODELS ──
+    async function fetchModels() {
+      const key = state.apiKey;
+      if (!key) return;
+
+      const sel = document.getElementById('modelSelect');
+      sel.innerHTML = '<option value="">Loading models…</option>';
+
+      try {
+        const res = await fetch('https://api.openai.com/v1/models', {
+          headers: { 'Authorization': `Bearer ${key}` }
+        });
+        if (!res.ok) throw new Error(`API error ${res.status}`);
+        const data = await res.json();
+
+        const gptModels = data.data
+          .map(m => m.id)
+          .filter(id => /^gpt/i.test(id) && !/instruct|vision|realtime|audio|search/i.test(id))
+          .sort((a, b) => {
+            // prioritize gpt-4o and newer first
+            if (a.includes('4o') && !b.includes('4o')) return -1;
+            if (!a.includes('4o') && b.includes('4o')) return 1;
+            return a.localeCompare(b);
+          });
+
+        if (!gptModels.length) throw new Error('No GPT models found');
+
+        sel.innerHTML = gptModels
+          .map(id => `<option value="${id}">${id}</option>`)
+          .join('');
+      } catch (err) {
+        sel.innerHTML = '<option value="">Failed to load — check key</option>';
+      }
+    }
+
+    // Auto-fetch models when key is entered (debounced)
+    let keyDebounce;
+    document.getElementById('apiKeyInput').addEventListener('input', function() {
+      clearTimeout(keyDebounce);
+      if (this.value.trim().startsWith('sk-')) {
+        keyDebounce = setTimeout(() => fetchModels(), 800);
+      }
+    });
+
+    // ── ERROR ──
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function clearError() {
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    // ── GENERATE REVIEW ──
+    async function generateReview() {
+      clearError();
+
+      const key        = state.apiKey;
+      const productName = document.getElementById('productName').value.trim();
+      const category   = document.getElementById('category').value;
+      const comments   = document.getElementById('comments').value.trim();
+      const model      = document.getElementById('modelSelect').value;
+      const lenVal     = parseInt(document.getElementById('lengthSlider').value);
+      const styleVal   = parseInt(document.getElementById('styleSlider').value);
+      const sentVal    = parseInt(document.getElementById('sentimentSlider').value);
+
+      if (!key)         return showError('Enter your OpenAI API key first.');
+      if (!productName) return showError('Enter a product name.');
+      if (!model)       return showError('Select a model (refresh models if needed).');
+
+      const lengthLabel    = LENGTH_LABELS[lenVal];
+      const styleLabel     = getStyleLabel(styleVal).replace(/^\S+\s/, '');
+      const sentimentLabel = getSentimentLabel(sentVal).replace(/^\S+\s/, '');
+
+      const prompt = [
+        `You are a product reviewer. Write a ${lengthLabel.toLowerCase()} product review for "${productName}" in the ${category} category.`,
+        ``,
+        `Tone: ${styleLabel} (style score: ${styleVal}/100 where 0 = glowing/enthusiastic and 100 = harsh critic)`,
+        `Sentiment: ${sentimentLabel} (sentiment score: ${sentVal}/100 where 0 = very negative and 100 = very positive)`,
+        ``,
+        comments ? `Additional context from the user: ${comments}` : null,
+        ``,
+        `Format the review with markdown. Include a brief summary, key pros, cons (if appropriate given sentiment), and a final verdict.`,
+      ].filter(l => l !== null).join('\n');
+
+      // UI: loading
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('loadingState').style.display = 'block';
+      document.getElementById('reviewCard').style.display = 'none';
+
+      try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.85,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error?.message || `API error ${res.status}`);
+        }
+
+        const data = await res.json();
+        const reviewText = data.choices?.[0]?.message?.content || '';
+
+        // Pick reviewer
+        const name = JB_NAMES[Math.floor(Math.random() * JB_NAMES.length)];
+        const avatar = AVATAR_EMOJIS[Math.floor(Math.random() * AVATAR_EMOJIS.length)];
+        const stars = starsFromSentiment(sentVal);
+
+        state.rawReview   = reviewText;
+        state.reviewerName = name;
+
+        document.getElementById('reviewerName').textContent  = name;
+        document.getElementById('reviewerAvatar').textContent = avatar;
+        document.getElementById('reviewerStars').textContent  = starsDisplay(stars);
+        document.getElementById('reviewProduct').textContent  = `${productName} — ${category}`;
+        document.getElementById('reviewBody').innerHTML       = marked.parse(reviewText);
+
+        document.getElementById('reviewCard').style.display = 'block';
+        document.getElementById('reviewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      } catch (err) {
+        showError('Error: ' + err.message);
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+        document.getElementById('loadingState').style.display = 'none';
+      }
+    }
+
+    // ── DOWNLOAD ──
+    function downloadReview() {
+      const productName = document.getElementById('productName').value.trim() || 'review';
+      const stars       = document.getElementById('reviewerStars').textContent;
+      const name        = state.reviewerName;
+      const product     = document.getElementById('reviewProduct').textContent;
+      const body        = state.rawReview;
+
+      const content = [
+        `Belieber Reviews`,
+        `================`,
+        `Reviewer: ${name}`,
+        `Product:  ${product}`,
+        `Rating:   ${stars}`,
+        `Verified Belieber: Yes`,
+        ``,
+        body,
+      ].join('\n');
+
+      const safeName = productName.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `${safeName}-review.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+
+</body>
+</html>
