@@ -445,7 +445,7 @@
           <span class="slider-label">Length</span>
           <span class="slider-value" id="lengthVal">Medium</span>
         </div>
-        <input type="range" id="lengthSlider" min="1" max="3" value="2" oninput="updateSliders()">
+        <input type="range" id="lengthSlider" min="0" max="100" value="50" oninput="updateSliders()">
         <div class="slider-endpoints">
           <span class="slider-end">Short</span>
           <span class="slider-end">Long</span>
@@ -570,7 +570,11 @@
     }
 
     // ── SLIDERS ──
-    const LENGTH_LABELS = { 1: 'Short', 2: 'Medium', 3: 'Long' };
+    function getLengthLabel(v) {
+      if (v <= 33) return 'Short';
+      if (v <= 66) return 'Medium';
+      return 'Long';
+    }
 
     function getStyleLabel(v) {
       if (v <= 25)  return '😍 Glowing';
@@ -592,7 +596,7 @@
       const sty = parseInt(document.getElementById('styleSlider').value);
       const sen = parseInt(document.getElementById('sentimentSlider').value);
 
-      document.getElementById('lengthVal').textContent    = LENGTH_LABELS[len];
+      document.getElementById('lengthVal').textContent    = getLengthLabel(len);
       document.getElementById('styleVal').textContent     = getStyleLabel(sty);
       document.getElementById('sentimentVal').textContent = getSentimentLabel(sen);
     }
@@ -612,6 +616,8 @@
     }
 
     // ── FETCH MODELS ──
+    const FALLBACK_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'];
+
     async function fetchModels() {
       const key = state.apiKey;
       if (!key) return;
@@ -626,23 +632,26 @@
         if (!res.ok) throw new Error(`API error ${res.status}`);
         const data = await res.json();
 
-        const gptModels = data.data
+        // Exclude non-chat models; show everything else
+        const chatModels = data.data
           .map(m => m.id)
-          .filter(id => /^gpt/i.test(id) && !/instruct|vision|realtime|audio|search/i.test(id))
+          .filter(id => !/embedding|dall-e|tts|whisper|moderation|babbage|davinci|ada|curie/i.test(id))
           .sort((a, b) => {
-            // prioritize gpt-4o and newer first
             if (a.includes('4o') && !b.includes('4o')) return -1;
             if (!a.includes('4o') && b.includes('4o')) return 1;
             return a.localeCompare(b);
           });
 
-        if (!gptModels.length) throw new Error('No GPT models found');
+        const modelsToShow = chatModels.length ? chatModels : FALLBACK_MODELS;
 
-        sel.innerHTML = gptModels
+        sel.innerHTML = modelsToShow
           .map(id => `<option value="${id}">${id}</option>`)
           .join('');
       } catch (err) {
-        sel.innerHTML = '<option value="">Failed to load — check key</option>';
+        // API call failed — fall back to hardcoded list so the app still works
+        sel.innerHTML = FALLBACK_MODELS
+          .map(id => `<option value="${id}">${id}</option>`)
+          .join('');
       }
     }
 
@@ -650,7 +659,7 @@
     let keyDebounce;
     document.getElementById('apiKeyInput').addEventListener('input', function() {
       clearTimeout(keyDebounce);
-      if (this.value.trim().startsWith('sk-')) {
+      if (this.value.trim().length > 10) {
         keyDebounce = setTimeout(() => fetchModels(), 800);
       }
     });
@@ -682,7 +691,7 @@
       if (!productName) return showError('Enter a product name.');
       if (!model)       return showError('Select a model (refresh models if needed).');
 
-      const lengthLabel    = LENGTH_LABELS[lenVal];
+      const lengthLabel    = getLengthLabel(lenVal);
       const styleLabel     = getStyleLabel(styleVal).replace(/^\S+\s/, '');
       const sentimentLabel = getSentimentLabel(sentVal).replace(/^\S+\s/, '');
 
