@@ -751,7 +751,12 @@
         document.getElementById('reviewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       } catch (err) {
-        showError('Error: ' + err.message);
+        const msg = err.message || '';
+        if (msg.toLowerCase().includes('load failed') || msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('networkerror')) {
+          showError('Network error: The request was blocked. This usually means the API key has browser/CORS restrictions, or you\'re offline. Try a different model or contact your professor.');
+        } else {
+          showError('Error: ' + msg);
+        }
       } finally {
         document.getElementById('generateBtn').disabled = false;
         document.getElementById('loadingState').style.display = 'none';
