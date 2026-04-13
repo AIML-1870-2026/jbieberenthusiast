@@ -24,7 +24,9 @@
       padding: 22px 20px 18px;
       text-align: center;
       box-shadow: 0 4px 32px rgba(107,33,168,0.5);
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 100;
       overflow: hidden;
     }
     header::before {
@@ -72,6 +74,11 @@
       padding: 22px 24px;
       backdrop-filter: blur(8px);
       box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(245,158,11,0.45);
+      box-shadow: 0 6px 32px rgba(107,33,168,0.45);
     }
     .card-title {
       font-size: 0.7rem;
@@ -289,6 +296,13 @@
 
     /* ── REVIEW CARD ── */
     #reviewCard { display: none; }
+    #reviewCard.animate-in {
+      animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     .review-meta {
       display: flex;
@@ -367,6 +381,55 @@
     .review-body em { color: rgba(245,158,11,0.85); }
     .review-body hr { border: none; border-top: 1px solid rgba(245,158,11,0.15); margin: 14px 0; }
 
+    /* ── CHAR COUNTER ── */
+    .char-counter {
+      font-size: 0.72rem;
+      color: rgba(243,232,255,0.35);
+      text-align: right;
+      margin-top: 4px;
+    }
+    .char-counter.near-limit { color: #F59E0B; }
+
+    /* ── MODEL TAG on review ── */
+    .review-model-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: rgba(243,232,255,0.4);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 2px 9px;
+      margin-top: 16px;
+    }
+
+    /* ── SHAKE (missing key) ── */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-8px); }
+      40%       { transform: translateX(8px); }
+      60%       { transform: translateX(-6px); }
+      80%       { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.4s ease; }
+
+    /* ── GENERATE BUTTON SUCCESS FLASH ── */
+    .btn-generate.success {
+      background: linear-gradient(135deg, #166534, #16a34a) !important;
+      border-color: #4ade80 !important;
+      color: #4ade80 !important;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 32px 16px 24px;
+      font-size: 0.72rem;
+      color: rgba(243,232,255,0.25);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
     /* ── DOWNLOAD BUTTON ── */
     .btn-download {
       display: block;
@@ -402,7 +465,7 @@
   <div class="container">
 
     <!-- API KEY -->
-    <div class="card">
+    <div class="card" id="apiKeyCard">
       <div class="card-title">🔑 API Key</div>
       <div class="field">
         <label for="apiKeyInput">OpenAI API Key</label>
@@ -431,7 +494,8 @@
       </div>
       <div class="field">
         <label for="comments">Additional Comments</label>
-        <textarea id="comments" placeholder="Include key features, strengths, weaknesses, specific experiences, or any advanced instructions for the review..."></textarea>
+        <textarea id="comments" placeholder="Include key features, strengths, weaknesses, specific experiences, or any advanced instructions for the review..." oninput="updateCharCounter()" maxlength="500"></textarea>
+        <div class="char-counter" id="charCounter">0 / 500</div>
       </div>
     </div>
 
@@ -518,6 +582,7 @@
       <div class="review-product" id="reviewProduct"></div>
       <div class="review-divider"></div>
       <div class="review-body" id="reviewBody"></div>
+      <div class="review-model-tag" id="reviewModelTag"></div>
 
       <button class="btn-download" id="downloadBtn" onclick="downloadReview()">
         ↓ Download Review as .txt
@@ -525,6 +590,8 @@
     </div>
 
   </div>
+
+  <footer>Belieber Certified ✦ 2026 ✦ Powered by OpenAI</footer>
 
   <script>
     // ── STATE ──
@@ -664,6 +731,15 @@
       }
     });
 
+    // ── CHAR COUNTER ──
+    function updateCharCounter() {
+      const ta  = document.getElementById('comments');
+      const ctr = document.getElementById('charCounter');
+      const len = ta.value.length;
+      ctr.textContent = `${len} / 500`;
+      ctr.classList.toggle('near-limit', len > 400);
+    }
+
     // ── ERROR ──
     function showError(msg) {
       const el = document.getElementById('errorMsg');
@@ -672,6 +748,14 @@
     }
     function clearError() {
       document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    // ── SHAKE ELEMENT ──
+    function shakeEl(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('shake');
+      void el.offsetWidth; // reflow to restart animation
+      el.classList.add('shake');
     }
 
     // ── GENERATE REVIEW ──
@@ -687,7 +771,10 @@
       const styleVal   = parseInt(document.getElementById('styleSlider').value);
       const sentVal    = parseInt(document.getElementById('sentimentSlider').value);
 
-      if (!key)         return showError('Enter your OpenAI API key first.');
+      if (!key) {
+        shakeEl('apiKeyCard');
+        return showError('Enter your OpenAI API key first.');
+      }
       if (!productName) return showError('Enter a product name.');
       if (!model)       return showError('Select a model (refresh models if needed).');
 
@@ -741,14 +828,28 @@
         state.rawReview   = reviewText;
         state.reviewerName = name;
 
-        document.getElementById('reviewerName').textContent  = name;
+        document.getElementById('reviewerName').textContent   = name;
         document.getElementById('reviewerAvatar').textContent = avatar;
         document.getElementById('reviewerStars').textContent  = starsDisplay(stars);
         document.getElementById('reviewProduct').textContent  = `${productName} — ${category}`;
         document.getElementById('reviewBody').innerHTML       = marked.parse(reviewText);
+        document.getElementById('reviewModelTag').textContent = `Generated with ${model}`;
 
-        document.getElementById('reviewCard').style.display = 'block';
-        document.getElementById('reviewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const card = document.getElementById('reviewCard');
+        card.classList.remove('animate-in');
+        void card.offsetWidth;
+        card.style.display = 'block';
+        card.classList.add('animate-in');
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Success flash on button
+        const btn = document.getElementById('generateBtn');
+        btn.textContent = '✦ Review Generated!';
+        btn.classList.add('success');
+        setTimeout(() => {
+          btn.textContent = '✦ Generate Belieber Review';
+          btn.classList.remove('success');
+        }, 2000);
 
       } catch (err) {
         const msg = err.message || '';
