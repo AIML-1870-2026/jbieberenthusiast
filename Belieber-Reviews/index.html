@@ -430,6 +430,43 @@
       text-transform: uppercase;
     }
 
+    /* ── SURPRISE ME BUTTON ── */
+    .product-name-row { display: flex; gap: 8px; }
+    .product-name-row input { flex: 1; }
+    .btn-surprise {
+      background: linear-gradient(135deg, #92400e, #b45309);
+      border: 1.5px solid #F59E0B;
+      border-radius: 9px;
+      color: #fde68a;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .btn-surprise:hover {
+      background: linear-gradient(135deg, #b45309, #d97706);
+      box-shadow: 0 0 12px rgba(245,158,11,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-surprise:active { transform: translateY(0); }
+
+    /* ── TYPING EFFECT ── */
+    .review-body.typing { min-height: 40px; }
+    .review-body.typing::after {
+      content: '▌';
+      display: inline;
+      color: #F59E0B;
+      animation: blink 0.7s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
     /* ── DOWNLOAD BUTTON ── */
     .btn-download {
       display: block;
@@ -481,7 +518,10 @@
       <div class="card-title">🛍️ Product Info</div>
       <div class="field">
         <label for="productName">Product Name</label>
-        <input type="text" id="productName" placeholder="e.g., Churro Ice Cream Sandwich">
+        <div class="product-name-row">
+          <input type="text" id="productName" placeholder="e.g., Churro Ice Cream Sandwich">
+          <button class="btn-surprise" onclick="surpriseMe()" title="Fill in a random product">🎲 Surprise Me</button>
+        </div>
       </div>
       <div class="field">
         <label for="category">Category</label>
@@ -600,6 +640,44 @@
       rawReview: '',
       reviewerName: '',
     };
+
+    // ── SURPRISE ME ──
+    const SURPRISE_PRODUCTS = [
+      { name: 'Justin Bieber Cologne — "Girlfriend"', category: 'Clothing & Apparel' },
+      { name: 'Crocs with Bedazzled JB Logo', category: 'Clothing & Apparel' },
+      { name: 'Purple Velvet Fanny Pack', category: 'Clothing & Apparel' },
+      { name: 'Baby Yoda Air Fryer', category: 'Electronics' },
+      { name: 'Glow-in-the-Dark Fidget Spinner', category: 'Electronics' },
+      { name: 'Bluetooth Karaoke Microphone', category: 'Electronics' },
+      { name: 'Churro Ice Cream Sandwich', category: 'Food & Beverages' },
+      { name: 'Pickle-Flavored Cotton Candy', category: 'Food & Beverages' },
+      { name: 'Spicy Mango Energy Drink', category: 'Food & Beverages' },
+      { name: 'Hot Cheeto Mac & Cheese', category: 'Food & Beverages' },
+      { name: 'Never Say Never — Justin Bieber Autobiography', category: 'Books & Media' },
+      { name: 'Pop Star Dance Workout DVD', category: 'Books & Media' },
+      { name: 'Sequined Platform Sneakers', category: 'Clothing & Apparel' },
+      { name: 'Smart Water Bottle That Judges You', category: 'Electronics' },
+    ];
+
+    function surpriseMe() {
+      const pick = SURPRISE_PRODUCTS[Math.floor(Math.random() * SURPRISE_PRODUCTS.length)];
+      const nameInput = document.getElementById('productName');
+      const catSelect = document.getElementById('category');
+
+      nameInput.value = pick.name;
+      // match category dropdown
+      for (const opt of catSelect.options) {
+        if (opt.value === pick.category) { catSelect.value = pick.category; break; }
+      }
+
+      // brief flash on the input to show it changed
+      nameInput.style.borderColor = '#F59E0B';
+      nameInput.style.boxShadow   = '0 0 0 3px rgba(245,158,11,0.25)';
+      setTimeout(() => {
+        nameInput.style.borderColor = '';
+        nameInput.style.boxShadow   = '';
+      }, 600);
+    }
 
     // ── REVIEWER NAMES ──
     const JB_NAMES = [
@@ -750,6 +828,26 @@
       document.getElementById('errorMsg').style.display = 'none';
     }
 
+    // ── TYPING EFFECT ──
+    function typeReview(el, text, onDone) {
+      el.innerHTML = '';
+      el.classList.add('typing');
+      let i = 0;
+      const speed = Math.max(8, Math.min(22, Math.round(4000 / text.length))); // scale speed to length
+      function tick() {
+        if (i < text.length) {
+          el.textContent += text[i++];
+          el.scrollIntoView({ block: 'nearest' });
+          setTimeout(tick, speed);
+        } else {
+          el.classList.remove('typing');
+          el.innerHTML = marked.parse(text);
+          if (onDone) onDone();
+        }
+      }
+      tick();
+    }
+
     // ── SHAKE ELEMENT ──
     function shakeEl(id) {
       const el = document.getElementById(id);
@@ -832,7 +930,6 @@
         document.getElementById('reviewerAvatar').textContent = avatar;
         document.getElementById('reviewerStars').textContent  = starsDisplay(stars);
         document.getElementById('reviewProduct').textContent  = `${productName} — ${category}`;
-        document.getElementById('reviewBody').innerHTML       = marked.parse(reviewText);
         document.getElementById('reviewModelTag').textContent = `Generated with ${model}`;
 
         const card = document.getElementById('reviewCard');
@@ -842,14 +939,16 @@
         card.classList.add('animate-in');
         card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        // Success flash on button
-        const btn = document.getElementById('generateBtn');
-        btn.textContent = '✦ Review Generated!';
-        btn.classList.add('success');
-        setTimeout(() => {
-          btn.textContent = '✦ Generate Belieber Review';
-          btn.classList.remove('success');
-        }, 2000);
+        // Type out the review body, then flash button when done
+        typeReview(document.getElementById('reviewBody'), reviewText, () => {
+          const btn = document.getElementById('generateBtn');
+          btn.textContent = '✦ Review Generated!';
+          btn.classList.add('success');
+          setTimeout(() => {
+            btn.textContent = '✦ Generate Belieber Review';
+            btn.classList.remove('success');
+          }, 2000);
+        });
 
       } catch (err) {
         const msg = err.message || '';
