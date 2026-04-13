@@ -832,16 +832,19 @@
     function typeReview(el, text, onDone) {
       el.innerHTML = '';
       el.classList.add('typing');
+      const words = text.split(' ');
       let i = 0;
-      const speed = Math.max(8, Math.min(22, Math.round(4000 / text.length))); // scale speed to length
+      // scale ms/word so total time stays ~5-8s regardless of length
+      const speed = Math.max(20, Math.min(80, Math.round(9000 / words.length)));
       function tick() {
-        if (i < text.length) {
-          el.textContent += text[i++];
-          el.scrollIntoView({ block: 'nearest' });
+        if (i < words.length) {
+          i++;
+          // parse the growing slice so markdown renders as it types
+          el.innerHTML = marked.parse(words.slice(0, i).join(' '));
           setTimeout(tick, speed);
         } else {
           el.classList.remove('typing');
-          el.innerHTML = marked.parse(text);
+          el.innerHTML = marked.parse(text); // final clean render
           if (onDone) onDone();
         }
       }
