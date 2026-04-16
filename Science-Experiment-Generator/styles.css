@@ -375,19 +375,7 @@ main {
 /* === LOADING STATE === */
 .loading-state {
   text-align: center;
-  padding: 44px 20px;
-}
-
-@keyframes bubble {
-  0%, 100% { transform: scale(1);    }
-  50%       { transform: scale(1.18); }
-}
-
-.loading-icon {
-  font-size: 52px;
-  display: block;
-  margin-bottom: 18px;
-  animation: bubble 1.3s ease-in-out infinite;
+  padding: 40px 20px;
 }
 
 .loading-text {
@@ -395,6 +383,74 @@ main {
   font-size: 22px;
   color: var(--teal);
   letter-spacing: 1px;
+  margin-top: 14px;
+}
+
+/* Animated beaker fill */
+.beaker-anim {
+  display: inline-block;
+}
+
+.flask-fill {
+  fill: var(--teal);
+  opacity: 0.65;
+  transform: translateY(90px);
+  animation: flaskFill 2.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes flaskFill {
+  0%   { transform: translateY(92px); }
+  100% { transform: translateY(36px); }
+}
+
+/* Bubbles rising inside flask */
+.bbl { fill: rgba(255,255,255,0.55); opacity: 0; }
+
+@keyframes riseUp {
+  0%   { transform: translateY(0);     opacity: 0.75; }
+  100% { transform: translateY(-72px); opacity: 0;    }
+}
+
+.bbl-1 { animation: riseUp 2.1s ease-in infinite; animation-delay: 0.3s; }
+.bbl-2 { animation: riseUp 2.5s ease-in infinite; animation-delay: 1.2s; }
+.bbl-3 { animation: riseUp 1.9s ease-in infinite; animation-delay: 0.8s; }
+.bbl-4 { animation: riseUp 2.3s ease-in infinite; animation-delay: 1.7s; }
+
+/* Science fact box */
+.science-fact-box {
+  margin: 22px auto 0;
+  max-width: 480px;
+  border: 3px solid var(--black);
+  box-shadow: 4px 4px 0 var(--black);
+  background: var(--white);
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.fact-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+.fact-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--teal);
+  font-weight: 500;
+}
+
+@keyframes factFade {
+  0%   { opacity: 0; transform: translateY(5px); }
+  100% { opacity: 1; transform: translateY(0);   }
+}
+
+.fact-text.fade-in {
+  animation: factFade 0.4s ease-out forwards;
 }
 
 /* === ERROR STATE === */
