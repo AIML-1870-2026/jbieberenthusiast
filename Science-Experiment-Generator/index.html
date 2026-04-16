@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Science Experiment Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+</head>
+<body>
+
+<!-- Floating background science icons (decorative) -->
+<div class="float-icons" aria-hidden="true">
+
+  <!-- Atom -->
+  <div class="fi fi-1">
+    <svg viewBox="0 0 100 100" width="80" height="80">
+      <circle cx="50" cy="50" r="7" fill="currentColor"/>
+      <ellipse cx="50" cy="50" rx="44" ry="16" fill="none" stroke="currentColor" stroke-width="3.5"/>
+      <ellipse cx="50" cy="50" rx="44" ry="16" fill="none" stroke="currentColor" stroke-width="3.5" transform="rotate(60 50 50)"/>
+      <ellipse cx="50" cy="50" rx="44" ry="16" fill="none" stroke="currentColor" stroke-width="3.5" transform="rotate(120 50 50)"/>
+    </svg>
+  </div>
+
+  <!-- Erlenmeyer Flask -->
+  <div class="fi fi-2">
+    <svg viewBox="0 0 100 120" width="62" height="74">
+      <path d="M38 10 L38 48 L10 90 Q5 103 20 103 L80 103 Q95 103 90 90 L62 48 L62 10 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+      <line x1="30" y1="22" x2="70" y2="22" stroke="currentColor" stroke-width="5"/>
+      <circle cx="35" cy="78" r="5" fill="currentColor" opacity="0.5"/>
+      <circle cx="56" cy="86" r="4" fill="currentColor" opacity="0.5"/>
+      <circle cx="68" cy="72" r="3" fill="currentColor" opacity="0.5"/>
+    </svg>
+  </div>
+
+  <!-- Beaker -->
+  <div class="fi fi-3">
+    <svg viewBox="0 0 100 110" width="55" height="60">
+      <path d="M25 10 L25 85 Q25 100 50 100 Q75 100 75 85 L75 10 Z" fill="none" stroke="currentColor" stroke-width="5"/>
+      <line x1="15" y1="10" x2="85" y2="10" stroke="currentColor" stroke-width="5"/>
+      <line x1="25" y1="72" x2="75" y2="72" stroke="currentColor" stroke-width="3" stroke-dasharray="4 3"/>
+    </svg>
+  </div>
+
+  <!-- Magnifying Glass -->
+  <div class="fi fi-4">
+    <svg viewBox="0 0 100 100" width="68" height="68">
+      <circle cx="42" cy="42" r="29" fill="none" stroke="currentColor" stroke-width="7"/>
+      <line x1="64" y1="64" x2="90" y2="90" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- Gear -->
+  <div class="fi fi-5">
+    <svg viewBox="0 0 100 100" width="72" height="72">
+      <circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="5"/>
+      <circle cx="50" cy="50" r="33" fill="none" stroke="currentColor" stroke-width="13" stroke-dasharray="15 5.5"/>
+    </svg>
+  </div>
+
+  <!-- DNA Helix -->
+  <div class="fi fi-6">
+    <svg viewBox="0 0 60 130" width="44" height="97">
+      <path d="M10 10 Q50 30 10 55 Q50 80 10 105 Q50 120 10 130" fill="none" stroke="currentColor" stroke-width="4"/>
+      <path d="M50 10 Q10 30 50 55 Q10 80 50 105 Q10 120 50 130" fill="none" stroke="currentColor" stroke-width="4"/>
+      <line x1="10" y1="30" x2="50" y2="30" stroke="currentColor" stroke-width="3"/>
+      <line x1="10" y1="55" x2="50" y2="55" stroke="currentColor" stroke-width="3"/>
+      <line x1="10" y1="80" x2="50" y2="80" stroke="currentColor" stroke-width="3"/>
+      <line x1="10" y1="105" x2="50" y2="105" stroke="currentColor" stroke-width="3"/>
+    </svg>
+  </div>
+
+  <!-- Molecule -->
+  <div class="fi fi-7">
+    <svg viewBox="0 0 120 100" width="92" height="76">
+      <circle cx="60" cy="50" r="13" fill="currentColor"/>
+      <circle cx="18" cy="22" r="9" fill="currentColor"/>
+      <circle cx="102" cy="22" r="9" fill="currentColor"/>
+      <circle cx="18" cy="78" r="9" fill="currentColor"/>
+      <circle cx="102" cy="78" r="9" fill="currentColor"/>
+      <line x1="60" y1="50" x2="18" y2="22" stroke="currentColor" stroke-width="4"/>
+      <line x1="60" y1="50" x2="102" y2="22" stroke="currentColor" stroke-width="4"/>
+      <line x1="60" y1="50" x2="18" y2="78" stroke="currentColor" stroke-width="4"/>
+      <line x1="60" y1="50" x2="102" y2="78" stroke="currentColor" stroke-width="4"/>
+    </svg>
+  </div>
+
+  <!-- Test Tube -->
+  <div class="fi fi-8">
+    <svg viewBox="0 0 50 120" width="38" height="90">
+      <path d="M15 10 L15 85 Q15 105 25 105 Q35 105 35 85 L35 10 Z" fill="none" stroke="currentColor" stroke-width="4.5"/>
+      <line x1="10" y1="10" x2="40" y2="10" stroke="currentColor" stroke-width="4.5"/>
+    </svg>
+  </div>
+
+  <!-- Planet/Orbit -->
+  <div class="fi fi-9">
+    <svg viewBox="0 0 100 100" width="76" height="76">
+      <circle cx="50" cy="50" r="21" fill="currentColor" opacity="0.55"/>
+      <ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="currentColor" stroke-width="4.5" transform="rotate(-28 50 50)"/>
+    </svg>
+  </div>
+
+  <!-- Microscope -->
+  <div class="fi fi-10">
+    <svg viewBox="0 0 80 120" width="52" height="78">
+      <rect x="28" y="8" width="22" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="4.5"/>
+      <rect x="22" y="50" width="34" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="4.5"/>
+      <line x1="39" y1="66" x2="39" y2="88" stroke="currentColor" stroke-width="4.5"/>
+      <line x1="12" y1="104" x2="68" y2="104" stroke="currentColor" stroke-width="5.5"/>
+      <line x1="39" y1="88" x2="18" y2="104" stroke="currentColor" stroke-width="4.5"/>
+      <circle cx="39" cy="8" r="9" fill="none" stroke="currentColor" stroke-width="4.5"/>
+    </svg>
+  </div>
+
+  <!-- Lightning Bolt -->
+  <div class="fi fi-11">
+    <svg viewBox="0 0 60 100" width="44" height="73">
+      <path d="M40 5 L14 55 L30 55 L20 95 L56 40 L36 40 Z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <!-- Asterisk / Star -->
+  <div class="fi fi-12">
+    <svg viewBox="0 0 100 100" width="58" height="58">
+      <line x1="50" y1="5"  x2="50" y2="95" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+      <line x1="5"  y1="50" x2="95" y2="50" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+      <line x1="18" y1="18" x2="82" y2="82" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+      <line x1="82" y1="18" x2="18" y2="82" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <h1 class="site-title">🧪 SCIENCE EXPERIMENT GENERATOR</h1>
+    <div class="site-sub">LAB EDITION &nbsp;·&nbsp; EST. 2026</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- INPUT CARD -->
+  <div class="card input-card">
+    <div class="card-label">EXPERIMENT PARAMETERS</div>
+
+    <!-- API Key Upload -->
+    <div class="field-group">
+      <div class="field-label">🔑 API Key (.env file)</div>
+      <div class="file-upload-row">
+        <label class="file-btn" for="envFile">📂 Upload .env File</label>
+        <input type="file" id="envFile" accept=".env,text/plain" style="display:none">
+        <span class="key-status" id="keyStatus">No file loaded</span>
+      </div>
+      <div class="field-hint">Your .env file should contain: <code>OPENAI_API_KEY=sk-...</code></div>
+    </div>
+
+    <!-- Grade + Subject -->
+    <div class="field-row">
+      <div class="field-group no-mb">
+        <label class="field-label" for="gradeSelect">🎓 Grade Level</label>
+        <select id="gradeSelect" class="select-field">
+          <option value="K-2">K–2 (Kindergarten–2nd)</option>
+          <option value="3-5">3–5 (3rd–5th)</option>
+          <option value="6-8" selected>6–8 (Middle School)</option>
+          <option value="9-12">9–12 (High School)</option>
+        </select>
+      </div>
+      <div class="field-group no-mb">
+        <label class="field-label" for="subjectSelect">🔬 Subject Area</label>
+        <select id="subjectSelect" class="select-field">
+          <option value="Physics">Physics</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Biology" selected>Biology</option>
+          <option value="Earth Science">Earth Science</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Difficulty (stretch challenge) -->
+    <div class="field-group">
+      <div class="field-label">⚗️ Difficulty Level</div>
+      <div class="difficulty-row">
+        <div class="diff-card active" data-diff="Beginner" onclick="setDifficulty('Beginner', this)">
+          <div class="diff-beakers">🧪</div>
+          <div class="diff-name">Beginner</div>
+        </div>
+        <div class="diff-card" data-diff="Intermediate" onclick="setDifficulty('Intermediate', this)">
+          <div class="diff-beakers">🧪🧪</div>
+          <div class="diff-name">Intermediate</div>
+        </div>
+        <div class="diff-card" data-diff="Advanced" onclick="setDifficulty('Advanced', this)">
+          <div class="diff-beakers">🧪🧪🧪</div>
+          <div class="diff-name">Advanced</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Supplies -->
+    <div class="field-group">
+      <label class="field-label" for="suppliesInput">📦 Available Supplies</label>
+      <textarea id="suppliesInput" class="textarea-field"
+        placeholder="List the materials you have on hand, e.g.:&#10;• Baking soda&#10;• Vinegar&#10;• Food coloring&#10;• Empty plastic bottles&#10;• Measuring cups"
+        rows="5"></textarea>
+    </div>
+
+    <!-- Generate -->
+    <button id="generateBtn" class="btn btn-primary" onclick="handleGenerate()">
+      ⚗️ Generate Experiment
+    </button>
+  </div>
+
+  <!-- RESULT CARD (hidden until first generation) -->
+  <div class="card result-card" id="resultCard" style="display:none">
+    <div class="corner-ribbon">LAB REPORT</div>
+    <div class="diff-stamp" id="diffStamp"></div>
+    <div class="result-body" id="resultBody"></div>
+    <div class="result-footer">
+      <button id="regenBtn" class="btn btn-regen" onclick="handleRegenerate()">
+        🔄 Regenerate Experiment
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  🧪 Science Experiment Generator &nbsp;·&nbsp; AIML 1870 &nbsp;·&nbsp; 2026
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

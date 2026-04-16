@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BieberBoard — LLM Switchboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* === CUSTOM PROPERTIES === */
+    :root {
+      --red: #E63946;
+      --red-dark: #C1121F;
+      --gold: #FFD60A;
+      --dark: #1A1A2E;
+      --surface: #16213E;
+      --surface2: #0F3460;
+      --border: rgba(255,255,255,0.07);
+      --text: #F1FAEE;
+      --text2: #8892A4;
+      --green: #4ADE80;
+    }
+    [data-theme="light"] {
+      --dark: #EEF2F7;
+      --surface: #FFFFFF;
+      --surface2: #E4EAF2;
+      --border: rgba(0,0,0,0.09);
+      --text: #1A1A2E;
+      --text2: #5A6780;
+    }
+
+    /* === RESET === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    /* === HEADER === */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      background: var(--surface);
+      border-bottom: 3px solid var(--red);
+      box-shadow: 0 2px 24px rgba(230,57,70,0.18);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+    .logo-main {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 28px;
+      letter-spacing: 0.5px;
+    }
+    .logo-main .r { color: var(--red); }
+    .logo-sub {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text2);
+    }
+
+    .header-badge {
+      background: rgba(230,57,70,0.12);
+      border: 1px solid rgba(230,57,70,0.28);
+      color: var(--red);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .header-spacer { flex: 1; }
+
+    /* === BUTTONS === */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .btn:disabled { opacity: 0.38; cursor: not-allowed !important; transform: none !important; box-shadow: none !important; }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+      padding: 9px 20px;
+      font-size: 13px;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--red-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(230,57,70,0.38);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: rgba(230,57,70,0.5); color: var(--text); background: rgba(230,57,70,0.06); }
+    .btn-ghost.on { border-color: var(--red); color: var(--red); background: rgba(230,57,70,0.1); }
+
+    .btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
+
+    /* === LAYOUT === */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      width: 205px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-title {
+      padding: 13px 14px 7px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text2);
+    }
+
+    .sidebar-list { flex: 1; overflow-y: auto; padding: 2px 9px 10px; }
+
+    .prompt-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.13s;
+      user-select: none;
+    }
+    .prompt-card:hover { border-color: rgba(230,57,70,0.5); background: rgba(230,57,70,0.05); }
+    .prompt-card:active { transform: scale(0.98); }
+
+    .pc-badge {
+      display: inline-block;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+    .pc-text { background: rgba(161,196,253,0.14); color: #A1C4FD; }
+    .pc-json { background: rgba(255,214,10,0.14); color: var(--gold); }
+
+    .pc-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .pc-desc { font-size: 11px; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* === MAIN AREA === */
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 13px 16px;
+      gap: 9px;
+    }
+
+    /* === CONTROLS === */
+    .controls-row {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .cg { display: flex; flex-direction: column; gap: 4px; }
+
+    .clabel {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text2);
+    }
+
+    select, input[type="text"], input[type="password"] {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 11px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select:focus, input:focus { border-color: var(--red); }
+    select option { background: var(--surface); color: var(--text); }
+
+    .key-row { display: flex; gap: 5px; align-items: center; }
+    .key-input { min-width: 210px; }
+
+    .input-ok  { border-color: var(--green) !important; }
+    .input-bad { border-color: var(--red) !important; }
+
+    .vhint { font-size: 9px; margin-top: 2px; }
+    .vhint.ok  { color: var(--green); }
+    .vhint.bad { color: var(--red); }
+
+    .mode-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .mode-toggle .btn { border-radius: 0; border: none; background: transparent; color: var(--text2); font-size: 11px; padding: 6px 12px; }
+    .mode-toggle .btn.active { background: var(--red); color: #fff; }
+    .mode-toggle .btn:hover:not(.active) { background: rgba(230,57,70,0.09); color: var(--text); }
+
+    /* === ANTHROPIC NOTICE === */
+    .ant-notice {
+      background: rgba(255,214,10,0.06);
+      border: 1px solid rgba(255,214,10,0.22);
+      border-radius: 10px;
+      padding: 11px 15px;
+      display: none;
+      flex-shrink: 0;
+    }
+    .ant-notice.show { display: block; }
+    .ant-notice p { font-size: 12px; color: var(--gold); line-height: 1.65; }
+    .ant-notice strong { color: var(--text); }
+    .ant-notice em { color: var(--text2); }
+
+    /* === SCHEMA BUILDER === */
+    .schema-builder {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+      flex-shrink: 0;
+    }
+    .schema-builder.show { display: block; }
+
+    .sb-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sb-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sb-fields { padding: 7px 11px; display: flex; flex-direction: column; gap: 5px; }
+
+    .sb-field { display: flex; gap: 6px; align-items: center; }
+    .sb-field input { flex: 1; padding: 4px 8px; font-size: 11px; }
+    .sb-field select { padding: 4px 8px; font-size: 11px; }
+    .req-label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text2); cursor: pointer; white-space: nowrap; }
+    .req-label input[type=checkbox] { accent-color: var(--red); }
+
+    .sb-note { font-size: 9px; color: var(--text2); padding: 3px 11px 7px; }
+
+    .sb-preview { border-top: 1px solid var(--border); }
+    .sb-preview summary { padding: 7px 13px; cursor: pointer; font-size: 10px; color: var(--text2); user-select: none; }
+    .sb-preview summary:hover { color: var(--text); }
+    .sb-preview pre { padding: 8px 13px; font-size: 10px; background: var(--dark); color: var(--gold); max-height: 72px; overflow: auto; line-height: 1.5; }
+
+    /* === PROMPT SECTION === */
+    .prompt-section { display: flex; gap: 10px; align-items: flex-end; flex-shrink: 0; }
+    .prompt-wrap { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+
+    textarea.prompt-ta {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 13px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      resize: none;
+      height: 68px;
+      outline: none;
+      transition: border-color 0.15s;
+      line-height: 1.55;
+    }
+    textarea.prompt-ta:focus { border-color: var(--red); }
+    .prompt-meta { font-size: 9px; color: var(--text2); }
+
+    .send-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-mic { font-size: 18px; animation: spin 0.85s linear infinite; display: none; }
+    .spin-mic.show { display: block; }
+
+    /* === PANELS === */
+    .panels-area { flex: 1; display: flex; gap: 11px; overflow: hidden; min-height: 0; }
+
+    .resp-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .ph {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 13px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .ph-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cmp-select {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 11px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .ph-spin { font-size: 15px; animation: spin 0.85s linear infinite; display: none; }
+    .ph-spin.show { display: block; }
+
+    .ph-acts { display: flex; gap: 4px; }
+
+    .prog-bar { height: 2px; background: var(--border); flex-shrink: 0; display: none; overflow: hidden; }
+    .prog-bar.show { display: block; }
+    @keyframes pp { 0%{width:0;opacity:1} 60%{width:75%;opacity:0.85} 100%{width:100%;opacity:0.6} }
+    .prog-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--gold)); animation: pp 1.4s ease-in-out infinite; }
+
+    .resp-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 13px;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .resp-body.json-mode { font-family: 'Courier New', monospace; font-size: 12px; }
+    .ph-text { color: var(--text2); font-style: italic; font-size: 13px; }
+    .err-text { color: var(--red); font-style: italic; font-size: 13px; }
+
+    .panel-metrics {
+      display: none;
+      gap: 14px;
+      padding: 6px 13px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .panel-metrics.show { display: flex; }
+    .metric { display: flex; gap: 3px; }
+    .ml { color: var(--text2); }
+    .mv { color: var(--gold); font-weight: 600; }
+
+    /* === JSON HIGHLIGHT === */
+    .jk { color: #A1C4FD; }
+    .js { color: #A8E6CF; }
+    .jn { color: var(--gold); }
+    .jb { color: #FFB347; }
+    .jl { color: #D3A4FF; }
+
+    /* === SCROLLBAR === */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-main">🎤 <span class="r">Bieber</span>Board</div>
+    <div class="logo-sub">LLM Switchboard</div>
+  </div>
+  <span class="header-badge">Justice Era</span>
+  <div class="header-spacer"></div>
+  <button id="compareModeBtn" class="btn btn-ghost" onclick="toggleCompareMode()">⊞ Compare</button>
+  <button class="btn btn-ghost" onclick="toggleTheme()">◑ Theme</button>
+</header>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-title">Example Prompts</div>
+    <div class="sidebar-list" id="sidebarList"></div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- CONTROLS -->
+    <div class="controls-row">
+      <div class="cg">
+        <div class="clabel">Provider</div>
+        <select id="providerSelect" onchange="onProviderChange()">
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+        </select>
+      </div>
+
+      <div class="cg">
+        <div class="clabel">Model</div>
+        <select id="modelSelect" onchange="state.model = this.value"></select>
+      </div>
+
+      <div class="cg">
+        <div class="clabel">API Key</div>
+        <div class="key-row">
+          <input type="password" id="keyInput" class="key-input" placeholder="sk-..."
+            oninput="state.apiKey = this.value"
+            onblur="validateKey()">
+          <button class="btn btn-ghost btn-sm" id="showKeyBtn" onclick="toggleKeyVis()">Show</button>
+        </div>
+        <div id="keyHint" class="vhint"></div>
+      </div>
+
+      <div class="cg">
+        <div class="clabel">Output Mode</div>
+        <div class="mode-toggle">
+          <button id="btnText" class="btn active" onclick="setMode('text')">Free Text</button>
+          <button id="btnJson" class="btn" onclick="setMode('json')">JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTHROPIC NOTICE -->
+    <div id="antNotice" class="ant-notice">
+      <p>🎧 <strong>Anthropic's API can't be called from the browser directly.</strong> Anthropic does not send CORS headers that allow direct browser requests — this is a deliberate security design. In a production app, you'd proxy requests through a backend server (Node.js, Python, etc.) that securely holds your key. <em>That's a real-world lesson worth knowing! The models shown are what you'd use once you build that server.</em></p>
+    </div>
+
+    <!-- SCHEMA BUILDER -->
+    <div id="schemaBuilder" class="schema-builder">
+      <div class="sb-top">
+        <span class="sb-title">JSON Schema Builder</span>
+        <button class="btn btn-ghost btn-sm" onclick="addField()">+ Add Field</button>
+      </div>
+      <div id="sbFields" class="sb-fields"></div>
+      <div class="sb-note">⚠ v1: flat schemas only — no nested objects</div>
+      <details class="sb-preview">
+        <summary>Preview Schema ▸</summary>
+        <pre id="sbPreview">{}</pre>
+      </details>
+    </div>
+
+    <!-- PROMPT -->
+    <div class="prompt-section">
+      <div class="prompt-wrap">
+        <textarea class="prompt-ta" id="promptInput"
+          placeholder="Ask something Bieber-worthy..."
+          oninput="onPromptInput()"></textarea>
+        <div class="prompt-meta" id="promptMeta">0 chars · ~0 tokens</div>
+      </div>
+      <div class="send-col">
+        <button id="sendBtn" class="btn btn-primary" onclick="handleSend()">Send 🎤</button>
+        <div class="spin-mic" id="globalSpin">🎤</div>
+      </div>
+    </div>
+
+    <!-- PANELS -->
+    <div class="panels-area">
+
+      <!-- MAIN PANEL -->
+      <div class="resp-panel" id="mainPanel">
+        <div class="ph">
+          <span class="ph-title" id="mainPanelTitle">Response</span>
+          <div class="ph-spin" id="mainSpin">🎤</div>
+          <div class="ph-acts">
+            <button class="btn btn-ghost btn-sm" id="copyMainBtn" onclick="copyResp('main')">Copy</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearResp('main')">Clear</button>
+          </div>
+        </div>
+        <div class="prog-bar" id="mainProg"><div class="prog-fill"></div></div>
+        <div class="resp-body" id="mainBody"><span class="ph-text">Your response will appear here…</span></div>
+        <div class="panel-metrics" id="mainMetrics">
+          <div class="metric"><span class="ml">Time:</span><span class="mv" id="mainTime">—</span></div>
+          <div class="metric"><span class="ml">Chars:</span><span class="mv" id="mainChars">—</span></div>
+          <div class="metric"><span class="ml">~Tokens:</span><span class="mv" id="mainTokens">—</span></div>
+        </div>
+      </div>
+
+      <!-- COMPARE PANEL -->
+      <div class="resp-panel" id="comparePanel" style="display:none">
+        <div class="ph">
+          <span class="ph-title">
+            Compare:
+            <select class="cmp-select" id="cmpModelSel" onchange="state.compareModel = this.value">
+              <option value="gpt-4o">gpt-4o</option>
+              <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+              <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+            </select>
+          </span>
+          <div class="ph-spin" id="cmpSpin">🎤</div>
+          <div class="ph-acts">
+            <button class="btn btn-ghost btn-sm" id="copyCmpBtn" onclick="copyResp('compare')">Copy</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearResp('compare')">Clear</button>
+          </div>
+        </div>
+        <div class="prog-bar" id="cmpProg"><div class="prog-fill"></div></div>
+        <div class="resp-body" id="cmpBody"><span class="ph-text">Compare response will appear here…</span></div>
+        <div class="panel-metrics" id="cmpMetrics">
+          <div class="metric"><span class="ml">Time:</span><span class="mv" id="cmpTime">—</span></div>
+          <div class="metric"><span class="ml">Chars:</span><span class="mv" id="cmpChars">—</span></div>
+          <div class="metric"><span class="ml">~Tokens:</span><span class="mv" id="cmpTokens">—</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+const state = {
+  provider: 'openai',
+  model: 'gpt-4o',
+  apiKey: '',
+  outputMode: 'text',
+  prompt: '',
+  schemaFields: [],
+  response: '',
+  compareMode: false,
+  compareModel: 'gpt-4o-mini',
+  compareResponse: '',
+  isLoading: false,
+  isCompareLoading: false,
+};
+
+const MODELS = {
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+  anthropic: ['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5-20251001'],
+};
+
+const EXAMPLES = [
+  {
+    type: 'text',
+    title: 'Biography',
+    desc: 'From YouTube to global superstar',
+    prompt: "Write a short biography of Justin Bieber's rise to fame from YouTube to global superstar.",
+  },
+  {
+    type: 'text',
+    title: 'Peaches Verse',
+    desc: 'A verse in his signature style',
+    prompt: "Write a verse in the style of Justin Bieber's song 'Peaches'.",
+  },
+  {
+    type: 'text',
+    title: 'Cultural Impact',
+    desc: 'Millennial & Gen Z pop culture',
+    prompt: 'Explain the cultural impact of Justin Bieber on millennial and Gen Z pop music.',
+  },
+  {
+    type: 'text',
+    title: 'Justice Review',
+    desc: 'Album review as music critic',
+    prompt: "Write a review of the Justice album as if you're a music critic.",
+  },
+  {
+    type: 'json',
+    title: 'Bieber Profile',
+    desc: 'name, birthdate, hometown…',
+    prompt: 'Return a structured profile of Justin Bieber',
+    schema: [
+      { name: 'name',        type: 'string', required: true },
+      { name: 'birthdate',   type: 'string', required: true },
+      { name: 'hometown',    type: 'string', required: true },
+      { name: 'genre',       type: 'string', required: true },
+      { name: 'debutSingle', type: 'string', required: true },
+    ],
+  },
+  {
+    type: 'json',
+    title: 'Top Albums',
+    desc: 'albums array with year & single',
+    prompt: "List Justin Bieber's top 5 albums with release year and lead single",
+    schema: [
+      { name: 'albums', type: 'array', required: true },
+    ],
+  },
+  {
+    type: 'json',
+    title: 'Career Facts',
+    desc: 'totalAlbums, awardsWon…',
+    prompt: "Extract key facts from Justin Bieber's career",
+    schema: [
+      { name: 'totalAlbums',  type: 'number', required: true },
+      { name: 'awardsWon',    type: 'number', required: true },
+      { name: 'debutAge',     type: 'number', required: true },
+      { name: 'currentLabel', type: 'string', required: true },
+    ],
+  },
+];
+
+// ================================================================
+// INIT
+// ================================================================
+function init() {
+  renderSidebar();
+  updateModelSelect();
+  render();
+}
+
+function g(id) { return document.getElementById(id); }
+
+function render() {
+  const isAnt = state.provider === 'anthropic';
+  const isJson = state.outputMode === 'json';
+
+  g('antNotice').classList.toggle('show', isAnt);
+  g('schemaBuilder').classList.toggle('show', isJson && !isAnt);
+
+  g('btnText').classList.toggle('active', !isJson);
+  g('btnJson').classList.toggle('active', isJson);
+
+  g('comparePanel').style.display = state.compareMode ? 'flex' : 'none';
+  g('compareModeBtn').classList.toggle('on', state.compareMode);
+
+  g('mainPanelTitle').textContent = state.compareMode ? state.model : 'Response';
+  g('sendBtn').disabled = isAnt || state.isLoading;
+}
+
+// ================================================================
+// MODEL SELECT
+// ================================================================
+function updateModelSelect() {
+  g('modelSelect').innerHTML = MODELS[state.provider]
+    .map(m => `<option value="${m}"${m === state.model ? ' selected' : ''}>${m}</option>`)
+    .join('');
+}
+
+function onProviderChange() {
+  state.provider = g('providerSelect').value;
+  state.model = MODELS[state.provider][0];
+  updateModelSelect();
+  render();
+}
+
+// ================================================================
+// API KEY
+// ================================================================
+function validateKey() {
+  const key = state.apiKey;
+  const input = g('keyInput');
+  const hint = g('keyHint');
+  input.classList.remove('input-ok', 'input-bad');
+  hint.textContent = '';
+  hint.className = 'vhint';
+  if (!key) return;
+  const prefix = state.provider === 'openai' ? 'sk-' : 'sk-ant-';
+  const valid = key.startsWith(prefix);
+  input.classList.add(valid ? 'input-ok' : 'input-bad');
+  hint.classList.add(valid ? 'ok' : 'bad');
+  hint.textContent = valid
+    ? '✓ Key format looks good'
+    : `⚠ ${state.provider === 'openai' ? 'OpenAI' : 'Anthropic'} keys start with "${prefix}"`;
+}
+
+function toggleKeyVis() {
+  const inp = g('keyInput');
+  const btn = g('showKeyBtn');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
+}
+
+// ================================================================
+// MODE
+// ================================================================
+function setMode(mode) {
+  state.outputMode = mode;
+  render();
+}
+
+// ================================================================
+// COMPARE / THEME
+// ================================================================
+function toggleCompareMode() {
+  state.compareMode = !state.compareMode;
+  render();
+}
+
+function toggleTheme() {
+  document.documentElement.dataset.theme =
+    document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
+// ================================================================
+// PROMPT INPUT
+// ================================================================
+function onPromptInput() {
+  const v = g('promptInput').value;
+  state.prompt = v;
+  const chars = v.length;
+  g('promptMeta').textContent = `${chars.toLocaleString()} chars · ~${Math.round(chars / 4).toLocaleString()} tokens`;
+}
+
+// ================================================================
+// SCHEMA BUILDER
+// ================================================================
+function addField() {
+  state.schemaFields.push({ name: '', type: 'string', required: false });
+  renderFields();
+  refreshPreview();
+}
+
+function removeField(i) {
+  state.schemaFields.splice(i, 1);
+  renderFields();
+  refreshPreview();
+}
+
+function renderFields() {
+  const types = ['string', 'number', 'boolean', 'array'];
+  g('sbFields').innerHTML = state.schemaFields.map((f, i) => `
+    <div class="sb-field">
+      <input type="text" value="${esc(f.name)}" placeholder="field name"
+        oninput="state.schemaFields[${i}].name=this.value; refreshPreview()">
+      <select onchange="state.schemaFields[${i}].type=this.value; refreshPreview()">
+        ${types.map(t => `<option${t===f.type?' selected':''}>${t}</option>`).join('')}
+      </select>
+      <label class="req-label">
+        <input type="checkbox" ${f.required?'checked':''}
+          onchange="state.schemaFields[${i}].required=this.checked; refreshPreview()">
+        Req
+      </label>
+      <button class="btn btn-ghost btn-sm" onclick="removeField(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function buildSchema(fields) {
+  const props = {};
+  const req = [];
+  for (const f of fields) {
+    if (!f.name.trim()) continue;
+    props[f.name] = { type: f.type };
+    if (f.required) req.push(f.name);
+  }
+  const s = { type: 'object', properties: props };
+  if (req.length) s.required = req;
+  return s;
+}
+
+function refreshPreview() {
+  g('sbPreview').textContent = JSON.stringify(buildSchema(state.schemaFields), null, 2);
+}
+
+// ================================================================
+// SIDEBAR PROMPTS
+// ================================================================
+function renderSidebar() {
+  g('sidebarList').innerHTML = EXAMPLES.map((p, i) => `
+    <div class="prompt-card" onclick="loadExample(${i})">
+      <div class="pc-badge pc-${p.type}">${p.type}</div>
+      <div class="pc-title">${esc(p.title)}</div>
+      <div class="pc-desc">${esc(p.desc)}</div>
+    </div>
+  `).join('');
+}
+
+function loadExample(i) {
+  const ex = EXAMPLES[i];
+  g('promptInput').value = ex.prompt;
+  state.prompt = ex.prompt;
+  const chars = ex.prompt.length;
+  g('promptMeta').textContent = `${chars} chars · ~${Math.round(chars/4)} tokens`;
+
+  if (ex.type === 'json') {
+    state.outputMode = 'json';
+    state.schemaFields = ex.schema.map(f => ({...f}));
+    renderFields();
+    refreshPreview();
+  } else {
+    state.outputMode = 'text';
+  }
+  render();
+}
+
+// ================================================================
+// SEND
+// ================================================================
+async function handleSend() {
+  const prompt = state.prompt.trim();
+  if (!prompt) return;
+  if (!state.apiKey.trim()) {
+    showErr('main', "🎤 Drop in your API key first — it's showtime!");
+    return;
+  }
+
+  state.isLoading = true;
+  g('sendBtn').disabled = true;
+  g('globalSpin').classList.add('show');
+  render();
+
+  try {
+    if (state.compareMode) {
+      await Promise.all([
+        callOpenAI(prompt, state.model, 'main'),
+        callOpenAI(prompt, state.compareModel, 'compare'),
+      ]);
+    } else {
+      await callOpenAI(prompt, state.model, 'main');
+    }
+  } finally {
+    state.isLoading = false;
+    g('sendBtn').disabled = false;
+    g('globalSpin').classList.remove('show');
+    render();
+  }
+}
+
+// ================================================================
+// OPENAI STREAMING
+// ================================================================
+async function callOpenAI(prompt, model, col) {
+  const bodyEl  = g(col === 'main' ? 'mainBody'    : 'cmpBody');
+  const spinEl  = g(col === 'main' ? 'mainSpin'    : 'cmpSpin');
+  const progEl  = g(col === 'main' ? 'mainProg'    : 'cmpProg');
+
+  bodyEl.className = 'resp-body' + (state.outputMode === 'json' ? ' json-mode' : '');
+  bodyEl.innerHTML = '';
+  spinEl.classList.add('show');
+  progEl.classList.add('show');
+
+  const t0 = Date.now();
+  let full = '';
+
+  const messages = [];
+  if (state.outputMode === 'json' && state.schemaFields.length > 0) {
+    const schema = buildSchema(state.schemaFields);
+    messages.push({
+      role: 'system',
+      content: `Respond with valid JSON matching this schema: ${JSON.stringify(schema)}. Return only the JSON object — no extra text, no markdown fences.`,
+    });
+  }
+  messages.push({ role: 'user', content: prompt });
+
+  const reqBody = { model, messages, stream: true };
+  if (state.outputMode === 'json') {
+    reqBody.response_format = { type: 'json_object' };
+  }
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${state.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reqBody),
+    });
+
+    if (!res.ok) {
+      let errData = {};
+      try { errData = await res.json(); } catch { /* ignore */ }
+      throw { status: res.status, message: errData.error?.message || `HTTP ${res.status}` };
+    }
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const chunk = JSON.parse(raw);
+          const tok = chunk.choices?.[0]?.delta?.content;
+          if (tok) {
+            full += tok;
+            streamRender(bodyEl, full, state.outputMode);
+          }
+        } catch { /* ignore malformed SSE chunk */ }
+      }
+    }
+
+    // Final render
+    if (state.outputMode === 'json') {
+      try {
+        const obj = JSON.parse(full);
+        bodyEl.innerHTML = `<pre>${jsonHL(JSON.stringify(obj, null, 2))}</pre>`;
+      } catch {
+        apiError({ type: 'json_parse' }, col);
+        return;
+      }
+    }
+
+    const elapsed = Date.now() - t0;
+    setMetrics(col, elapsed, full);
+    if (col === 'main') state.response = full;
+    else state.compareResponse = full;
+
+  } catch (err) {
+    apiError(err, col);
+  } finally {
+    spinEl.classList.remove('show');
+    progEl.classList.remove('show');
+  }
+}
+
+function streamRender(el, text, mode) {
+  if (mode === 'json') {
+    try {
+      el.innerHTML = `<pre>${jsonHL(JSON.stringify(JSON.parse(text), null, 2))}</pre>`;
+    } catch {
+      el.textContent = text;
+    }
+  } else {
+    el.textContent = text;
+  }
+  el.scrollTop = el.scrollHeight;
+}
+
+// ================================================================
+// ERROR HANDLING
+// ================================================================
+function apiError(err, col) {
+  let msg;
+  if (err.type === 'json_parse') {
+    msg = "🎸 The model went off-script — the response wasn't valid JSON.";
+  } else if (err.status === 401 || err.message?.toLowerCase().includes('invalid') || err.message?.toLowerCase().includes('incorrect api')) {
+    msg = "🎤 Even Bieber has bad days — your API key looks invalid.";
+  } else if (err.status === 429 || err.message?.toLowerCase().includes('rate limit') || err.message?.toLowerCase().includes('rate_limit')) {
+    msg = "🎵 Whoa, slow down! You've hit the rate limit. Try again in a moment.";
+  } else if (err.name === 'TypeError' || err.message?.toLowerCase().includes('fetch') || err.message?.toLowerCase().includes('network')) {
+    msg = "📡 Lost the signal. Check your internet connection and try again.";
+  } else {
+    msg = `❌ ${err.message || 'Something went wrong.'}`;
+  }
+  showErr(col, msg);
+}
+
+function showErr(col, msg) {
+  const el = g(col === 'main' ? 'mainBody' : 'cmpBody');
+  el.innerHTML = `<div class="err-text">${esc(msg)}</div>`;
+}
+
+// ================================================================
+// METRICS
+// ================================================================
+function setMetrics(col, ms, text) {
+  const p = col === 'main' ? 'main' : 'cmp';
+  const chars = text.length;
+  const toks  = Math.round(chars / 4);
+  g(`${p}Time`).textContent   = `${ms.toLocaleString()}ms`;
+  g(`${p}Chars`).textContent  = chars.toLocaleString();
+  g(`${p}Tokens`).textContent = toks.toLocaleString();
+  g(`${p}Metrics`).classList.add('show');
+}
+
+// ================================================================
+// COPY & CLEAR
+// ================================================================
+function copyResp(col) {
+  const text = col === 'main' ? state.response : state.compareResponse;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = g(col === 'main' ? 'copyMainBtn' : 'copyCmpBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+}
+
+function clearResp(col) {
+  const bodyEl = g(col === 'main' ? 'mainBody' : 'cmpBody');
+  const metEl  = g(col === 'main' ? 'mainMetrics' : 'cmpMetrics');
+  bodyEl.innerHTML = '<span class="ph-text">Cleared.</span>';
+  metEl.classList.remove('show');
+  if (col === 'main') state.response = '';
+  else state.compareResponse = '';
+}
+
+// ================================================================
+// JSON SYNTAX HIGHLIGHTING
+// Uses a regex tokenizer — safe: HTML-escapes each matched token
+// ================================================================
+function jsonHL(jsonStr) {
+  return jsonStr.replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    (match) => {
+      let cls = 'jn';
+      if (/^"/.test(match)) {
+        cls = /:$/.test(match) ? 'jk' : 'js';
+      } else if (/^(true|false)$/.test(match)) {
+        cls = 'jb';
+      } else if (match === 'null') {
+        cls = 'jl';
+      }
+      return `<span class="${cls}">${esc(match)}</span>`;
+    }
+  );
+}
+
+// ================================================================
+// HELPERS
+// ================================================================
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+init();
+</script>
+</body>
+</html>
