@@ -185,42 +185,50 @@ main {
   font-family: monospace;
 }
 
-/* === FILE UPLOAD === */
-.file-upload-row {
+/* === API KEY INPUT === */
+.key-input-row {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  gap: 0;
 }
 
-.file-btn {
-  display: inline-block;
+.key-text-input {
+  flex: 1;
+  background: var(--white);
+  border: 3px solid var(--black);
+  border-right: none;
+  box-shadow: 3px 3px 0 var(--black);
+  padding: 11px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+
+.key-text-input:focus {
+  border-color: var(--teal);
+}
+
+.show-key-btn {
   background: var(--teal);
   color: var(--cream);
   border: 3px solid var(--black);
   box-shadow: 3px 3px 0 var(--black);
-  padding: 9px 18px;
+  padding: 0 16px;
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition: transform 0.1s, box-shadow 0.1s;
-  user-select: none;
 }
 
-.file-btn:hover {
+.show-key-btn:hover {
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--black);
 }
-
-.key-status {
-  font-size: 13px;
-  font-weight: 600;
-  color: #888;
-}
-
-.key-status.loaded { color: #2a7a2a; }
-.key-status.error  { color: var(--red); }
 
 /* === SELECT === */
 .select-field {

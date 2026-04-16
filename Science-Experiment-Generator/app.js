@@ -11,32 +11,17 @@ const state = {
 };
 
 // ================================================================
-// .ENV FILE PARSING  (in-memory only — key is never stored)
+// API KEY INPUT  (in-memory only — never stored)
 // ================================================================
-document.getElementById('envFile').addEventListener('change', function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function (ev) {
-    const key = parseEnvKey(ev.target.result);
-    const el  = document.getElementById('keyStatus');
-    if (key) {
-      state.apiKey     = key;
-      el.textContent   = '✓ Key loaded (' + key.slice(0, 7) + '…)';
-      el.className     = 'key-status loaded';
-    } else {
-      state.apiKey     = '';
-      el.textContent   = '✗ OPENAI_API_KEY not found in file';
-      el.className     = 'key-status error';
-    }
-  };
-  reader.readAsText(file);
-});
+function handleKeyInput(value) {
+  state.apiKey = value.trim();
+}
 
-function parseEnvKey(text) {
-  const match = text.match(/^OPENAI_API_KEY\s*=\s*(.+)$/m);
-  if (!match) return null;
-  return match[1].trim().replace(/^["']|["']$/g, '');
+function toggleKeyVis() {
+  const inp = document.getElementById('apiKeyInput');
+  const btn = document.getElementById('showKeyBtn');
+  inp.type     = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
 }
 
 // ================================================================
@@ -98,7 +83,7 @@ Use markdown formatting: bullet lists for materials and steps, bold key terms, a
 // ================================================================
 async function handleGenerate() {
   if (!state.apiKey) {
-    showError('Upload your .env file with a valid OPENAI_API_KEY before generating.');
+    showError('Paste your OpenAI API key before generating.');
     return;
   }
   if (!state.supplies.trim()) {

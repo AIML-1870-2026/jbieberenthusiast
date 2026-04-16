@@ -148,15 +148,14 @@
   <div class="card input-card">
     <div class="card-label">EXPERIMENT PARAMETERS</div>
 
-    <!-- API Key Upload -->
+    <!-- API Key Input -->
     <div class="field-group">
-      <div class="field-label">🔑 API Key (.env file)</div>
-      <div class="file-upload-row">
-        <label class="file-btn" for="envFile">📂 Upload .env File</label>
-        <input type="file" id="envFile" accept=".env,text/plain" style="display:none">
-        <span class="key-status" id="keyStatus">No file loaded</span>
+      <label class="field-label" for="apiKeyInput">🔑 OpenAI API Key</label>
+      <div class="key-input-row">
+        <input type="password" id="apiKeyInput" class="key-text-input" placeholder="sk-..." oninput="handleKeyInput(this.value)">
+        <button class="show-key-btn" id="showKeyBtn" onclick="toggleKeyVis()">Show</button>
       </div>
-      <div class="field-hint">Your .env file should contain: <code>OPENAI_API_KEY=sk-...</code></div>
+      <div class="field-hint">Your key is used in-memory only and never stored.</div>
     </div>
 
     <!-- Grade + Subject -->
