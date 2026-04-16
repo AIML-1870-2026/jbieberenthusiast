@@ -82,6 +82,7 @@ Use markdown formatting: bullet lists for materials and steps, bold key terms, a
 // GENERATE & REGENERATE
 // ================================================================
 async function handleGenerate() {
+  state.apiKey = document.getElementById('apiKeyInput').value.trim();
   if (!state.apiKey) {
     showError('Paste your OpenAI API key before generating.');
     return;
