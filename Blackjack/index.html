@@ -452,7 +452,16 @@
       </div>
 
       <div class="form-group">
-        <div class="form-label">.env File</div>
+        <div class="form-label">API Key</div>
+        <div style="display:flex;gap:5px;">
+          <input type="password" id="keyInput" placeholder="Paste API key…" oninput="handleKeyInput(this.value)" style="flex:1;">
+          <button class="btn-sm" id="showKeyBtn" onclick="toggleKeyVis()" style="padding:4px 8px;font-size:11px;">Show</button>
+        </div>
+        <div id="keyHint" style="font-size:10px;margin-top:3px;"></div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label" style="color:var(--text3);font-size:10px;">— or upload —</div>
         <div class="file-upload-area" id="uploadArea">
           <input type="file" id="envFileInput" accept=".env,text/plain" onchange="handleEnvUpload(event)">
           <div class="upload-icon">📁</div>
@@ -676,6 +685,25 @@ function handleEnvUpload(event) {
   reader.readAsText(file);
 }
 
+function handleKeyInput(val) {
+  const key = val.trim();
+  const hint = g('keyHint');
+  if (!key) { hint.textContent = ''; state.apiKeys[state.family] = ''; updateDealBtn(); return; }
+  const prefix = state.family === 'openai' ? 'sk-' : 'sk-ant-';
+  const valid = key.startsWith(prefix);
+  hint.style.color = valid ? 'var(--green)' : 'var(--red)';
+  hint.textContent = valid ? '✓ Key format looks good' : `⚠ ${state.family === 'openai' ? 'OpenAI' : 'Anthropic'} keys start with "${prefix}"`;
+  state.apiKeys[state.family] = key;
+  updateDealBtn();
+}
+
+function toggleKeyVis() {
+  const inp = g('keyInput');
+  const btn = g('showKeyBtn');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
+}
+
 function parseEnvFile(content) {
   const vars = {};
   for (const raw of content.split('\n')) {
@@ -699,6 +727,8 @@ function parseEnvFile(content) {
 function onFamilyChange() {
   state.family = g('familySelect').value;
   refreshModels();
+  g('keyInput').value = '';
+  g('keyHint').textContent = '';
   updateDealBtn();
 }
 
