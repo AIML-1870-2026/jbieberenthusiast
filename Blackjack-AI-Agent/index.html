@@ -772,7 +772,7 @@ async function deal() {
 // ASK AGENT
 // ================================================================
 async function askAgent() {
-  const apiKey = state.apiKeys[state.family];
+  const apiKey = state.apiKeys[state.family] || g('keyInput').value.trim();
   const model = g('modelSelect').value;
 
   g('aiPanel').classList.add('show');
@@ -831,10 +831,11 @@ async function askAgent() {
     g('aiPanel').classList.remove('show');
     const m = err.message || '';
     let msg = 'AI error: ';
-    if (m.includes('401') || m.toLowerCase().includes('invalid') || m.toLowerCase().includes('api key') || m.toLowerCase().includes('authentication')) msg += 'Invalid API key.';
-    else if (m.includes('429') || m.toLowerCase().includes('rate')) msg += 'Rate limit hit. Wait a moment.';
+    if (m.includes('401') || m.toLowerCase().includes('invalid') || m.toLowerCase().includes('api key') || m.toLowerCase().includes('authentication')) msg += 'Invalid API key. Double-check it was pasted correctly.';
+    else if (m.includes('403')) msg += 'Access denied — your key may not have access to this model.';
+    else if (m.includes('429') || m.toLowerCase().includes('rate')) msg += 'Rate limit hit. Wait a moment and try again.';
     else if (m.toLowerCase().includes('json')) msg += 'Could not parse AI response as JSON. Raw output is in the console.';
-    else if (m.toLowerCase().includes('fetch') || m.toLowerCase().includes('network') || m.toLowerCase().includes('cors')) msg += 'Network error — check your connection.';
+    else if (m.toLowerCase().includes('fetch') || m.toLowerCase().includes('network') || m.toLowerCase().includes('cors') || m.toLowerCase().includes('load')) msg += 'Network error — CORS or connection blocked. Try a different browser (Chrome works best), or check that your key is for the selected provider.';
     else msg += m || 'Unknown error.';
     showError(msg);
   } finally {
