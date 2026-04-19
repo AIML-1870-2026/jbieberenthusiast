@@ -604,6 +604,13 @@
 
       <div class="status-msg" id="statusMsg">Upload your .env file and place a bet to begin.</div>
 
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:1px;padding-bottom:6px;">
+        <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:3px;padding:1px 5px;">D</kbd> Deal &nbsp;
+        <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:3px;padding:1px 5px;">E</kbd> Execute &nbsp;
+        <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:3px;padding:1px 5px;">N</kbd> Next hand &nbsp;
+        <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:3px;padding:1px 5px;">1–4</kbd> Add chips
+      </div>
+
     </div>
   </div>
 </div>
@@ -1271,6 +1278,35 @@ function hideError() { g('errorToast').classList.remove('show'); }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ================================================================
+// ================================================================
+// KEYBOARD SHORTCUTS
+// ================================================================
+document.addEventListener('keydown', (e) => {
+  // Ignore when typing in an input
+  if (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+
+  switch (e.key) {
+    case 'd':
+    case 'D':
+      if (!g('dealBtn').disabled) deal();
+      break;
+    case 'Enter':
+    case 'e':
+    case 'E':
+      if (!g('executeBtn').disabled && g('actionArea').classList.contains('show')) executeRecommendation();
+      break;
+    case 'n':
+    case 'N':
+      if (state.phase === 'resolved') resetHand();
+      break;
+    case '1': addBet(5); break;
+    case '2': addBet(25); break;
+    case '3': addBet(50); break;
+    case '4': addBet(100); break;
+  }
+});
 
 // ================================================================
 // BOOT
